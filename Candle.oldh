@@ -1,0 +1,41 @@
+// Candle class. 
+#ifndef CANDLE_H
+#define CANDLE_H
+#include "Arduino.h"
+
+class Candle {
+  private:
+
+
+    uint8_t state; // 0: UNLIT, 1: LIGHTING, 2: LIT, 3: GOING OUT 
+    uint8_t glow;
+    int wax;
+    bool isBeacon;
+    Candle * neighbourCandlesArray;
+
+  public:
+
+
+    Candle ();
+
+    void updateState();
+    void updateGlow();
+
+    void setGlow(uint8_t value);
+    uint8_t getGlow();
+    void glowUp();
+    void glowDown();
+
+    void setNeighbourCandlesArray(Candle neighbours[]);
+    void sendBeaconSignal(bool outgoingSignal);
+    void receiveBeaconSignal(bool incomingSignal);
+    void receiveButtonSignal(bool incomingSignal);
+
+    void newCandle();
+    void setWax(int value);
+    int getWax();
+    void burnWax();
+    void burnOut();
+};
+
+#endif
