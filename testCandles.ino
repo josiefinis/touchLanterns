@@ -1,5 +1,5 @@
 #define USE_TIMER_1     true
-#define MONITOR_ON      true
+#define MONITOR_ON      false
 
 #include "Sensor.h"
 #include "Button.h"
@@ -14,9 +14,6 @@ uint8_t eventCountdown = 0;
 ISR_Timer ISR_timer;
 Button button = Button();
 Sensor sensor = Sensor();
-uint16_t Candle::litCandles = 0;          
-uint16_t Candle::activeCounters = 0;
-uint16_t Candle::newChanges = 0;
 Candle candleArray[16] = Candle();
 Register reg;
 
@@ -26,41 +23,36 @@ void TimerHandler() {
 }
 
 #define HW_TIMER_INTERVAL_MS             100L
-#define TIMER_INTERVAL_200MS             2000L
+#define TIMER_INTERVAL_200MS             200L
 #define TIMER_INTERVAL_60S               60000L
 
 
 void updateOften() {
-  uint16_t sensorOutput = sensor.output();
-  uint32_t buttonOutput = button.output(sensorOutput);
+  uint32_t buttonOutput = button.output(sensor.output());
   if ( buttonOutput ) { 
-    Serial.println();
-    Serial.print("B->"); Serial.print(buttonOutput, BIN); Serial.print("\t");
     sendSignalToCandle(buttonOutput);
   } 
-  Serial.println(); Candle::printCounters(); Candle::printNewChanges(); Candle::printLitCandles();
-  printStates();
-  if ( Candle::activeCounters ) {
-    for (uint8_t i=0; i<16; i++ ) { candleArray[i].updateCycle(i); }
+  if ( Candle::getActiveCounters() ) {
+    for (uint8_t i=0; i<16; i++ ) { candleArray[i].update(i); }
   }
-  if ( Candle::hasNewChanges() ) { 
-    Serial.println(); Candle::printCounters(); Candle::printNewChanges(); Candle::printLitCandles();
-    Candle::applyNewChanges(); 
+  if ( Candle::hasUpdatesForRegister() ) { 
     reg.writeToStorageRegister(Candle::getLitCandles()); 
   }
 }
 
+#if MONITOR_ON
 void printStates() {
   Serial.println();
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
 }
+#endif
 
 void sendSignalToCandle(uint32_t input) {
   uint8_t i = 0;
   while ( input ) {
-    candleArray[i].receiveSignal( i, (uint8_t) (input >> 30) ); 
-    input <<= 2;
+    candleArray[i].receiveSignal( i, input & 0b11 ); 
+    input >>= 2;
     i++;
   }
 }

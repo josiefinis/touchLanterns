@@ -5,6 +5,8 @@
 #define LONG_PRESS 0b01
 
 
+
+
 Candle::Candle() {
   state = 0x40;
   watching = nullptr;
@@ -12,62 +14,40 @@ Candle::Candle() {
 }
 
  
+uint16_t  Candle::litCandles = 0;          
+uint8_t  Candle::activeCounters = 0;
+bool  Candle::newChanges = false;
+
+
 void Candle::receiveSignal(uint8_t i, uint8_t input) {
   // Handle input from buttons.
-  Serial.println();
-  Serial.print("received: "); Serial.print(i); Serial.print(" "); Serial.print(input, BIN);
   if ( input == 0 ) { return; }
-  Serial.print("receiveInput ");
   if ( input & ANY_PRESS ) { 
-    Serial.print("Cidx: ");Serial.print(i);Serial.print("\t");
     toggleIsLit();
-    activeCounters |= indexToOneHot(i); // TODO change active counters to simple counter that keeps track of how many counters are counting.
+    activeCounters++;
   }
   // if ( input & LONG_PRESS ) { buildBeaconNetwork(i); }
 }
 
 
-uint16_t Candle::updateCycle(uint8_t i) {
+void Candle::update(uint8_t i) {
   // Handle timer interrupt events. 
-  uint16_t returnValue = 0;
-  if ( activeCounters == 0 ) { return 0; }
+  if ( activeCounters == 0 ) { return; }
   //if ( watching->changedLastCycle() ) { followSuit(); }
   if ( changedLastCycle() ) { 
+    litCandles ^= indexToOneHot(i);
+    newChanges = true;
     setNotChangedLastCycle(); 
-    returnValue = indexToOneHot(i); 
-    newChanges |= indexToOneHot(i); 
-    activeCounters &= ~indexToOneHot(i);
+    activeCounters--;
+    // TODO rework state: don't store lit/unlit, store that in static variable.
   } 
   if ( isCounting() ) { state++; }
-  return returnValue;
 }
 
 
-// bool Candle::update() {
-//   // 
-//   Serial.print("update ");
-//   //TODO check finished
-//   if ( watching->changedLastCycle() ) { followSuit(); }
-//   if ( changedLastCycle() ) { return true; }
-//   if ( isCounting() ) { state++; }
-//   return false;
-// }
-
-
-void Candle::printCounters() { Serial.print("counters: "); Serial.print(activeCounters, BIN); Serial.print("\t"); }
-void Candle::printNewChanges() { Serial.print("new changes: "); Serial.print(newChanges, BIN); Serial.print("\t"); }
-void Candle::printLitCandles() { Serial.print("lit candles: "); Serial.print(litCandles, BIN); Serial.print("\t"); }
-
-
-bool Candle::hasNewChanges() { return newChanges > 0; } // Require hardware register update. 
+bool Candle::hasUpdatesForRegister() { return newChanges; } 
 uint16_t Candle::getLitCandles() { return litCandles; } 
-
-
-void Candle::applyNewChanges() { 
-  Serial.print("applyNewChanges ");
-  litCandles ^= newChanges; 
-  newChanges = 0;
-}
+uint8_t Candle::getActiveCounters() { return activeCounters; }
 
 
 uint16_t Candle::indexToOneHot(uint8_t idx) {
@@ -163,7 +143,6 @@ uint8_t Candle::getState() {
 
 void Candle::toggleIsLit() {
 // Set 
-  Serial.print("toggleIsLit ");
   state |= 0b01111111;
 }
   
@@ -182,7 +161,6 @@ bool Candle::changedLastCycle() {
 
 void Candle::setNotChangedLastCycle() {
 // Reset changedLastCycle flag to .
-  Serial.print("setNotChangedLastCycle ");
   state |= 0b01000000;
 }
 
@@ -195,16 +173,11 @@ bool Candle::isCounting() {
 
 void Candle::setRemainingCounter(uint8_t value) {
 // Set remaining counter to value.
-  Serial.print("setRemainingCounter ");
   state &= 0xE0;
   state |= 0x1F & ~value;
 }
 
 void Candle::burn() { 
 // 
-  Serial.print("burn ");
   state--; 
 }
-
-
-
