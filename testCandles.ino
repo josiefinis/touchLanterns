@@ -24,7 +24,7 @@ void TimerHandler() {
 
 #define HW_TIMER_INTERVAL_MS             100L
 #if MONITOR_ON
-#define TIMER_INTERVAL_200MS             1000L
+#define TIMER_INTERVAL_200MS             2000L
 #else
 #define TIMER_INTERVAL_200MS             200L
 #endif
@@ -32,6 +32,7 @@ void TimerHandler() {
 
 
 void updateOften() {
+  if ( Candle::busy ) { return; }
   printStates();
   uint32_t buttonOutput = button.output(sensor.output());
   if ( buttonOutput ) { 
@@ -49,6 +50,7 @@ void updateOften() {
 #if MONITOR_ON
 void printStates() {
   Serial.println();
+  Serial.print("Counters: "); Serial.print(Candle::activeCounters); Serial.print("\n");
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].isWatching()); Serial.print("\t"); }Serial.print("\n");

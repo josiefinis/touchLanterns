@@ -8,7 +8,6 @@ class Candle {
     // bits for 16 candles
     static uint16_t litCandles;          
     static bool newChanges;           // New changes that require update of hardware register. 
-    static uint8_t activeCounters;    // Number of candles that will change on counter completion. 
 
 
     uint8_t state; /*  7-bit   is lit
@@ -16,15 +15,15 @@ class Candle {
                        5-bit   is counting 
                      4-0-bits  counter        
                      */
-    Candle * watching;
-    Candle * next;
+    Candle* watching;
+    Candle* next;
 
     static uint16_t indexToOneHot(uint8_t idx);
     void followSuit();
     void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
-    Candle * findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
-    Candle * findWatchBeaconBelow(Candle candleArray[16], uint8_t idx);
-    bool linkWatchBeacon(Candle candleArray[16], uint8_t idx);
+    Candle* findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
+    Candle* findWatchBeaconBelow(Candle candleArray[16], uint8_t idx);
+    bool linkWatchBeacon(Candle candleArray[16], uint8_t watcher, uint8_t watched);
     void toggleIsLit();
     bool isLit();
     bool changedLastCycle();
@@ -35,8 +34,10 @@ class Candle {
 
   public:
     Candle();
+    static uint8_t activeCounters;    // Number of candles that will change on counter completion. 
+    static bool busy;
     uint8_t getState();
-    Candle * getWatching();
+    Candle* getWatching();
     bool isWatching();
 
 
