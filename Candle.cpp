@@ -20,13 +20,14 @@ bool Candle::newChanges = false;
 
 
 void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
+  Serial.print("input: "); Serial.print(input); Serial.print("\n");
   uint8_t i = 0;
   while ( input ) {
     if ( input & ANY_PRESS ) {
       candleArray[i].toggleIsLit();
       activeCounters++;
     }
-    if ( input & LONG_PRESS ) { candleArray[i].buildBeaconNetwork(candleArray, i); }
+    if ( input & LONG_PRESS ) { Serial.print("long press\n"); candleArray[i].buildBeaconNetwork(candleArray, i); }
     input >>= 2;
     i++;
   }
@@ -36,7 +37,7 @@ void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
 void Candle::update(uint8_t i) {
   // Handle timer interrupt events. 
   if ( activeCounters == 0 ) { return; }
-  if ( isWatching() and watching->changedLastCycle() ) { followSuit(); }
+  if ( isWatching() and watching->changedLastCycle() ) { followSuit(); activeCounters++; }
   if ( changedLastCycle() ) { 
     litCandles ^= indexToOneHot(i);
     newChanges = true;
@@ -91,14 +92,16 @@ void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
 // Build tree of candles watching others to follow suit, starting with candle at idx.
   Serial.print("buildBeaconNetwork ");
   watching = this;
-  Candle* queue = this;
+  Candle* head = this;
   Candle* last = this;
-  while ( queue ) {
-     *last->next = *queue->findWatchBeaconAbove(candleArray, idx);
-     if ( &(*last->next) ) { *last = *last->next; }
-     *last->next = *queue->findWatchBeaconBelow(candleArray, idx);
-     if ( &(*last->next) ) { *last = *last->next; }
-     *queue = *queue->next;
+  while ( head ) {
+     *last->next = *head->findWatchBeaconAbove(candleArray, idx);   // find beacon to add to watch beacon at head of queue. add it to back of queue
+     if ( &(*last->next) ) { *last = *last->next; }                  // if beacon was found and added to queue, move last pointer to point to it
+
+     *last->next = *head->findWatchBeaconBelow(candleArray, idx);   // find second beacon and add to back of queue
+     if ( &(*last->next) ) { *last = *last->next; }                  // move last pointer to back of queue
+    
+     *head = *head->next;                                           // move head to next in queue.
   } 
 }
 
@@ -106,8 +109,8 @@ void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
 Candle* Candle::findWatchBeaconAbove(Candle candleArray[16], uint8_t idx) {
 // Try to assign 1 watcher with idx 1 or 2 steps above this candle, if possible. 
   Serial.print("findWatchBeaconAbove ");
-  uint8_t step = 0;
-  step = 0x80 + random(2); step++;
+  uint8_t step = 0b0110 + 3*random(2);
+  //step = 0x80 + random(2); step++;
   while ( step ) {
     if ( linkWatchBeacon(candleArray, idx + step) ) { return &candleArray[idx + step]; }
     step >>= 2;
@@ -119,8 +122,8 @@ Candle* Candle::findWatchBeaconAbove(Candle candleArray[16], uint8_t idx) {
 Candle* Candle::findWatchBeaconBelow(Candle candleArray[16], uint8_t idx) {
 // Try to assign 1 watcher with idx 1 or 2 steps below this candle, if possible. 
   Serial.print("findWatchBeaconBelow ");
-  uint8_t step = 0;
-  step = 0x80 + random(2); step++;
+  uint8_t step = 0b0110 + 3*random(2);
+  //step = 0x80 + random(2); step++;    //1000 0001 or 1000 0010    ummm oops, want either 0110 or 1001 i.e. 6 or 9 
   while ( step ) {
     if ( linkWatchBeacon(candleArray, idx - step) ) { return &candleArray[idx - step]; }
     step >>= 2;
