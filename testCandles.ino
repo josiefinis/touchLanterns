@@ -1,5 +1,5 @@
 #define USE_TIMER_1     true
-#define MONITOR_ON      false
+#define MONITOR_ON      true
 
 #include "Sensor.h"
 #include "Button.h"
@@ -14,7 +14,6 @@ uint8_t eventCountdown = 0;
 ISR_Timer ISR_timer;
 Button button = Button();
 Sensor sensor = Sensor();
-Candle candleArray[16] = Candle();
 Register reg;
 
 
@@ -33,7 +32,7 @@ void updateOften() {
     sendSignalToCandle(buttonOutput);
   } 
   if ( Candle::getActiveCounters() ) {
-    for (uint8_t i=0; i<16; i++ ) { candleArray[i].update(i); }
+    for (uint8_t i=0; i<16; i++ ) { Candle::candleArray[i]->update(i); }
   }
   if ( Candle::hasUpdatesForRegister() ) { 
     reg.writeToStorageRegister(Candle::getLitCandles()); 
@@ -44,14 +43,14 @@ void updateOften() {
 void printStates() {
   Serial.println();
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
+  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(Candle::candleArray[i]->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
 }
 #endif
 
 void sendSignalToCandle(uint32_t input) {
   uint8_t i = 0;
   while ( input ) {
-    candleArray[i].receiveSignal( i, input & 0b11 ); 
+    Candle::candleArray[i]->receiveSignal( i, input & 0b11 ); 
     input >>= 2;
     i++;
   }

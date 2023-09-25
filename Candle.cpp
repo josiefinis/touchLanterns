@@ -17,6 +17,7 @@ Candle::Candle() {
 uint16_t  Candle::litCandles = 0;          
 uint8_t  Candle::activeCounters = 0;
 bool  Candle::newChanges = false;
+Candle * Candle::candleArray[16]; 
 
 
 void Candle::receiveSignal(uint8_t i, uint8_t input) {
@@ -26,14 +27,14 @@ void Candle::receiveSignal(uint8_t i, uint8_t input) {
     toggleIsLit();
     activeCounters++;
   }
-  // if ( input & LONG_PRESS ) { buildBeaconNetwork(i); }
+  if ( input & LONG_PRESS ) { buildBeaconNetwork(i); }
 }
 
 
 void Candle::update(uint8_t i) {
   // Handle timer interrupt events. 
   if ( activeCounters == 0 ) { return; }
-  //if ( watching->changedLastCycle() ) { followSuit(); }
+  if ( watching->changedLastCycle() ) { followSuit(); }
   if ( changedLastCycle() ) { 
     litCandles ^= indexToOneHot(i);
     newChanges = true;
@@ -66,7 +67,6 @@ bool Candle::isWatching() {
 }
 
 
-#if false
 void Candle::followSuit() {
   Serial.print("followSuit ");
   state |= 0b01111111;
@@ -134,7 +134,7 @@ bool Candle::linkWatchBeacon(uint8_t idx) {
   } 
   return false;
 }
-#endif
+
 
 uint8_t Candle::getState() {
   return state;

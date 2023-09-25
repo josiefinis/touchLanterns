@@ -10,6 +10,7 @@ class Candle {
     static bool newChanges;           // New changes that require update of hardware register. 
     static uint8_t activeCounters;    // Number of candles that will change on counter completion. 
 
+
     uint8_t state; /*  7-bit   is lit
                        6-bit   is changing
                        5-bit   is counting 
@@ -36,7 +37,9 @@ class Candle {
 
   public:
     Candle();
+    static Candle * candleArray[16];
     uint8_t getState();
+
 
     static uint8_t getActiveCounters();
     static bool hasUpdatesForRegister();
