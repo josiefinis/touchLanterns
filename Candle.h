@@ -16,15 +16,15 @@ class Candle {
                        5-bit   is counting 
                      4-0-bits  counter        
                      */
-    Candle* watching;
-    Candle* next;
+    Candle * watching;
+    Candle * next;
 
     static uint16_t indexToOneHot(uint8_t idx);
     void followSuit();
-    void buildBeaconNetwork(uint8_t idx);
-    Candle * findWatchBeaconAbove(uint8_t idx);
-    Candle * findWatchBeaconBelow(uint8_t idx);
-    bool linkWatchBeacon(uint8_t idx);
+    void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
+    Candle * findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
+    Candle * findWatchBeaconBelow(Candle candleArray[16], uint8_t idx);
+    bool linkWatchBeacon(Candle candleArray[16], uint8_t idx);
     void toggleIsLit();
     bool isLit();
     bool changedLastCycle();
@@ -32,20 +32,19 @@ class Candle {
     bool isCounting();
     void setRemainingCounter(uint8_t value);
     void burn();
-    Candle * getWatching();
-    bool isWatching();
 
   public:
     Candle();
-    static Candle * candleArray[16];
     uint8_t getState();
+    Candle * getWatching();
+    bool isWatching();
 
 
     static uint8_t getActiveCounters();
     static bool hasUpdatesForRegister();
     static uint16_t getLitCandles();
 
-    void receiveSignal(uint8_t, uint8_t input);
+    static void receiveSignal(Candle candleArray[16], uint32_t input);
     void update(uint8_t i);
 };
 

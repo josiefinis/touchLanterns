@@ -14,6 +14,7 @@ uint8_t eventCountdown = 0;
 ISR_Timer ISR_timer;
 Button button = Button();
 Sensor sensor = Sensor();
+Candle candleArray[16]; 
 Register reg;
 
 
@@ -22,39 +23,39 @@ void TimerHandler() {
 }
 
 #define HW_TIMER_INTERVAL_MS             100L
+#if MONITOR_ON
+#define TIMER_INTERVAL_200MS             1000L
+#else
 #define TIMER_INTERVAL_200MS             200L
+#endif
 #define TIMER_INTERVAL_60S               60000L
 
 
 void updateOften() {
+  printStates();
   uint32_t buttonOutput = button.output(sensor.output());
   if ( buttonOutput ) { 
-    sendSignalToCandle(buttonOutput);
+    Candle::receiveSignal( candleArray, buttonOutput ); 
   } 
   if ( Candle::getActiveCounters() ) {
-    for (uint8_t i=0; i<16; i++ ) { Candle::candleArray[i]->update(i); }
+    for (uint8_t i=0; i<16; i++ ) { candleArray[i].update(i); }
   }
   if ( Candle::hasUpdatesForRegister() ) { 
     reg.writeToStorageRegister(Candle::getLitCandles()); 
   }
 }
 
+
 #if MONITOR_ON
 void printStates() {
   Serial.println();
   for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(Candle::candleArray[i]->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
+  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
+  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].isWatching()); Serial.print("\t"); }Serial.print("\n");
+  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print((long) candleArray[i].getWatching()); Serial.print("\t"); }Serial.print("\n");
+  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getWatching()->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
 }
 #endif
-
-void sendSignalToCandle(uint32_t input) {
-  uint8_t i = 0;
-  while ( input ) {
-    Candle::candleArray[i]->receiveSignal( i, input & 0b11 ); 
-    input >>= 2;
-    i++;
-  }
-}
 
 
 void setup() {

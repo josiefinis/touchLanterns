@@ -4,7 +4,7 @@
 #define ANY_PRESS  0b10
 #define LONG_PRESS 0b01
 
-
+#define BEACONS_ON true
 
 
 Candle::Candle() {
@@ -16,25 +16,27 @@ Candle::Candle() {
  
 uint16_t  Candle::litCandles = 0;          
 uint8_t  Candle::activeCounters = 0;
-bool  Candle::newChanges = false;
-Candle * Candle::candleArray[16]; 
+bool Candle::newChanges = false;
 
 
-void Candle::receiveSignal(uint8_t i, uint8_t input) {
-  // Handle input from buttons.
-  if ( input == 0 ) { return; }
-  if ( input & ANY_PRESS ) { 
-    toggleIsLit();
-    activeCounters++;
+void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
+  uint8_t i = 0;
+  while ( input ) {
+    if ( input & ANY_PRESS ) {
+      candleArray[i].toggleIsLit();
+      activeCounters++;
+    }
+    if ( input & LONG_PRESS ) { candleArray[i].buildBeaconNetwork(candleArray, i); }
+    input >>= 2;
+    i++;
   }
-  if ( input & LONG_PRESS ) { buildBeaconNetwork(i); }
 }
 
 
 void Candle::update(uint8_t i) {
   // Handle timer interrupt events. 
   if ( activeCounters == 0 ) { return; }
-  if ( watching->changedLastCycle() ) { followSuit(); }
+  if ( isWatching() and watching->changedLastCycle() ) { followSuit(); }
   if ( changedLastCycle() ) { 
     litCandles ^= indexToOneHot(i);
     newChanges = true;
@@ -64,11 +66,13 @@ Candle* Candle::getWatching() {
 
 bool Candle::isWatching() {
   if ( watching ) { return true; }
+  return false;
 }
 
 
 void Candle::followSuit() {
   Serial.print("followSuit ");
+  if ( not watching ) { return false; }
   state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
     state ^= 0b10000000; 
@@ -82,58 +86,60 @@ void Candle::followSuit() {
 }
 
 
-void Candle::buildBeaconNetwork(uint8_t idx) {
+#if BEACONS_ON
+void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
 // Build tree of candles watching others to follow suit, starting with candle at idx.
   Serial.print("buildBeaconNetwork ");
   watching = this;
   Candle* queue = this;
   Candle* last = this;
   while ( queue ) {
-     *last->next = *queue->findWatchBeaconAbove(idx);
+     *last->next = *queue->findWatchBeaconAbove(candleArray, idx);
      if ( &(*last->next) ) { *last = *last->next; }
-     *last->next = *queue->findWatchBeaconBelow(idx);
+     *last->next = *queue->findWatchBeaconBelow(candleArray, idx);
      if ( &(*last->next) ) { *last = *last->next; }
      *queue = *queue->next;
   } 
 }
 
 
-Candle* Candle::findWatchBeaconAbove(uint8_t idx) {
+Candle* Candle::findWatchBeaconAbove(Candle candleArray[16], uint8_t idx) {
 // Try to assign 1 watcher with idx 1 or 2 steps above this candle, if possible. 
   Serial.print("findWatchBeaconAbove ");
   uint8_t step = 0;
   step = 0x80 + random(2); step++;
   while ( step ) {
-    if ( linkWatchBeacon(idx + step) ) { return candleArray[idx + step]; }
+    if ( linkWatchBeacon(candleArray, idx + step) ) { return &candleArray[idx + step]; }
     step >>= 2;
   }
   return nullptr;
 }
 
 
-Candle* Candle::findWatchBeaconBelow(uint8_t idx) {
+Candle* Candle::findWatchBeaconBelow(Candle candleArray[16], uint8_t idx) {
 // Try to assign 1 watcher with idx 1 or 2 steps below this candle, if possible. 
   Serial.print("findWatchBeaconBelow ");
   uint8_t step = 0;
   step = 0x80 + random(2); step++;
   while ( step ) {
-    if ( linkWatchBeacon(idx - step) ) { return candleArray[idx - step]; }
+    if ( linkWatchBeacon(candleArray, idx - step) ) { return &candleArray[idx - step]; }
     step >>= 2;
   }
   return nullptr;
 }
 
   
-bool Candle::linkWatchBeacon(uint8_t idx) {
+bool Candle::linkWatchBeacon(Candle candleArray[16], uint8_t idx) {
 // Set candle at idx to watch this candle if not already watching a candle.
   Serial.print("linkWatchBeacon ");
   if ( idx > 15 ) { return false; }
-  if ( not candleArray[idx]->watching ) { 
-    candleArray[idx]->watching = this;
+  if ( not candleArray[idx].isWatching() ) { 
+    candleArray[idx].watching = this;
     return true;
   } 
   return false;
 }
+#endif
 
 
 uint8_t Candle::getState() {
