@@ -5,7 +5,7 @@
 #define LONG_PRESS 0b01
 
 #define BEACONS_ON true
-#define MONITOR_ON true
+#define MONITOR_ON false
 
 
 Candle::Candle() {
@@ -62,7 +62,7 @@ void Candle::periodicUpdate(uint8_t i) {
   busy = true;
   if ( isWatching() and watching->changedLastCycle() ) { followSuit(); activeCounters++; }
   if ( changedLastCycle() ) { 
-    litCandles ^= indexToOneHot(i);
+    updateLitCandles(i);
     newChanges = true;
     setNotChangedLastCycle(); 
     activeCounters--;
@@ -70,6 +70,12 @@ void Candle::periodicUpdate(uint8_t i) {
   } 
   if ( isCounting() ) { state++; }
   busy = false;
+}
+
+
+void Candle::updateLitCandles(uint8_t i) {
+  litCandles &= ~indexToOneHot(i);
+  if ( isLit() ) { litCandles |= indexToOneHot(i); }
 }
 
 
