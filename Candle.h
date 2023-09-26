@@ -25,6 +25,7 @@ class Candle {
     Candle* next;
 
     static uint16_t indexToOneHot(uint8_t idx);
+    void updateLitCandles(uint8_t i);
     void followSuit();
     void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);

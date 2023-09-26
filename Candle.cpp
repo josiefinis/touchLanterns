@@ -12,7 +12,6 @@
 #define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
 
-
 Candle::Candle() {
   state = 0x40;
   watching = nullptr;
@@ -67,7 +66,7 @@ void Candle::periodicUpdate(uint8_t i) {
   busy = true;
   if ( isWatching() and watching->changedLastCycle() ) { followSuit(); activeCounters++; }
   if ( changedLastCycle() ) { 
-    litCandles ^= indexToOneHot(i);
+    updateLitCandles(i);
     newChanges = true;
     if ( isLit() ) { setCounterRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE)); }
     setNotChangedLastCycle(); 
@@ -76,6 +75,12 @@ void Candle::periodicUpdate(uint8_t i) {
   } 
   if ( isCounting() ) { state++; }
   busy = false;
+}
+
+
+void Candle::updateLitCandles(uint8_t i) {
+  litCandles &= ~indexToOneHot(i);
+  if ( isLit() ) { litCandles |= indexToOneHot(i); }
 }
 
 
