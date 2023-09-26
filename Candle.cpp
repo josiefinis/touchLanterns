@@ -5,7 +5,7 @@
 #define LONG_PRESS 0b01
 
 #define BEACONS_ON true
-#define MONITOR_ON true
+#define MONITOR_ON false
 
 
 Candle::Candle() {
