@@ -5,6 +5,7 @@
 #define LONG_PRESS 0b01
 
 #define BEACONS_ON true
+#define MONITOR_ON true
 
 
 Candle::Candle() {
@@ -38,14 +39,16 @@ uint8_t Candle::addressToIndex(uint8_t address) {
 void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
 // Handle input from buttons.
   busy = true;
-  Serial.print("input: "); Serial.print(input); Serial.print("\n");
+  #if MONITOR_ON
+  Serial.print("input: "); Serial.print(input, HEX); Serial.print("\n");
+  #endif
   uint8_t i = 0;
   while ( input ) {
     if ( input & ANY_PRESS ) {
       candleArray[i].toggleIsLit();
       activeCounters++;
     }
-    if ( input & LONG_PRESS ) { Serial.print("long press\n"); candleArray[i].buildBeaconNetwork(candleArray, i); }
+    if ( input & LONG_PRESS ) { candleArray[i].buildBeaconNetwork(candleArray, i); }
     input >>= 2;
     i++;
   }
@@ -53,7 +56,7 @@ void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
 }
 
 
-void Candle::update(uint8_t i) {   // TODO change name to periodicUpdate: here, .h and main
+void Candle::periodicUpdate(uint8_t i) {   
   // Handle timer interrupt events. 
   if ( activeCounters == 0 ) { return; }
   busy = true;
@@ -93,7 +96,6 @@ bool Candle::isWatching() {
 
 
 void Candle::followSuit() {
-  Serial.print("followSuit ");
   if ( not watching ) { return false; }
   state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
@@ -101,7 +103,7 @@ void Candle::followSuit() {
     setRemainingCounter(4);
   }
   else {
-    state |= 0b01100000; //TODO delete line
+    // state |= 0b01100000; //TODO delete line
     setRemainingCounter(random(4,12));
   }
   watching = nullptr;
@@ -111,25 +113,30 @@ void Candle::followSuit() {
 #if BEACONS_ON
 void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
 // Build tree of candles watching others to follow suit, starting with candle at idx.
-  Serial.print("buildBeaconNetwork, starting from ");
   watching = nullptr;
-  Candle* head = this; Serial.print((long) this); Serial.print(".\n"); 
+  Candle* head = this; 
+  #if MONITOR_ON
+  Serial.print("buildBeaconNetwork, starting from ");
+  Serial.print((long) this, HEX); Serial.print(".\n"); 
+  #endif
   Candle* last = this;
   while ( head ) {
-     last->next = findWatchBeaconAbove(candleArray, addressToIndex((uint8_t) head));   // TODO index does not get updated!!! find beacon to add to watch beacon at head of queue. add it to back of queue
-     if ( (last->next) ) { last = last->next; }                  // if beacon was found and added to queue, move last pointer to point to it
+     last->next = findWatchBeaconAbove(candleArray, addressToIndex((uint8_t) head));   
+     if ( (last->next) ) { last = last->next; }                  
 
-     last->next = findWatchBeaconBelow(candleArray, addressToIndex((uint8_t) head));   // find second beacon and add to back of queue
-     if ( (last->next) ) { last = last->next; }                  // move last pointer to back of queue
+     last->next = findWatchBeaconBelow(candleArray, addressToIndex((uint8_t) head));   
+     if ( (last->next) ) { last = last->next; }                 
     
      Candle* done = head;
      head = head->next;                                           // move head to next in queue.
      done->next = nullptr;
 
+     #if MONITOR_ON
      Serial.print("Queue: ");
      Candle* q = head;
      while ( q ) { Serial.print((long) q); Serial.print("->>"); q = q->next; }
      Serial.print("\n");
+     #endif
   } 
 }
 
@@ -164,7 +171,9 @@ bool Candle::linkWatchBeacon(Candle candleArray[16], uint8_t watcher, uint8_t wa
   if ( candleArray[watcher].isWatching() ) { return false; }
   if ( this == &candleArray[watcher] ) { return false; }
   candleArray[watcher].watching = &candleArray[watched];
+  #if MONITOR_ON
   Serial.print(watcher); Serial.print("->"); Serial.print(watched); Serial.print("\n");
+  #endif
   return true;
 }
 #endif

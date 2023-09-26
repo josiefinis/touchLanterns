@@ -3,6 +3,10 @@
 #define CANDLE_H
 #include "Arduino.h"
 
+/* TODO handle long press while still responding to a previous long press.
+           existing beacon network/tree will be destroyed when building a new one.
+           possible solution: maintain multiple networks/trees with multiple 'next' pointers?
+*/
 class Candle {
   private:
 
@@ -21,7 +25,6 @@ class Candle {
     Candle* next;
 
     static uint16_t indexToOneHot(uint8_t idx);
-    static uint8_t Candle::addressToIndex(uint8_t address);
     void followSuit();
     void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
@@ -38,6 +41,7 @@ class Candle {
   public:
     Candle();
     static void Candle::storeAddress(Candle candleArray[16]);
+    static uint8_t Candle::addressToIndex(uint8_t address);
     static uint8_t activeCounters;    // Number of candles that will change on counter completion. 
     static bool busy;
     uint8_t getState();
@@ -50,7 +54,7 @@ class Candle {
     static uint16_t getLitCandles();
 
     static void receiveSignal(Candle candleArray[16], uint32_t input);
-    void update(uint8_t i);
+    void periodicUpdate(uint8_t i);
 };
 
 #endif

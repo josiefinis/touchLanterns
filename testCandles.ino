@@ -10,6 +10,9 @@
 #include <ISR_Timer.h>
 
 
+// TODO wax
+
+
 uint8_t eventCountdown = 0;
 ISR_Timer ISR_timer;
 Button button = Button();
@@ -24,7 +27,7 @@ void TimerHandler() {
 
 #define HW_TIMER_INTERVAL_MS             100L
 #if MONITOR_ON
-#define TIMER_INTERVAL_200MS             2000L
+#define TIMER_INTERVAL_200MS             1000L
 #else
 #define TIMER_INTERVAL_200MS             200L
 #endif
@@ -33,13 +36,15 @@ void TimerHandler() {
 
 void updateOften() {
   if ( Candle::busy ) { return; }
+  #if MONITOR_ON
   printStates();
+  #endif
   uint32_t buttonOutput = button.output(sensor.output());
   if ( buttonOutput ) { 
     Candle::receiveSignal( candleArray, buttonOutput ); 
   } 
   if ( Candle::getActiveCounters() ) {
-    for (uint8_t i=0; i<16; i++ ) { candleArray[i].update(i); }
+    for (uint8_t i=0; i<16; i++ ) { candleArray[i].periodicUpdate(i); }
   }
   if ( Candle::hasUpdatesForRegister() ) { 
     reg.writeToStorageRegister(Candle::getLitCandles()); 
@@ -51,11 +56,11 @@ void updateOften() {
 void printStates() {
   Serial.println();
   Serial.print("Counters: "); Serial.print(Candle::activeCounters); Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].isWatching()); Serial.print("\t"); }Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print((long) candleArray[i].getWatching()); Serial.print("\t"); }Serial.print("\n");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getWatching()->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
+  Serial.print("index   \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
+  //Serial.print("address \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print((long) &candleArray[i], HEX); Serial.print("\t"); } Serial.print("\n");
+  Serial.print("state   \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
+  Serial.print("watching\t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(Candle::addressToIndex(candleArray[i].getWatching())); Serial.print("\t"); }Serial.print("\n");
+  Serial.print("state_w \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getWatching()->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
 }
 #endif
 
