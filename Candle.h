@@ -35,8 +35,7 @@ class Candle {
     bool changedLastCycle();
     void setNotChangedLastCycle();
     bool isCounting();
-    void setRemainingCounter(uint8_t value);
-    void burn();
+    void setCounterRemaining(uint8_t value);
 
   public:
     Candle();
@@ -55,6 +54,7 @@ class Candle {
 
     static void receiveSignal(Candle candleArray[16], uint32_t input);
     void periodicUpdate(uint8_t i);
+    static void burnDown(Candle candleArray[16], uint16_t litCandles);
 };
 
 #endif

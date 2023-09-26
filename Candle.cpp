@@ -64,6 +64,7 @@ void Candle::periodicUpdate(uint8_t i) {
   if ( changedLastCycle() ) { 
     litCandles ^= indexToOneHot(i);
     newChanges = true;
+    if ( isLit() ) { setCounterRemaining(64 - random(8)); }
     setNotChangedLastCycle(); 
     activeCounters--;
     // TODO rework state: don't store lit/unlit, store that in static variable.
@@ -100,11 +101,11 @@ void Candle::followSuit() {
   state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
     state ^= 0b10000000; 
-    setRemainingCounter(4);
+    setCounterRemaining(4);
   }
   else {
     // state |= 0b01100000; //TODO delete line
-    setRemainingCounter(random(4,12));
+    setCounterRemaining(random(4,12));
   }
   watching = nullptr;
 }
@@ -214,13 +215,21 @@ bool Candle::isCounting() {
 }
 
 
-void Candle::setRemainingCounter(uint8_t value) {
-// Set remaining counter to value.
+void Candle::setCounterRemaining(uint8_t value) {
+// Set counter such that it maxes out in value counts.
   state &= 0xE0;
   state |= 0x1F & ~value;
 }
 
-void Candle::burn() { 
-// 
-  state--; 
+
+void Candle::burnDown(Candle candleArray[16], uint16_t litCandles) { 
+// Increment counter for all lit candles 
+  uint8_t i = 0;
+  while ( litCandles ) {
+    if ( not litCandles & 1 ) { continue; }
+    if ( candleArray[i].isCounting() ) { continue; }
+    candleArray[i].state++; 
+    i++;
+    litCandles >>= 1;
+  }
 }

@@ -31,10 +31,10 @@ void TimerHandler() {
 #else
 #define TIMER_INTERVAL_200MS             200L
 #endif
-#define TIMER_INTERVAL_60S               60000L
+#define TIMER_INTERVAL_240S              240000L
 
 
-void updateOften() {
+void shortCycle() {
   if ( Candle::busy ) { return; }
   #if MONITOR_ON
   printStates();
@@ -51,6 +51,8 @@ void updateOften() {
   }
 }
 
+
+void longCycle() { Candle::burnDown(candleArray, Candle::getLitCandles()); }
 
 #if MONITOR_ON
 void printStates() {
@@ -92,7 +94,8 @@ void setup() {
   #else
   ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
   #endif
-  ISR_timer.setInterval(TIMER_INTERVAL_200MS, updateOften);
+  ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
+  ISR_timer.setInterval(TIMER_INTERVAL_240S, longCycle);
   Candle::storeAddress(candleArray);
 }
 
