@@ -5,7 +5,9 @@
 
 class Candle {
   private:
-    // bits for 16 candles
+
+    static uint8_t zeroAddress;
+    static uint8_t addressStep;
     static uint16_t litCandles;          
     static bool newChanges;           // New changes that require update of hardware register. 
 
@@ -19,6 +21,7 @@ class Candle {
     Candle* next;
 
     static uint16_t indexToOneHot(uint8_t idx);
+    static uint8_t Candle::addressToIndex(uint8_t address);
     void followSuit();
     void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
@@ -34,6 +37,7 @@ class Candle {
 
   public:
     Candle();
+    static void Candle::storeAddress(Candle candleArray[16]);
     static uint8_t activeCounters;    // Number of candles that will change on counter completion. 
     static bool busy;
     uint8_t getState();

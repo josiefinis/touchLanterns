@@ -14,13 +14,29 @@ Candle::Candle() {
 }
 
  
+uint8_t Candle::zeroAddress = 0;
+uint8_t Candle::addressStep = 0;
 bool Candle::busy = false;
 uint16_t  Candle::litCandles = 0;          
 uint8_t  Candle::activeCounters = 0;
 bool Candle::newChanges = false;
 
 
+void Candle::storeAddress(Candle candleArray[16]) {
+// Store memory address of candle array and size of step between array elements.
+  zeroAddress = (uint8_t) &candleArray[0];
+  addressStep = (uint8_t) &candleArray[1] - zeroAddress;
+}
+
+
+uint8_t Candle::addressToIndex(uint8_t address) {
+// Return candleArray index of candle at address.
+  return (address - zeroAddress) / addressStep;
+}
+
+
 void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
+// Handle input from buttons.
   busy = true;
   Serial.print("input: "); Serial.print(input); Serial.print("\n");
   uint8_t i = 0;
@@ -37,7 +53,7 @@ void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
 }
 
 
-void Candle::update(uint8_t i) {
+void Candle::update(uint8_t i) {   // TODO change name to periodicUpdate: here, .h and main
   // Handle timer interrupt events. 
   if ( activeCounters == 0 ) { return; }
   busy = true;
@@ -100,13 +116,16 @@ void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
   Candle* head = this; Serial.print((long) this); Serial.print(".\n"); 
   Candle* last = this;
   while ( head ) {
-     last->next = head->findWatchBeaconAbove(candleArray, idx);   // TODO index does not get updated!!! find beacon to add to watch beacon at head of queue. add it to back of queue
+     last->next = findWatchBeaconAbove(candleArray, addressToIndex((uint8_t) head));   // TODO index does not get updated!!! find beacon to add to watch beacon at head of queue. add it to back of queue
      if ( (last->next) ) { last = last->next; }                  // if beacon was found and added to queue, move last pointer to point to it
 
-     last->next = head->findWatchBeaconBelow(candleArray, idx);   // find second beacon and add to back of queue
+     last->next = findWatchBeaconBelow(candleArray, addressToIndex((uint8_t) head));   // find second beacon and add to back of queue
      if ( (last->next) ) { last = last->next; }                  // move last pointer to back of queue
     
+     Candle* done = head;
      head = head->next;                                           // move head to next in queue.
+     done->next = nullptr;
+
      Serial.print("Queue: ");
      Candle* q = head;
      while ( q ) { Serial.print((long) q); Serial.print("->>"); q = q->next; }

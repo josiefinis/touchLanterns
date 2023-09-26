@@ -88,6 +88,7 @@ void setup() {
   ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
   #endif
   ISR_timer.setInterval(TIMER_INTERVAL_200MS, updateOften);
+  Candle::storeAddress(candleArray);
 }
 
 void loop() {
