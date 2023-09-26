@@ -1,5 +1,5 @@
 #define USE_TIMER_1     true
-#define MONITOR_ON      true
+#define MONITOR_ON      false
 
 #include "Sensor.h"
 #include "Button.h"
@@ -25,13 +25,13 @@ void TimerHandler() {
   ISR_timer.run();
 }
 
-#define HW_TIMER_INTERVAL_MS             100L
+#define HW_TIMER_INTERVAL_MS             199L
 #if MONITOR_ON
 #define TIMER_INTERVAL_200MS             1000L
 #else
-#define TIMER_INTERVAL_200MS             200L
+#define TIMER_INTERVAL_200MS             199L
 #endif
-#define TIMER_INTERVAL_240S              240000L
+#define TIMER_INTERVAL_240S              239999L
 
 
 void shortCycle() {
@@ -52,7 +52,9 @@ void shortCycle() {
 }
 
 
-void longCycle() { Candle::burnDown(candleArray, Candle::getLitCandles()); }
+void longCycle() { 
+  Candle::burnDown(candleArray, Candle::getLitCandles());
+}
 
 #if MONITOR_ON
 void printStates() {
@@ -94,8 +96,8 @@ void setup() {
   #else
   ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
   #endif
-  ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
   ISR_timer.setInterval(TIMER_INTERVAL_240S, longCycle);
+  ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
   Candle::storeAddress(candleArray);
 }
 

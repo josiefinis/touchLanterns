@@ -1,11 +1,16 @@
 #include "Candle.h"
 #include "Arduino.h"
 
+#define BEACONS_ON true
+#define MONITOR_ON false
+
 #define ANY_PRESS  0b10
 #define LONG_PRESS 0b01
+#define BEACON_MIN_DELAY  2     //   / 200 ms
+#define BEACON_MAX_DELAY  5     //   / 200 ms
+#define MEAN_CANDLE_LIFE 64     //   / 4 minutes
+#define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
-#define BEACONS_ON true
-#define MONITOR_ON true
 
 
 Candle::Candle() {
@@ -64,7 +69,7 @@ void Candle::periodicUpdate(uint8_t i) {
   if ( changedLastCycle() ) { 
     litCandles ^= indexToOneHot(i);
     newChanges = true;
-    if ( isLit() ) { setCounterRemaining(64 - random(8)); }
+    if ( isLit() ) { setCounterRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE)); }
     setNotChangedLastCycle(); 
     activeCounters--;
     // TODO rework state: don't store lit/unlit, store that in static variable.
@@ -105,7 +110,7 @@ void Candle::followSuit() {
   }
   else {
     // state |= 0b01100000; //TODO delete line
-    setCounterRemaining(random(4,12));
+    setCounterRemaining(random(BEACON_MIN_DELAY, BEACON_MAX_DELAY));
   }
   watching = nullptr;
 }
@@ -224,12 +229,12 @@ void Candle::setCounterRemaining(uint8_t value) {
 
 void Candle::burnDown(Candle candleArray[16], uint16_t litCandles) { 
 // Increment counter for all lit candles 
-  uint8_t i = 0;
-  while ( litCandles ) {
-    if ( not litCandles & 1 ) { continue; }
-    if ( candleArray[i].isCounting() ) { continue; }
-    candleArray[i].state++; 
-    i++;
+  for ( uint8_t i = 0; i < 16; i++ ) {
+    if ( not litCandles ) { break; }
     litCandles >>= 1;
+    if ( candleArray[i].state == 0xFF ) { activeCounters++; break; }
+    if ( candleArray[i].isLit() ) { 
+      candleArray[i].state++;
+    }
   }
 }
