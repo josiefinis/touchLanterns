@@ -8,7 +8,7 @@
 #define LONG_PRESS 0b01
 #define BEACON_MIN_DELAY  2     //   / 200 ms
 #define BEACON_MAX_DELAY  5     //   / 200 ms
-#define MEAN_CANDLE_LIFE 64     //   / 4 minutes
+#define MEAN_CANDLE_LIFE 63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
 #define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
 
@@ -22,9 +22,9 @@ Candle::Candle() {
 uint8_t Candle::zeroAddress = 0;
 uint8_t Candle::addressStep = 0;
 bool Candle::busy = false;
-uint16_t  Candle::litCandles = 0;          
 uint8_t  Candle::activeCounters = 0;
-bool Candle::newChanges = false;
+bool Candle::updatesForRegister = false;
+bool Candle::anyLitCandles = 0;
 
 
 void Candle::storeAddress(Candle candleArray[16]) {
@@ -66,9 +66,8 @@ void Candle::periodicUpdate(uint8_t i) {
   busy = true;
   if ( isWatching() and watching->changedLastCycle() ) { followSuit(); activeCounters++; }
   if ( changedLastCycle() ) { 
-    updateLitCandles(i);
-    newChanges = true;
-    if ( isLit() ) { setCounterRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE)); }
+    updatesForRegister = true;
+    if ( isLit() ) { setLifeRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE)); }// TODO Investigate if causing strange turning on/off behaviour.
     setNotChangedLastCycle(); 
     activeCounters--;
     // TODO rework state: don't store lit/unlit, store that in static variable.
@@ -78,15 +77,17 @@ void Candle::periodicUpdate(uint8_t i) {
 }
 
 
-void Candle::updateLitCandles(uint8_t i) {
-  litCandles &= ~indexToOneHot(i);
-  if ( isLit() ) { litCandles |= indexToOneHot(i); }
-}
-
-
-bool Candle::hasUpdatesForRegister() { return newChanges; } 
-uint16_t Candle::getLitCandles() { return litCandles; } 
+bool Candle::hasUpdatesForRegister() { return updatesForRegister; } 
+void Candle::setUpdatesForRegister(bool value) { updatesForRegister = value; } 
 uint8_t Candle::getActiveCounters() { return activeCounters; }
+uint16_t Candle::getLitCandles(Candle candleArray[16]) { 
+  uint16_t litCandles = 0;
+  for ( uint8_t i = 0; i < 16; i++ ) { 
+    if (candleArray[i].isLit() ) { litCandles |= indexToOneHot(i); }
+  }
+  anyLitCandles = (bool) litCandles;
+  return litCandles;
+} 
 
 
 uint16_t Candle::indexToOneHot(uint8_t idx) {
@@ -111,10 +112,9 @@ void Candle::followSuit() {
   state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
     state ^= 0b10000000; 
-    setCounterRemaining(4);
+    setCounterRemaining(0);
   }
   else {
-    // state |= 0b01100000; //TODO delete line
     setCounterRemaining(random(BEACON_MIN_DELAY, BEACON_MAX_DELAY));
   }
   watching = nullptr;
@@ -226,17 +226,23 @@ bool Candle::isCounting() {
 
 
 void Candle::setCounterRemaining(uint8_t value) {
-// Set counter such that it maxes out in value counts.
+// Set counter such that it maxes out in 'value' counts.
   state &= 0xE0;
   state |= 0x1F & ~value;
 }
 
 
-void Candle::burnDown(Candle candleArray[16], uint16_t litCandles) { 
+void Candle::setLifeRemaining(uint8_t value) {
+// Set life counter such that it maxes out in 'value' counts.
+// NB The life counter hijacks the isCounting bit (6 bit)
+  state &= 0xC0;
+  state |= 0x3F & ~value;
+}
+
+
+void Candle::burnDown(Candle candleArray[16]) { 
 // Increment counter for all lit candles 
-  for ( uint8_t i = 0; i < 16; i++ ) {
-    if ( not litCandles ) { break; }
-    litCandles >>= 1;
+  for ( uint8_t i = random(4); i < 16; i+=4 ) {
     if ( candleArray[i].state == 0xFF ) { activeCounters++; break; }
     if ( candleArray[i].isLit() ) { 
       candleArray[i].state++;

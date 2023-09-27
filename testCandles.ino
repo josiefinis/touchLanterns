@@ -1,5 +1,7 @@
-#define USE_TIMER_1     true
-#define MONITOR_ON      false
+#define USE_TIMER_1          true
+#define MONITOR_ON           false
+#define LIMITED_MONITOR_ON   true
+
 
 #include "Sensor.h"
 #include "Button.h"
@@ -10,7 +12,7 @@
 #include <ISR_Timer.h>
 
 
-// TODO wax
+uint8_t minuteCounter = 1;
 
 
 uint8_t eventCountdown = 0;
@@ -25,20 +27,24 @@ void TimerHandler() {
   ISR_timer.run();
 }
 
-#define HW_TIMER_INTERVAL_MS             199L
+#define HW_TIMER_INTERVAL_MS             100L
 #if MONITOR_ON
 #define TIMER_INTERVAL_200MS             1000L
 #else
-#define TIMER_INTERVAL_200MS             199L
+#define TIMER_INTERVAL_200MS             200L
 #endif
-#define TIMER_INTERVAL_240S              239999L
 
 
 void shortCycle() {
   if ( Candle::busy ) { return; }
   #if MONITOR_ON
   printStates();
+  #else 
+  #if LIMITED_MONITOR_ON
+  printLimited();
   #endif
+  #endif
+
   uint32_t buttonOutput = button.output(sensor.output());
   if ( buttonOutput ) { 
     Candle::receiveSignal( candleArray, buttonOutput ); 
@@ -47,14 +53,24 @@ void shortCycle() {
     for (uint8_t i=0; i<16; i++ ) { candleArray[i].periodicUpdate(i); }
   }
   if ( Candle::hasUpdatesForRegister() ) { 
-    reg.writeToStorageRegister(Candle::getLitCandles()); 
+    reg.writeToStorageRegister(Candle::getLitCandles(candleArray)); 
+    Candle::setUpdatesForRegister(false);
   }
+  if ( Candle::anyLitCandles ) { minuteCounter++; }
 }
 
 
-void longCycle() { 
-  Candle::burnDown(candleArray, Candle::getLitCandles());
+#if LIMITED_MONITOR_ON
+void printLimited() {
+  Serial.println();
+  //Serial.print("u"); Serial.print(Candle::hasUpdatesForRegister()); Serial.print("\t");
+  //Serial.print("c"); Serial.print(Candle::activeCounters); Serial.print("\t");  // TODO make getActiveCounters function
+  //Serial.print("l"); Serial.print(Candle::getLitCandles(candleArray), BIN); Serial.print("\n");
+  Serial.print(minuteCounter); Serial.print("\t");
+  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }
 }
+#endif
+
 
 #if MONITOR_ON
 void printStates() {
@@ -73,6 +89,11 @@ void setup() {
   #if MONITOR_ON
   Serial.begin(9600);		
   while(!Serial) {}
+  #else 
+  #if LIMITED_MONITOR_ON
+  Serial.begin(9600);		
+  while(!Serial) {}
+  #endif
   #endif
 
   pinMode(PIN_SENSOR_RECEIVE, INPUT);
@@ -96,10 +117,13 @@ void setup() {
   #else
   ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
   #endif
-  ISR_timer.setInterval(TIMER_INTERVAL_240S, longCycle);
   ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
   Candle::storeAddress(candleArray);
 }
 
 void loop() {
+  if ( not Candle::anyLitCandles ) { return; }
+  if ( minuteCounter ) { return; }
+  Candle::burnDown(candleArray); 
+  minuteCounter++;
 }

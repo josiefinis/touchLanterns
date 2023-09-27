@@ -15,6 +15,8 @@ class Register {
   private:
 
     void writeToShiftRegister(uint16_t word);
+    void writeBit(bool bit);
+    void storeShiftRegister();
     void clearShiftRegister();
     void enableOutput();
     void disableOutput();
@@ -24,7 +26,6 @@ class Register {
   public:
     Register();
 
-    void writeBit(bool bit);
     void writeToStorageRegister(uint16_t word);
-    void storeShiftRegister();
+    void reset();
 };

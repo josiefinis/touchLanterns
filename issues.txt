@@ -1,0 +1,2 @@
+beacons not making it all the way. may only affect 12 - 15
+register needs a cleaner startup
