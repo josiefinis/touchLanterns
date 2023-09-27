@@ -1,7 +1,11 @@
 #include "Arduino.h"
 #include "Sensor.h"
 
+#define MONITOR_ON false
 #define SENSOR_THRESHOLD 80
+#define SENSOR_SAMPLES 30
+
+
 CapacitiveSensor Sensor::sensor = CapacitiveSensor(PIN_SENSOR_SEND, PIN_SENSOR_RECEIVE);
 uint8_t Sensor::muxChannel;
 
@@ -10,11 +14,11 @@ Sensor::Sensor() {
 
 
 long Sensor::sensorInput() { 
-  #if false 
-  Serial.print(sensor.capacitiveSensor(30));
+  #if MONITOR_ON 
+  Serial.print(sensor.capacitiveSensor(SENSOR_SAMPLES));
   Serial.print("\t");
   #endif
-  return sensor.capacitiveSensor(30);
+  return sensor.capacitiveSensor(SENSOR_SAMPLES);
 }
 
 
