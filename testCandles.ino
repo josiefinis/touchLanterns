@@ -1,6 +1,6 @@
 #define USE_TIMER_1          true
 #define MONITOR_ON           false
-#define LIMITED_MONITOR_ON   true
+#define LIMITED_MONITOR_ON   false
 
 
 #include "Sensor.h"
@@ -12,15 +12,14 @@
 #include <ISR_Timer.h>
 
 
-uint8_t minuteCounter = 1;
-
-
-uint8_t eventCountdown = 0;
+Register shiftRegister;
 ISR_Timer ISR_timer;
 Button button = Button();
 Sensor sensor = Sensor();
 Candle candleArray[16]; 
-Register reg;
+
+
+uint8_t minuteCounter = 1;
 
 
 void TimerHandler() {
@@ -53,7 +52,7 @@ void shortCycle() {
     for (uint8_t i=0; i<16; i++ ) { candleArray[i].periodicUpdate(i); }
   }
   if ( Candle::hasUpdatesForRegister() ) { 
-    reg.writeToStorageRegister(Candle::getLitCandles(candleArray)); 
+    shiftRegister.writeToStorageRegister(Candle::getLitCandles(candleArray)); 
     Candle::setUpdatesForRegister(false);
   }
   if ( Candle::anyLitCandles ) { minuteCounter++; }
@@ -119,6 +118,7 @@ void setup() {
   #endif
   ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
   Candle::storeAddress(candleArray);
+  shiftRegister.reset();
 }
 
 void loop() {

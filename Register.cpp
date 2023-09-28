@@ -5,7 +5,7 @@
 #define HARDWARE_REGISTER_SIZE 16
 Register::Register() 
 {
-  reset();
+  disableOutput();
 }
 
 
