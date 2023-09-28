@@ -3,11 +3,12 @@
 
 #define BEACONS_ON true
 #define MONITOR_ON false
+#define LIMITED_MONITOR_ON false
 
 #define ANY_PRESS  0b10
 #define LONG_PRESS 0b01
-#define BEACON_MIN_DELAY  2     //   / 200 ms
-#define BEACON_MAX_DELAY  5     //   / 200 ms
+#define BEACON_MIN_DELAY  3     //   / 200 ms
+#define BEACON_MAX_DELAY  8    //   / 200 ms
 #define MEAN_CANDLE_LIFE 63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
 #define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
@@ -43,20 +44,43 @@ uint8_t Candle::addressToIndex(uint8_t address) {
 void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
 // Handle input from buttons.
   busy = true;
+  // If long press, quickly build tree before next interrupt.
+  if ( isLongPressContainedIn(input) ) { 
+    uint8_t beaconTreeSource = longPressIndex(input);
+    candleArray[beaconTreeSource].buildBeaconTree(candleArray, beaconTreeSource);
+  }
+
   #if MONITOR_ON
   Serial.print("input: "); Serial.print(input, HEX); Serial.print("\n");
   #endif
+
   uint8_t i = 0;
   while ( input ) {
     if ( input & ANY_PRESS ) {
       candleArray[i].toggleIsLit();
       activeCounters++;
     }
-    if ( input & LONG_PRESS ) { candleArray[i].buildBeaconNetwork(candleArray, i); }
     input >>= 2;
     i++;
   }
   busy = false;
+}
+
+
+bool Candle::isLongPressContainedIn(uint32_t input) {
+// True if input contains a long press on any one button.
+  return 0x55555555L & input;
+}
+
+
+uint8_t Candle::longPressIndex(uint32_t input) {
+// Return index of button what was long-pressed.
+  uint8_t i = 0;
+  while ( input ) {
+    if ( input & LONG_PRESS ) { return i; }
+    i++;
+    input >>= 2;
+  }
 }
 
 
@@ -122,15 +146,18 @@ void Candle::followSuit() {
 
 
 #if BEACONS_ON
-void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
-// Build tree of candles watching others to follow suit, starting with candle at idx.
+void Candle::buildBeaconTree(Candle candleArray[16], uint8_t idx) {
+// Build a tree of candles that watch their parent node and follow suit when that candle toggles on or off. Starts with candle at idx.
   watching = nullptr;
   Candle* head = this; 
+  Candle* last = this;
+
   #if MONITOR_ON
-  Serial.print("buildBeaconNetwork, starting from ");
+  Serial.print("buildBeaconTree, starting from ");
   Serial.print((long) this, HEX); Serial.print(".\n"); 
   #endif
-  Candle* last = this;
+
+  // TODO Feel like this and the following 3 functions: findwWatchBeaconAbove/Below and linkWatchBeacon could be made more efficient and elegant.
   while ( head ) {
      last->next = findWatchBeaconAbove(candleArray, addressToIndex((uint8_t) head));   
      if ( (last->next) ) { last = last->next; }                  
@@ -142,10 +169,10 @@ void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
      head = head->next;                                           // move head to next in queue.
      done->next = nullptr;
 
-     #if MONITOR_ON
+     #if LIMITED_MONITOR_ON
      Serial.print("Queue: ");
      Candle* q = head;
-     while ( q ) { Serial.print((long) q); Serial.print("->>"); q = q->next; }
+     while ( q ) { Serial.print(addressToIndex((uint8_t) q)); Serial.print("->>"); q = q->next; }
      Serial.print("\n");
      #endif
   } 

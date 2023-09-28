@@ -23,9 +23,11 @@ class Candle {
     Candle* watching;
     Candle* next;
 
+    static bool isLongPressContainedIn(uint32_t input);
+    static uint8_t longPressIndex(uint32_t input);
     static uint16_t indexToOneHot(uint8_t idx);
     void followSuit();
-    void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
+    void buildBeaconTree(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconBelow(Candle candleArray[16], uint8_t idx);
     bool linkWatchBeacon(Candle candleArray[16], uint8_t watcher, uint8_t watched);
