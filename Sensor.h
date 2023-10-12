@@ -12,9 +12,10 @@
 class Sensor {
 
   private:
+    static uint8_t i;
     static uint8_t muxChannel;
     static CapacitiveSensor sensor;
-    long sensorInput();
+    long input();
     void advanceMuxChannel();
 
   public:
