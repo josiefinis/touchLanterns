@@ -6,19 +6,16 @@
 Register::Register() 
 {
   disableOutput();
+}
+
+
+void Register::reset() {
+// Clear everything.
+  disableOutput();
   clearShiftRegister();
   storeShiftRegister();
   enableOutput();
 }
-
-
-// void Register::fillRegister(uint16_t inputBits)
-// {
-//   for (int i = 0; i < HARDWARE_REGISTER_SIZE; i++) {
-//     inputSerialBit( inputBits[i] );
-//   }
-//   updateStorageRegister();
-// }
 
 
 void Register::writeToStorageRegister(uint16_t word) {

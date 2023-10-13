@@ -12,8 +12,7 @@ class Candle {
 
     static uint8_t zeroAddress;
     static uint8_t addressStep;
-    static uint16_t litCandles;          
-    static bool newChanges;           // New changes that require update of hardware register. 
+    static bool updatesForRegister;           // New changes that require update of hardware register. 
 
 
     uint8_t state; /*  7-bit   is lit
@@ -24,9 +23,11 @@ class Candle {
     Candle* watching;
     Candle* next;
 
+    static bool isLongPressContainedIn(uint32_t input);
+    static uint8_t longPressIndex(uint32_t input);
     static uint16_t indexToOneHot(uint8_t idx);
     void followSuit();
-    void buildBeaconNetwork(Candle candleArray[16], uint8_t idx);
+    void buildBeaconTree(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconAbove(Candle candleArray[16], uint8_t idx);
     Candle* findWatchBeaconBelow(Candle candleArray[16], uint8_t idx);
     bool linkWatchBeacon(Candle candleArray[16], uint8_t watcher, uint8_t watched);
@@ -35,26 +36,29 @@ class Candle {
     bool changedLastCycle();
     void setNotChangedLastCycle();
     bool isCounting();
-    void setRemainingCounter(uint8_t value);
-    void burn();
+    void setCounterRemaining(uint8_t value);
+    void setLifeRemaining(uint8_t value);
 
   public:
     Candle();
-    static void Candle::storeAddress(Candle candleArray[16]);
-    static uint8_t Candle::addressToIndex(uint8_t address);
+    static void setUpdatesForRegister(bool value);
+    static void storeAddress(Candle candleArray[16]);
+    static uint8_t addressToIndex(uint8_t address);
     static uint8_t activeCounters;    // Number of candles that will change on counter completion. 
     static bool busy;
     uint8_t getState();
     Candle* getWatching();
     bool isWatching();
+    static bool anyLitCandles;
 
 
     static uint8_t getActiveCounters();
     static bool hasUpdatesForRegister();
-    static uint16_t getLitCandles();
+    static uint16_t getLitCandles(Candle candleArray[16]);
 
     static void receiveSignal(Candle candleArray[16], uint32_t input);
     void periodicUpdate(uint8_t i);
+    static void burnDown(Candle candleArray[16]);
 };
 
 #endif

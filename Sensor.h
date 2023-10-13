@@ -12,14 +12,19 @@
 class Sensor {
 
   private:
-    static uint8_t muxChannel;
     static CapacitiveSensor sensor;
-    long sensorInput();
+    uint16_t lastInput[16];
+    uint16_t sensorOutput;
+    uint8_t i;
+    uint8_t muxChannel;
+    int8_t detectEdge(long input);
+    long input();
     void advanceMuxChannel();
 
   public:
     Sensor::Sensor();
     uint16_t output();
+    void zeroOutput();
 };
 
 /* 

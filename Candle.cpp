@@ -1,11 +1,16 @@
 #include "Candle.h"
 #include "Arduino.h"
 
-#define ANY_PRESS  0b10
-#define LONG_PRESS 0b01
-
 #define BEACONS_ON true
 #define MONITOR_ON false
+#define LIMITED_MONITOR_ON false
+
+#define ANY_PRESS  0b10
+#define LONG_PRESS 0b01
+#define BEACON_MIN_DELAY  3     //   / 200 ms
+#define BEACON_MAX_DELAY  8    //   / 200 ms
+#define MEAN_CANDLE_LIFE 63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
+#define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
 
 Candle::Candle() {
@@ -18,9 +23,9 @@ Candle::Candle() {
 uint8_t Candle::zeroAddress = 0;
 uint8_t Candle::addressStep = 0;
 bool Candle::busy = false;
-uint16_t  Candle::litCandles = 0;          
 uint8_t  Candle::activeCounters = 0;
-bool Candle::newChanges = false;
+bool Candle::updatesForRegister = false;
+bool Candle::anyLitCandles = 0;
 
 
 void Candle::storeAddress(Candle candleArray[16]) {
@@ -39,20 +44,43 @@ uint8_t Candle::addressToIndex(uint8_t address) {
 void Candle::receiveSignal(Candle candleArray[16], uint32_t input) {
 // Handle input from buttons.
   busy = true;
+  // If long press, quickly build tree before next interrupt.
+  if ( isLongPressContainedIn(input) ) { 
+    uint8_t beaconTreeSource = longPressIndex(input);
+    candleArray[beaconTreeSource].buildBeaconTree(candleArray, beaconTreeSource);
+  }
+
   #if MONITOR_ON
   Serial.print("input: "); Serial.print(input, HEX); Serial.print("\n");
   #endif
+
   uint8_t i = 0;
   while ( input ) {
     if ( input & ANY_PRESS ) {
       candleArray[i].toggleIsLit();
       activeCounters++;
     }
-    if ( input & LONG_PRESS ) { candleArray[i].buildBeaconNetwork(candleArray, i); }
     input >>= 2;
     i++;
   }
   busy = false;
+}
+
+
+bool Candle::isLongPressContainedIn(uint32_t input) {
+// True if input contains a long press on any one button.
+  return 0x55555555L & input;
+}
+
+
+uint8_t Candle::longPressIndex(uint32_t input) {
+// Return index of button what was long-pressed.
+  uint8_t i = 0;
+  while ( input ) {
+    if ( input & LONG_PRESS ) { return i; }
+    i++;
+    input >>= 2;
+  }
 }
 
 
@@ -62,8 +90,8 @@ void Candle::periodicUpdate(uint8_t i) {
   busy = true;
   if ( isWatching() and watching->changedLastCycle() ) { followSuit(); activeCounters++; }
   if ( changedLastCycle() ) { 
-    litCandles ^= indexToOneHot(i);
-    newChanges = true;
+    updatesForRegister = true;
+    if ( isLit() ) { setLifeRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE)); }// TODO Investigate if causing strange turning on/off behaviour.
     setNotChangedLastCycle(); 
     activeCounters--;
     // TODO rework state: don't store lit/unlit, store that in static variable.
@@ -73,9 +101,17 @@ void Candle::periodicUpdate(uint8_t i) {
 }
 
 
-bool Candle::hasUpdatesForRegister() { return newChanges; } 
-uint16_t Candle::getLitCandles() { return litCandles; } 
+bool Candle::hasUpdatesForRegister() { return updatesForRegister; } 
+void Candle::setUpdatesForRegister(bool value) { updatesForRegister = value; } 
 uint8_t Candle::getActiveCounters() { return activeCounters; }
+uint16_t Candle::getLitCandles(Candle candleArray[16]) { 
+  uint16_t litCandles = 0;
+  for ( uint8_t i = 0; i < 16; i++ ) { 
+    if (candleArray[i].isLit() ) { litCandles |= indexToOneHot(i); }
+  }
+  anyLitCandles = (bool) litCandles;
+  return litCandles;
+} 
 
 
 uint16_t Candle::indexToOneHot(uint8_t idx) {
@@ -100,26 +136,28 @@ void Candle::followSuit() {
   state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
     state ^= 0b10000000; 
-    setRemainingCounter(4);
+    setCounterRemaining(0);
   }
   else {
-    // state |= 0b01100000; //TODO delete line
-    setRemainingCounter(random(4,12));
+    setCounterRemaining(random(BEACON_MIN_DELAY, BEACON_MAX_DELAY));
   }
   watching = nullptr;
 }
 
 
 #if BEACONS_ON
-void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
-// Build tree of candles watching others to follow suit, starting with candle at idx.
+void Candle::buildBeaconTree(Candle candleArray[16], uint8_t idx) {
+// Build a tree of candles that watch their parent node and follow suit when that candle toggles on or off. Starts with candle at idx.
   watching = nullptr;
   Candle* head = this; 
+  Candle* last = this;
+
   #if MONITOR_ON
-  Serial.print("buildBeaconNetwork, starting from ");
+  Serial.print("buildBeaconTree, starting from ");
   Serial.print((long) this, HEX); Serial.print(".\n"); 
   #endif
-  Candle* last = this;
+
+  // TODO Feel like this and the following 3 functions: findwWatchBeaconAbove/Below and linkWatchBeacon could be made more efficient and elegant.
   while ( head ) {
      last->next = findWatchBeaconAbove(candleArray, addressToIndex((uint8_t) head));   
      if ( (last->next) ) { last = last->next; }                  
@@ -131,10 +169,10 @@ void Candle::buildBeaconNetwork(Candle candleArray[16], uint8_t idx) {
      head = head->next;                                           // move head to next in queue.
      done->next = nullptr;
 
-     #if MONITOR_ON
+     #if LIMITED_MONITOR_ON
      Serial.print("Queue: ");
      Candle* q = head;
-     while ( q ) { Serial.print((long) q); Serial.print("->>"); q = q->next; }
+     while ( q ) { Serial.print(addressToIndex((uint8_t) q)); Serial.print("->>"); q = q->next; }
      Serial.print("\n");
      #endif
   } 
@@ -214,13 +252,27 @@ bool Candle::isCounting() {
 }
 
 
-void Candle::setRemainingCounter(uint8_t value) {
-// Set remaining counter to value.
+void Candle::setCounterRemaining(uint8_t value) {
+// Set counter such that it maxes out in 'value' counts.
   state &= 0xE0;
   state |= 0x1F & ~value;
 }
 
-void Candle::burn() { 
-// 
-  state--; 
+
+void Candle::setLifeRemaining(uint8_t value) {
+// Set life counter such that it maxes out in 'value' counts.
+// NB The life counter hijacks the isCounting bit (6 bit)
+  state &= 0xC0;
+  state |= 0x3F & ~value;
+}
+
+
+void Candle::burnDown(Candle candleArray[16]) { 
+// Increment counter for all lit candles 
+  for ( uint8_t i = random(4); i < 16; i+=4 ) {
+    if ( candleArray[i].state == 0xFF ) { activeCounters++; break; }
+    if ( candleArray[i].isLit() ) { 
+      candleArray[i].state++;
+    }
+  }
 }
