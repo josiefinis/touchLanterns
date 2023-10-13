@@ -20,6 +20,7 @@ Candle candleArray[16];
 
 
 uint8_t minuteCounter = 1;
+uint8_t startupCounter = 25;
 
 
 void TimerHandler() {
@@ -36,6 +37,7 @@ void TimerHandler() {
 
 void shortCycle() {
   if ( Candle::busy ) { return; }
+
   #if MONITOR_ON
   printStates();
   #else 
@@ -45,6 +47,11 @@ void shortCycle() {
   #endif
 
   uint32_t buttonOutput = button.output(sensor.output());
+  if ( startupCounter > 0 ) {
+    startupCounter--;
+    sensor.zeroOutput();
+    return;
+  }
   if ( buttonOutput ) { 
     Candle::receiveSignal( candleArray, buttonOutput ); 
   } 

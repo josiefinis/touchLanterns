@@ -2,8 +2,8 @@
 #include "Sensor.h"
 
 #define MONITOR_ON false
-#define SENSOR_THRESHOLD 250
 #define SENSOR_SAMPLES 30
+#define EDGE_THRESHOLD 80
 
 
 CapacitiveSensor Sensor::sensor = CapacitiveSensor(PIN_SENSOR_SEND, PIN_SENSOR_RECEIVE);
@@ -11,6 +11,55 @@ CapacitiveSensor Sensor::sensor = CapacitiveSensor(PIN_SENSOR_SEND, PIN_SENSOR_R
 Sensor::Sensor() {
   i = 0;
   muxChannel = 0;
+  sensorOutput = 0;
+}
+
+
+uint16_t Sensor::output() {
+// Return one-hot encoded sensor output.
+  long newInput;
+  do {
+    newInput = input();
+    switch ( detectEdge(newInput) ) {
+      case 0:
+        break;
+      case 1:
+        sensorOutput |= (1 << muxChannel);
+        break;
+      case -1:
+        sensorOutput &= ~(1 << muxChannel);
+        break;
+    }
+    lastInput[muxChannel] = newInput;
+    advanceMuxChannel();
+  }
+  while ( muxChannel % 16 != 0 );
+
+  #if MONITOR_ON
+  Serial.print(sensorOutput, BIN); Serial.print("\n");
+  #endif
+  return sensorOutput;
+}
+
+
+int8_t Sensor::detectEdge(long input) {
+// Return 1 if rising edge, -1 if falling edge, 0 if no edge.
+  int16_t difference = input - lastInput[muxChannel];
+  if ( abs(difference) < EDGE_THRESHOLD ) { 
+    return 0; 
+  }
+  else if ( difference > 0 ) { 
+    return 1; 
+  }
+  else { 
+    return -1;
+  }
+}
+
+
+void Sensor::zeroOutput() {
+// Set the sensor output to 0.
+  sensorOutput = 0;
 }
 
 
@@ -46,18 +95,3 @@ void Sensor::advanceMuxChannel() {
 }
 
 
-uint16_t Sensor::output() {
-// Return one-hot encoded sensor output.
-  uint16_t sensorOutput = 0;
-  do {
-    advanceMuxChannel();
-    if ( input() > SENSOR_THRESHOLD ) { 
-      sensorOutput |= (1 << muxChannel);
-    }
-  }
-  while ( muxChannel % 16 != 0 ) 
-  #if MONITOR_ON
-  Serial.println();
-  #endif
-  return sensorOutput;
-}
