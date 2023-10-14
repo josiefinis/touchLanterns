@@ -19,22 +19,6 @@ Button button = Button();
 Sensor sensor = Sensor();
 Candle candleArray[16];
 Lanterns lanterns(candleArray);
-candleArray[0x0].setNeighbours(0x0000)
-candleArray[0x1].setNeighbours(0x0000)
-candleArray[0x2].setNeighbours(0x0000)
-candleArray[0x3].setNeighbours(0x0000)
-candleArray[0x4].setNeighbours(0x0000)
-candleArray[0x5].setNeighbours(0x0000)
-candleArray[0x6].setNeighbours(0x0000)
-candleArray[0x7].setNeighbours(0x0000)
-candleArray[0x8].setNeighbours(0x0000)
-candleArray[0x9].setNeighbours(0x0000)
-candleArray[0xA].setNeighbours(0x0000)
-candleArray[0xB].setNeighbours(0x0000)
-candleArray[0xC].setNeighbours(0x0000)
-candleArray[0xD].setNeighbours(0x0000)
-candleArray[0xE].setNeighbours(0x0000)
-candleArray[0xF].setNeighbours(0x0000)
 
 
 uint8_t minuteCounter = 1;
@@ -54,7 +38,6 @@ void TimerHandler() {
 
 
 void shortCycle() {
-  if ( Candle::busy ) { return; }
 
   #if MONITOR_ON
   printStates();
@@ -74,13 +57,13 @@ void shortCycle() {
     lanterns.receiveSignal(buttonOutput); 
   } 
   if ( lanterns.getActiveCounters() ) {
-    lanterns.update(); }
+    lanterns.update(); 
   }
-  if ( lanterns.getIsUpdatesForRegister() ) { 
+  if ( lanterns.getIsUpdateForRegister() ) { 
     shiftRegister.writeToStorageRegister(lanterns.getLitCandles()); 
-    lanterns.setUpdatesForRegister(false);
+    lanterns.setIsUpdateForRegister(false);
   }
-  if ( lanterns.litCandles ) { minuteCounter++; }
+  if ( lanterns.getLitCandles() ) { minuteCounter++; }
 }
 
 
@@ -129,6 +112,22 @@ void setup() {
   pinMode(PIN_REGISTER_NOT_SRCLR, OUTPUT);
   DDRD |= 0b11111100; // set PORTD (digital 7 to 2) to outputs
 
+  candleArray[0].setNeighbours(0x0000);
+  candleArray[1].setNeighbours(0x0000);
+  candleArray[2].setNeighbours(0x0000);
+  candleArray[3].setNeighbours(0x0000);
+  candleArray[4].setNeighbours(0x0000);
+  candleArray[5].setNeighbours(0x0000);
+  candleArray[6].setNeighbours(0x0000);
+  candleArray[7].setNeighbours(0x0000);
+  candleArray[8].setNeighbours(0x0000);
+  candleArray[9].setNeighbours(0x0000);
+  candleArray[10].setNeighbours(0x0000);
+  candleArray[11].setNeighbours(0x0000);
+  candleArray[12].setNeighbours(0x0000);
+  candleArray[13].setNeighbours(0x0000);
+  candleArray[14].setNeighbours(0x0000);
+  candleArray[15].setNeighbours(0x0000);
   ITimer1.init();
   #if MONITOR_ON
   if (ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler))
@@ -146,7 +145,7 @@ void setup() {
 }
 
 void loop() {
-  if ( not lanterns.litCandles ) { return; }
+  if ( not lanterns.getLitCandles() ) { return; }
   if ( minuteCounter ) { return; }
   lanterns.burnDown(); 
   minuteCounter++;

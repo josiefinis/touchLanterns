@@ -1,6 +1,7 @@
 // Candle class. 
 #ifndef CANDLE_H
 #define CANDLE_H
+#include "Arduino.h"
 
 class Candle {
   private:
@@ -24,9 +25,10 @@ class Candle {
     bool isChangedLastCycle();
     bool isSignaled();
 
+    void incrementCounter();
     void toggleIsLit();
     void setNeighbours(uint16_t fourNeighbours);
-    void setWatching(*Candle pCandle);
+    void setWatching(Candle* pCandle);
     void setCounterRemaining(uint8_t value);
     void setNotChangedLastCycle();
     void setLifeRemaining(uint8_t value);

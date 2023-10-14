@@ -2,11 +2,12 @@
 #ifndef LANTERNS_H
 #define LANTERNS_H
 
+#include "Arduino.h"
 #include "Candle.h"
 
 
 struct queueNode {
-  Candle* item;
+  Candle* pCandle;
   queueNode* next;
 };
 
@@ -21,15 +22,16 @@ class Lanterns {
 
     bool isLongPressContainedIn(uint32_t input);
     uint8_t longPressIndex(uint32_t input);
-    void buildBeaconTree();
+    void buildBeaconTree(Candle* originCandle);
 
   public:
-    Lanterns Lanterns(Candle* pArray);
+    Lanterns(Candle* pArray);
 
     uint16_t getLitCandles();
     uint8_t getActiveCounters();
-    bool getIsUpdateForRegister();
+    bool getIsUpdateForRegister();  // TODO rename this mess
 
+    void setIsUpdateForRegister(bool value);
     void update();
     void receiveSignal(uint32_t input);
     void burnDown();

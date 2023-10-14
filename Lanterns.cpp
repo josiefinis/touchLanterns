@@ -1,4 +1,4 @@
-#include "Candle.h"
+#include "Lanterns.h"
 #include "Arduino.h"
 
 #define MONITOR_ON false
@@ -10,19 +10,20 @@
 #define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
 
-uint16_t Lanterns::litCandles = 0;
-uint8_t Lanterns::activeCounters = 0;
-bool Lanterns::isUpdateForRegister = false;
 
 
 Lanterns::Lanterns(Candle* pArray) {
   pCandleArray = pArray; 
+  litCandles = 0;
+  activeCounters = 0;
+  isUpdateForRegister = false;
 }
 
 
 uint16_t Lanterns::getLitCandles() { return litCandles; }
 bool Lanterns::getIsUpdateForRegister() { return isUpdateForRegister; } 
 uint8_t Lanterns::getActiveCounters() { return activeCounters; }
+void Lanterns::setIsUpdateForRegister(bool value) { isUpdateForRegister = value; }
 
 
 void Lanterns::update() {   
@@ -32,10 +33,10 @@ void Lanterns::update() {
   for (uint8_t i=0; i<16; i++ ) {
     candle = pCandleArray + i;
     if ( candle->isSignaled() ) { 
-      followSuit(); 
+      candle->followSuit(); 
       activeCounters++; 
     }
-    if ( candle->changedLastCycle() ) { 
+    if ( candle->isChangedLastCycle() ) { 
       isUpdateForRegister = true;
       if ( candle->isLit() ) { 
         candle->setLifeRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE));
@@ -47,16 +48,16 @@ void Lanterns::update() {
       candle->setNotChangedLastCycle(); 
       activeCounters--;
     } 
-    if ( candle->isCounting() ) { state++; }
+    if ( candle->isCounting() ) { candle->incrementCounter(); }
   }
 }
 
 
-void Lanterns::receiveSignal(Candle candleArray[16], uint32_t input) {
+void Lanterns::receiveSignal(uint32_t input) {
 // Handle input from buttons.
   // If long press, quickly build tree before next interrupt.
   if ( 0x55555555L & input ) {   
-    *Candle origin = pCandleArray[longPressIndex(input)];
+    Candle* origin = &pCandleArray[longPressIndex(input)];
     buildBeaconTree(origin);
   }
 
@@ -106,31 +107,31 @@ void Lanterns::buildBeaconTree(Candle* originCandle) {
   origin.next = nullptr;
   origin.pCandle->setWatching(nullptr);
   
-  queueNode* first = &origin;
-  queueNode* last = &origin;
+  queueNode* pFirst = &origin;
+  queueNode* pLast = &origin;
 
-  while ( first ) {
-    uint16_t neighbours = *first.pCandle->getShuffledNeighbours();
+  while ( pFirst ) {
+    uint16_t neighbours = pFirst->pCandle->getNeighbours();
     uint8_t numberOfWatchers = 0;
     while ( neighbours ) {
-      Candle* pNeighbour = pCandleArray[neighbours & 0xF];
+      Candle* pNeighbour = &pCandleArray[neighbours & 0xF];
       neighbours >>= 4;
       if ( pNeighbour == origin.pCandle ) { continue; }
       if ( pNeighbour->isWatching() ) { continue; }
-      pNeighbour->setWatching(first->pCandle);
-      queue newLast;
+      pNeighbour->setWatching(pFirst->pCandle);
+      queueNode newLast;
       newLast.pCandle = pNeighbour;
       newLast.next = nullptr;
-      last->next = newLast;
-      last = newLast;
+      pLast->next = &newLast;
+      pLast = &newLast;
       numberOfWatchers++;
       if ( numberOfWatchers > 1 ) { break; }
     }
-    first = first->next;
+    pFirst = pFirst->next;
 
     #if LIMITED_MONITOR_ON
     Serial.print("Queue: ");
-    queueNode* q = first;
+    queueNode* q = pFirst;
     while ( q ) { Serial.print(addressToIndex((uint8_t) q->item)); Serial.print("->>"); q = q->next; }
     Serial.print("\n");
     #endif

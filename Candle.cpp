@@ -4,14 +4,12 @@
 #define BEACON_MAX_DELAY  8     //   / 200 ms
 
 
-Candle::Candle(uint16_t neighbours) {
-  NEIGHBOURS = neighbours;
+const uint8_t Candle::SHUFFLE[6] = {0x1B, 0x27, 0x4B, 0x63, 0x87, 0x93};
+
+Candle::Candle() {
   state = 0x40;
   watching = nullptr;
 }
-
-
-const uint8_t Candle::SHUFFLE[6] = {0x1B, 0x27, 0x4B, 0x63, 0x87, 0x93};
 
 
 uint8_t Candle::cut(uint8_t sequence) {
@@ -25,7 +23,7 @@ uint8_t Candle::getState() {
 }
 
 
-uint16_t getNeighbours() {
+uint16_t Candle::getNeighbours() {
 // Return candles four neighbours as four 4-bit indices, in random order.
   uint16_t shuffledNeighbours = 0;
   uint8_t randomOrder = cut(SHUFFLE[random(6)]);
@@ -70,11 +68,16 @@ bool Candle::isChangedLastCycle() {
 bool Candle::isSignaled() {
 // True if the candle that this candle is watching changes state.
   if ( not watching ) { return false; }
-  if ( not watching.isChangedLastCycle() ) { return false; }
+  if ( not watching->isChangedLastCycle() ) { return false; }
   return true;
 }
 
 
+void Candle::incrementCounter() {
+  state++;
+}
+
+  
 void Candle::toggleIsLit() {
 // Set 
   state |= 0b01111111;
