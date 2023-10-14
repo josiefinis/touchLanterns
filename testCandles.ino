@@ -6,6 +6,7 @@
 #include "Sensor.h"
 #include "Button.h"
 #include "Candle.h"
+#include "Lanterns.h"
 #include "Register.h"
 #include "Arduino.h"
 #include <TimerInterrupt.h>
@@ -16,7 +17,24 @@ Register shiftRegister;
 ISR_Timer ISR_timer;
 Button button = Button();
 Sensor sensor = Sensor();
-Candle candleArray[16]; 
+Candle candleArray[16];
+Lanterns lanterns(candleArray);
+candleArray[0x0].setNeighbours(0x0000)
+candleArray[0x1].setNeighbours(0x0000)
+candleArray[0x2].setNeighbours(0x0000)
+candleArray[0x3].setNeighbours(0x0000)
+candleArray[0x4].setNeighbours(0x0000)
+candleArray[0x5].setNeighbours(0x0000)
+candleArray[0x6].setNeighbours(0x0000)
+candleArray[0x7].setNeighbours(0x0000)
+candleArray[0x8].setNeighbours(0x0000)
+candleArray[0x9].setNeighbours(0x0000)
+candleArray[0xA].setNeighbours(0x0000)
+candleArray[0xB].setNeighbours(0x0000)
+candleArray[0xC].setNeighbours(0x0000)
+candleArray[0xD].setNeighbours(0x0000)
+candleArray[0xE].setNeighbours(0x0000)
+candleArray[0xF].setNeighbours(0x0000)
 
 
 uint8_t minuteCounter = 1;
@@ -53,16 +71,16 @@ void shortCycle() {
     return;
   }
   if ( buttonOutput ) { 
-    Candle::receiveSignal( candleArray, buttonOutput ); 
+    lanterns.receiveSignal(buttonOutput); 
   } 
-  if ( Candle::getActiveCounters() ) {
-    for (uint8_t i=0; i<16; i++ ) { candleArray[i].periodicUpdate(i); }
+  if ( lanterns.getActiveCounters() ) {
+    lanterns.update(); }
   }
-  if ( Candle::hasUpdatesForRegister() ) { 
-    shiftRegister.writeToStorageRegister(Candle::getLitCandles(candleArray)); 
-    Candle::setUpdatesForRegister(false);
+  if ( lanterns.getIsUpdatesForRegister() ) { 
+    shiftRegister.writeToStorageRegister(lanterns.getLitCandles()); 
+    lanterns.setUpdatesForRegister(false);
   }
-  if ( Candle::anyLitCandles ) { minuteCounter++; }
+  if ( lanterns.litCandles ) { minuteCounter++; }
 }
 
 
@@ -81,11 +99,11 @@ void printLimited() {
 #if MONITOR_ON
 void printStates() {
   Serial.println();
-  Serial.print("Counters: "); Serial.print(Candle::activeCounters); Serial.print("\n");
+  Serial.print("Counters: "); Serial.print(lanterns.activeCounters); Serial.print("\n");
   Serial.print("index   \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
   //Serial.print("address \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print((long) &candleArray[i], HEX); Serial.print("\t"); } Serial.print("\n");
   Serial.print("state   \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
-  Serial.print("watching\t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(Candle::addressToIndex(candleArray[i].getWatching())); Serial.print("\t"); }Serial.print("\n");
+  Serial.print("watching\t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(lanterns.addressToIndex(candleArray[i].getWatching())); Serial.print("\t"); }Serial.print("\n");
   Serial.print("state_w \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getWatching()->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
 }
 #endif
@@ -124,13 +142,12 @@ void setup() {
   ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
   #endif
   ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
-  Candle::storeAddress(candleArray);
   shiftRegister.reset();
 }
 
 void loop() {
-  if ( not Candle::anyLitCandles ) { return; }
+  if ( not lanterns.litCandles ) { return; }
   if ( minuteCounter ) { return; }
-  Candle::burnDown(candleArray); 
+  lanterns.burnDown(); 
   minuteCounter++;
 }
