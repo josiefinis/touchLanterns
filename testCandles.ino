@@ -12,6 +12,26 @@
 #include <TimerInterrupt.h>
 #include <ISR_Timer.h>
 
+// A candle is given exactly four neighbours, represented by a sequence of four 4-bit indices.
+// Less than four neighbours can be assigned by filling the remining spaces with the candle's own index.
+// For example, if candle 4 has only two neighbours 3 and 6 this is represented by 0x4436. 
+#define NEIGHBOURS_OF_CANDLE_0x0 0x0124
+#define NEIGHBOURS_OF_CANDLE_0x1 0x0234
+#define NEIGHBOURS_OF_CANDLE_0x2 0x0135
+#define NEIGHBOURS_OF_CANDLE_0x3 0x3125
+#define NEIGHBOURS_OF_CANDLE_0x4 0x0167
+#define NEIGHBOURS_OF_CANDLE_0x5 0x2367
+#define NEIGHBOURS_OF_CANDLE_0x6 0x458C
+#define NEIGHBOURS_OF_CANDLE_0x7 0x458C
+#define NEIGHBOURS_OF_CANDLE_0x8 0x679A
+#define NEIGHBOURS_OF_CANDLE_0x9 0x8ABD
+#define NEIGHBOURS_OF_CANDLE_0xA 0xA89B
+#define NEIGHBOURS_OF_CANDLE_0xB 0xB9AF
+#define NEIGHBOURS_OF_CANDLE_0xC 0x67DE
+#define NEIGHBOURS_OF_CANDLE_0xD 0x9CEF
+#define NEIGHBOURS_OF_CANDLE_0xE 0xECDF
+#define NEIGHBOURS_OF_CANDLE_0xF 0xFBDE
+
 
 Register shiftRegister;
 ISR_Timer ISR_timer;
@@ -112,22 +132,22 @@ void setup() {
   pinMode(PIN_REGISTER_NOT_SRCLR, OUTPUT);
   DDRD |= 0b11111100; // set PORTD (digital 7 to 2) to outputs
 
-  candleArray[0].setNeighbours(0x0000);
-  candleArray[1].setNeighbours(0x0000);
-  candleArray[2].setNeighbours(0x0000);
-  candleArray[3].setNeighbours(0x0000);
-  candleArray[4].setNeighbours(0x0000);
-  candleArray[5].setNeighbours(0x0000);
-  candleArray[6].setNeighbours(0x0000);
-  candleArray[7].setNeighbours(0x0000);
-  candleArray[8].setNeighbours(0x0000);
-  candleArray[9].setNeighbours(0x0000);
-  candleArray[10].setNeighbours(0x0000);
-  candleArray[11].setNeighbours(0x0000);
-  candleArray[12].setNeighbours(0x0000);
-  candleArray[13].setNeighbours(0x0000);
-  candleArray[14].setNeighbours(0x0000);
-  candleArray[15].setNeighbours(0x0000);
+  candleArray[0x0].setNeighbours(NEIGHBOURS_OF_CANDLE_0x0);
+  candleArray[0x1].setNeighbours(NEIGHBOURS_OF_CANDLE_0x1);
+  candleArray[0x2].setNeighbours(NEIGHBOURS_OF_CANDLE_0x2);
+  candleArray[0x3].setNeighbours(NEIGHBOURS_OF_CANDLE_0x3);
+  candleArray[0x4].setNeighbours(NEIGHBOURS_OF_CANDLE_0x4);
+  candleArray[0x5].setNeighbours(NEIGHBOURS_OF_CANDLE_0x5);
+  candleArray[0x6].setNeighbours(NEIGHBOURS_OF_CANDLE_0x6);
+  candleArray[0x7].setNeighbours(NEIGHBOURS_OF_CANDLE_0x7);
+  candleArray[0x8].setNeighbours(NEIGHBOURS_OF_CANDLE_0x8);
+  candleArray[0x9].setNeighbours(NEIGHBOURS_OF_CANDLE_0x9);
+  candleArray[0xA].setNeighbours(NEIGHBOURS_OF_CANDLE_0xA);
+  candleArray[0xB].setNeighbours(NEIGHBOURS_OF_CANDLE_0xB);
+  candleArray[0xC].setNeighbours(NEIGHBOURS_OF_CANDLE_0xC);
+  candleArray[0xD].setNeighbours(NEIGHBOURS_OF_CANDLE_0xD);
+  candleArray[0xE].setNeighbours(NEIGHBOURS_OF_CANDLE_0xE);
+  candleArray[0xF].setNeighbours(NEIGHBOURS_OF_CANDLE_0xF);
   ITimer1.init();
   #if MONITOR_ON
   if (ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler))

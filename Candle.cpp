@@ -24,7 +24,7 @@ uint8_t Candle::getState() {
 
 
 uint16_t Candle::getNeighbours() {
-// Return candles four neighbours as four 4-bit indices, in random order.
+// Return this candle's four neighbours as four 4-bit indices, in random order.
   uint16_t shuffledNeighbours = 0;
   uint8_t randomOrder = cut(SHUFFLE[random(6)]);
   while ( randomOrder ) {

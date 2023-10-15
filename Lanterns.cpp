@@ -110,21 +110,24 @@ void Lanterns::buildBeaconTree(Candle* originCandle) {
   queueNode* pFirst = &origin;
   queueNode* pLast = &origin;
 
+  uint16_t neighbourhood;
   while ( pFirst ) {
-    uint16_t neighbours = pFirst->pCandle->getNeighbours();
+    neighbourhood = pFirst->pCandle->getNeighbours();
     uint8_t numberOfWatchers = 0;
-    while ( neighbours ) {
-      Candle* pNeighbour = &pCandleArray[neighbours & 0xF];
-      neighbours >>= 4;
+    for ( uint8_t i=0; i<4; i++ ) {
+      Candle* pNeighbour = &pCandleArray[neighbourhood & 0xF];
+      neighbourhood >>= 4;
+      if ( pNeighbour == pFirst->pCandle ) { continue; }
       if ( pNeighbour == origin.pCandle ) { continue; }
       if ( pNeighbour->isWatching() ) { continue; }
+
       pNeighbour->setWatching(pFirst->pCandle);
+      numberOfWatchers++;
       queueNode newLast;
       newLast.pCandle = pNeighbour;
       newLast.next = nullptr;
       pLast->next = &newLast;
       pLast = &newLast;
-      numberOfWatchers++;
       if ( numberOfWatchers > 1 ) { break; }
     }
     pFirst = pFirst->next;
