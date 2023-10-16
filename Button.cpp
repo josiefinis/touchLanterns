@@ -2,9 +2,9 @@
 #include "Arduino.h"
 
 #define MONITOR_ON false
-#define LONG_INTERVAL 5
+#define LONG_INTERVAL 5   // TODO increase interval maybe
 #define SHORT_PRESS 0b10
-#define LONG_PRESS  0b11
+#define LONG_PRESS  0b11   // TODO change to 0b01
 
 Button::Button() { }
     

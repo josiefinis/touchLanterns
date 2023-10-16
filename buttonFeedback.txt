@@ -1,0 +1,10 @@
+# Better button feedback.
+
+Issue: short press is triggered on button release and since touch sensor is not 100% reliable this leads to failed presses, guessing of how long to touch for to trigger a short press, and accidental long presses.
+
+Want to trigger short press on touch. For long press, either trigger as before or trigger on release. Probably best to keep it as before.
+
+Unfortunately this causes a problem, that a long press will always be preceded by a short press, which requires changes elsewhere.
+  Longpress should not toggle candle on off as it is already changed by short press.
+  First watch beacons need to be toggled on off instead of following suit. (or maybe not actually, need to check)
+  OR followSuit needs to be changed so that it isn't the change in the watched candle that triggers follow suit but instead the difference in state between the watching candle and the watched.

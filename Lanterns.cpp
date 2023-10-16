@@ -4,7 +4,7 @@
 #define MONITOR_ON false
 #define LIMITED_MONITOR_ON false
 
-#define ANY_PRESS  0b10
+#define ANY_PRESS  0b10    // TODO change to SHORT_PRESS
 #define LONG_PRESS 0b01
 #define MEAN_CANDLE_LIFE 63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
 #define RANGE_CANDLE_LIFE 8     //   / 4 minutes
@@ -83,7 +83,7 @@ void Lanterns::update() {
   if ( activeCounters == 0 ) { return; }
   Candle* candle = nullptr;
   for (uint8_t i=0; i<16; i++ ) {
-    candle = pCandleArray + i;
+    candle = pCandleArray + i; // TODO change to pCandleArray[i]
     if ( candle->isSignaled() ) { 
       candle->followSuit(); 
       activeCounters++; 
@@ -118,12 +118,12 @@ void Lanterns::receiveSignal(uint32_t input) {
   #endif
 
   uint8_t i = 0;
-  while ( input ) {
-    if ( input & ANY_PRESS ) {
+  while ( input ) { // TODO change to for loop
+    if ( input & ANY_PRESS ) { // TODO change to ( input >> i & SHORT_PRESS )
       pCandleArray[i].toggleIsLit();
       activeCounters++;
     }
-    input >>= 2;
+    input >>= 2; // TODO delete line
     i++;
   }
 }

@@ -68,9 +68,9 @@ bool Candle::isChangedLastCycle() {
 
 
 bool Candle::isSignaled() {
-// True if the candle that this candle is watching changes state.
+// True if the candle that this candle is watching changes state.  // TODO change to: True if unlit and watching a candle that is lit, or vice versa.
   if ( not watching ) { return false; }
-  if ( not watching->isChangedLastCycle() ) { return false; }
+  if ( not watching->isChangedLastCycle() ) { return false; } // TODO change to: if ( watching->isLit() == isLit() ) { return false; }
   return true;
 }
 
@@ -123,7 +123,7 @@ void Candle::followSuit() {
   if ( not watching ) { return false; }
   state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
-    state ^= 0b10000000; 
+    state ^= 0b10000000; // flip the state bit briefly so that it will flip back and match the candle it is watching.
     setCounterRemaining(0);
   }
   else {
