@@ -26,6 +26,7 @@ class Candle {
     bool isSignaled();
 
     void incrementCounter();
+    void toggleIsLitOnCount(uint8_t count);
     void toggleIsLit();
     void setNeighbours(uint16_t fourNeighbours);
     void setWatching(Candle* pCandle);

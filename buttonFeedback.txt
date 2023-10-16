@@ -6,5 +6,5 @@ Want to trigger short press on touch. For long press, either trigger as before o
 
 Unfortunately this causes a problem, that a long press will always be preceded by a short press, which requires changes elsewhere.
   Longpress should not toggle candle on off as it is already changed by short press.
-  First watch beacons need to be toggled on off instead of following suit. (or maybe not actually, need to check)
-  OR followSuit needs to be changed so that it isn't the change in the watched candle that triggers follow suit but instead the difference in state between the watching candle and the watched.
+  First watch beacons need to be toggled on off instead of following suit. 
+ 

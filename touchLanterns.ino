@@ -1,4 +1,5 @@
 #define USE_TIMER_1          true
+#define SERIAL_ON            false
 #define MONITOR_ON           false
 #define LIMITED_MONITOR_ON   false
 
@@ -59,12 +60,8 @@ void TimerHandler() {
 
 void shortCycle() {
 
-  #if MONITOR_ON
-  // printStates();
-  #else 
   #if LIMITED_MONITOR_ON
   printLimited();
-  #endif
   #endif
 
   uint32_t buttonOutput = button.output(sensor.output());
@@ -113,14 +110,9 @@ void printStates() {
 
 
 void setup() {
-  #if MONITOR_ON
+  #if SERIAL_ON
   Serial.begin(9600);		
   while(!Serial) {}
-  #else 
-  #if LIMITED_MONITOR_ON
-  Serial.begin(9600);		
-  while(!Serial) {}
-  #endif
   #endif
 
   pinMode(PIN_SENSOR_RECEIVE, INPUT);

@@ -68,9 +68,9 @@ bool Candle::isChangedLastCycle() {
 
 
 bool Candle::isSignaled() {
-// True if the candle that this candle is watching changes state.  // TODO change to: True if unlit and watching a candle that is lit, or vice versa.
+// True if the candle that this candle is watching changes state.  
   if ( not watching ) { return false; }
-  if ( not watching->isChangedLastCycle() ) { return false; } // TODO change to: if ( watching->isLit() == isLit() ) { return false; }
+  if ( not watching->isChangedLastCycle() ) { return false; } 
   return true;
 }
 
@@ -80,9 +80,16 @@ void Candle::incrementCounter() {
 }
 
   
-void Candle::toggleIsLit() {
-// Set 
+void Candle::toggleIsLitOnCount(uint8_t count) {
+// Set candle to change from lit to unlit or vice versa next cycle.
   state |= 0b01111111;
+  setCounterRemaining(count);
+}
+
+
+void Candle::toggleIsLit() {
+// Change from lit to unlit or vice versa.
+  state ^= 0b10000000;
 }
   
 
@@ -121,13 +128,12 @@ void Candle::setLifeRemaining(uint8_t value) {
 
 void Candle::followSuit() {
   if ( not watching ) { return false; }
-  state |= 0b01111111;
   if ( isLit() == watching->isLit() ) {
-    state ^= 0b10000000; // flip the state bit briefly so that it will flip back and match the candle it is watching.
-    setCounterRemaining(0);
+    toggleIsLit(); // flip the state bit briefly so that it will flip back and match the candle it is watching.
+    toggleIsLitOnCount(0);
   }
   else {
-    setCounterRemaining(random(BEACON_MIN_DELAY, BEACON_MAX_DELAY));
+    toggleIsLitOnCount(random(BEACON_MIN_DELAY, BEACON_MAX_DELAY));
   }
   watching = nullptr;
 }

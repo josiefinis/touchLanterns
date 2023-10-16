@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "Sensor.h"
 
-#define MONITOR_ON false
+#define LIMITED_MONITOR_ON false
 #define SENSOR_SAMPLES 30
 #define EDGE_THRESHOLD 80
 
@@ -35,7 +35,7 @@ uint16_t Sensor::output() {
   }
   while ( muxChannel % 16 != 0 );
 
-  #if MONITOR_ON
+  #if LIMITED_MONITOR_ON
   Serial.print(sensorOutput, BIN); Serial.print("\n");
   #endif
   return sensorOutput;
@@ -65,7 +65,7 @@ void Sensor::zeroOutput() {
 
 long Sensor::input() { 
 // Get sensor input using capacitive sensor library.
-  #if MONITOR_ON 
+  #if LIMITED_MONITOR_ON 
   Serial.print(sensor.capacitiveSensor(SENSOR_SAMPLES)); Serial.print("\t");
   #endif
   return sensor.capacitiveSensor(SENSOR_SAMPLES);

@@ -1,10 +1,10 @@
 #include "Button.h"
 #include "Arduino.h"
 
-#define MONITOR_ON false
-#define LONG_INTERVAL 5   // TODO increase interval maybe
+#define LIMITED_MONITOR_ON false
+#define LONG_INTERVAL 6   
 #define SHORT_PRESS 0b10
-#define LONG_PRESS  0b11   // TODO change to 0b01
+#define LONG_PRESS  0b01   
 
 Button::Button() { }
     
@@ -12,9 +12,8 @@ Button::Button() { }
 uint32_t Button::output(uint16_t input) {
 // Return 16 two-bit output signals based on input and count of immediately preceding consecutive '1' input signals.
 
-  uint32_t outputBuffer = ~0;
+  uint32_t outputBuffer = 0;
   for ( uint8_t i=0; i<16; i++ ) {
-    uint8_t held = counter[i];
     switch ( input >> i & 1 ) {
       case 0:
         counter[i] = 0;
@@ -34,8 +33,8 @@ uint32_t Button::output(uint16_t input) {
         break;
     }
   }
-  #if MONITOR_ON
-  Serial.print("B->"); Serial.print(outputBuffer, BIN); Serial.print("\t");
+  #if LIMITED_MONITOR_ON
+  Serial.print("B->"); Serial.println(outputBuffer, BIN); 
   #endif
   return outputBuffer;
 }
