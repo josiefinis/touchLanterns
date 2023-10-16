@@ -1,5 +1,5 @@
 #define USE_TIMER_1          true
-#define MONITOR_ON           false
+#define MONITOR_ON           true
 #define LIMITED_MONITOR_ON   false
 
 
@@ -60,7 +60,7 @@ void TimerHandler() {
 void shortCycle() {
 
   #if MONITOR_ON
-  printStates();
+  // printStates();
   #else 
   #if LIMITED_MONITOR_ON
   printLimited();
@@ -99,7 +99,7 @@ void printLimited() {
 #endif
 
 
-#if MONITOR_ON
+#if false
 void printStates() {
   Serial.println();
   Serial.print("Counters: "); Serial.print(lanterns.activeCounters); Serial.print("\n");

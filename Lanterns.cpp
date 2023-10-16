@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 #define MONITOR_ON false
-#define LIMITED_MONITOR_ON false
+#define LIMITED_MONITOR_ON true
 
 #define ANY_PRESS  0b10
 #define LONG_PRESS 0b01
@@ -113,6 +113,7 @@ void Lanterns::buildBeaconTree(Candle* originCandle) {
   uint16_t neighbourhood;
   while ( pFirst ) {
     neighbourhood = pFirst->pCandle->getNeighbours();
+    Serial.print("neighbourhood "); Serial.println(neighbourhood, HEX);
     uint8_t numberOfWatchers = 0;
     for ( uint8_t i=0; i<4; i++ ) {
       Candle* pNeighbour = &pCandleArray[neighbourhood & 0xF];
@@ -121,6 +122,7 @@ void Lanterns::buildBeaconTree(Candle* originCandle) {
       if ( pNeighbour == origin.pCandle ) { continue; }
       if ( pNeighbour->isWatching() ) { continue; }
 
+      Serial.print("watcher "); Serial.println(neighbourhood & 0xF, HEX);
       pNeighbour->setWatching(pFirst->pCandle);
       numberOfWatchers++;
       queueNode newLast;
@@ -135,7 +137,7 @@ void Lanterns::buildBeaconTree(Candle* originCandle) {
     #if LIMITED_MONITOR_ON
     Serial.print("Queue: ");
     queueNode* q = pFirst;
-    while ( q ) { Serial.print(addressToIndex((uint8_t) q->item)); Serial.print("->>"); q = q->next; }
+    while ( q ) { Serial.print((long) q->pCandle); Serial.print("->>"); q = q->next; }
     Serial.print("\n");
     #endif
   }
