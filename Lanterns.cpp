@@ -111,18 +111,29 @@ void Lanterns::buildBeaconTree(Candle* originCandle) {
   queueNode* pLast = &origin;
 
   uint16_t neighbourhood;
+  uint16_t neighbour;
   while ( pFirst ) {
     neighbourhood = pFirst->pCandle->getNeighbours();
     Serial.print("neighbourhood "); Serial.println(neighbourhood, HEX);
     uint8_t numberOfWatchers = 0;
     for ( uint8_t i=0; i<4; i++ ) {
-      Candle* pNeighbour = &pCandleArray[neighbourhood & 0xF];
-      neighbourhood >>= 4;
-      if ( pNeighbour == pFirst->pCandle ) { continue; }
-      if ( pNeighbour == origin.pCandle ) { continue; }
-      if ( pNeighbour->isWatching() ) { continue; }
+      neighbour = neighbourhood >> 4*i & 0xF;
+      Serial.print("neighbour "); Serial.println(neighbour, HEX);
+      Candle* pNeighbour = &pCandleArray[neighbour];
+      if ( pNeighbour == pFirst->pCandle ) { 
+        Serial.println("is first!");
+        continue; 
+      }
+      if ( pNeighbour == origin.pCandle ) { 
+        Serial.println("is origin!");
+        continue; 
+      }
+      if ( pNeighbour->isWatching() ) { 
+        Serial.println("is watching!");
+        continue; 
+      }
 
-      Serial.print("watcher "); Serial.println(neighbourhood & 0xF, HEX);
+      Serial.print("watcher "); Serial.println(neighbour, HEX);
       pNeighbour->setWatching(pFirst->pCandle);
       numberOfWatchers++;
       queueNode newLast;
