@@ -18,7 +18,6 @@ class Button {
  private:
   
   uint8_t counter[16]; 
-  bool getBit(uint16_t input);
 
  public:
 

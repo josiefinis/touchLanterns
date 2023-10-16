@@ -17,18 +17,17 @@ uint32_t Button::output(uint16_t input) {
     uint8_t held = counter[i];
     switch ( input >> i & 1 ) {
       case 0:
-        if ( not held ) { }
-        else if ( held < LONG_INTERVAL ) {
-          outputBuffer |= (SHORT_PRESS << 2*i);
-        }
         counter[i] = 0;
         break;
 
       case 1:
-        if ( held < LONG_INTERVAL ) {
+        if ( counter[i] == 0 ) {
+          outputBuffer |= (SHORT_PRESS << 2*i);
+        }
+        if ( counter[i] < LONG_INTERVAL ) {
           counter[i]++;
         }
-        else if ( held == LONG_INTERVAL ) {
+        else if ( counter[i] == LONG_INTERVAL ) {
           outputBuffer |= (LONG_PRESS << 2*i);
           counter[i]++;
         }
