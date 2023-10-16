@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 #define MONITOR_ON false
-#define LIMITED_MONITOR_ON true
+#define LIMITED_MONITOR_ON false
 
 #define ANY_PRESS  0b10
 #define LONG_PRESS 0b01
@@ -10,6 +10,58 @@
 #define RANGE_CANDLE_LIFE 8     //   / 4 minutes
 
 
+Queue::Queue() {
+  pHead = nullptr;
+}
+
+
+bool Queue::isEmpty() {
+// True if queue has no nodes.
+  if ( pHead == nullptr ) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+
+void Queue::enqueue(Candle* candle) {
+// Put candle at back of queue.
+  node* newNode = new node;
+  newNode->pCandle = candle;
+  newNode->pNext = nullptr;
+
+  if ( isEmpty() ) { 
+    pHead = newNode;
+  }
+  else {
+    pBack->pNext = newNode;
+  }
+  pBack = newNode;
+}
+
+
+Candle* Queue::dequeue() {
+// Take candle from front of queue.
+  Candle* candle = pHead->pCandle;
+  node* oldHead = pHead;
+  pHead = oldHead->pNext;
+  delete oldHead;
+
+  return candle;
+}
+
+
+#if MONITOR_ON
+void Queue::print() {
+// Print the queue.
+  Serial.print("Queue: ");
+  node* q = pHead;
+  while ( q ) { Serial.print((long) q->pCandle); Serial.print("->>"); q = q->pNext; }
+  Serial.print("\n");
+}
+#endif
 
 
 Lanterns::Lanterns(Candle* pArray) {
@@ -100,56 +152,42 @@ uint8_t Lanterns::longPressIndex(uint32_t input) {
 }
 
 
-void Lanterns::buildBeaconTree(Candle* originCandle) {
+void Lanterns::buildBeaconTree(Candle* origin) {
 // Build a tree of candles that watch their parent node and follow suit when that candle toggles on or off. Starts with this candle.
-  queueNode origin;
-  origin.pCandle = originCandle;
-  origin.next = nullptr;
-  origin.pCandle->setWatching(nullptr);
-  
-  queueNode* pFirst = &origin;
-  queueNode* pLast = &origin;
+  #if MONITOR_ON
+  for ( uint8_t i=0; i<16; i++ ) {
+    Serial.print(i, HEX); Serial.print(": "); Serial.println((long) &pCandleArray[i]);
+  }
+  #endif
 
+  origin->setWatching(nullptr);
+  Queue queue;
+  queue.enqueue(origin);
   uint16_t neighbourhood;
   uint16_t neighbour;
-  while ( pFirst ) {
-    neighbourhood = pFirst->pCandle->getNeighbours();
-    Serial.print("neighbourhood "); Serial.println(neighbourhood, HEX);
+  Candle* newBeacon = nullptr;
+
+  while ( not queue.isEmpty() ) {
+    newBeacon = queue.dequeue();
+    neighbourhood = newBeacon->getNeighbours();
     uint8_t numberOfWatchers = 0;
     for ( uint8_t i=0; i<4; i++ ) {
       neighbour = neighbourhood >> 4*i & 0xF;
-      Serial.print("neighbour "); Serial.println(neighbour, HEX);
       Candle* pNeighbour = &pCandleArray[neighbour];
-      if ( pNeighbour == pFirst->pCandle ) { 
-        Serial.println("is first!");
-        continue; 
-      }
-      if ( pNeighbour == origin.pCandle ) { 
-        Serial.println("is origin!");
-        continue; 
-      }
-      if ( pNeighbour->isWatching() ) { 
-        Serial.println("is watching!");
-        continue; 
-      }
-
-      Serial.print("watcher "); Serial.println(neighbour, HEX);
-      pNeighbour->setWatching(pFirst->pCandle);
+      if ( pNeighbour == newBeacon ) { continue; } // A candle lists itself as a neighbour to represent an empty neighbour slot.
+      if ( pNeighbour == origin ) { continue; }
+      if ( pNeighbour->isWatching() ) { continue; }
+      
+      pNeighbour->setWatching(newBeacon);
       numberOfWatchers++;
-      queueNode newLast;
-      newLast.pCandle = pNeighbour;
-      newLast.next = nullptr;
-      pLast->next = &newLast;
-      pLast = &newLast;
+      queue.enqueue(pNeighbour);
       if ( numberOfWatchers > 1 ) { break; }
     }
-    pFirst = pFirst->next;
 
-    #if LIMITED_MONITOR_ON
-    Serial.print("Queue: ");
-    queueNode* q = pFirst;
-    while ( q ) { Serial.print((long) q->pCandle); Serial.print("->>"); q = q->next; }
-    Serial.print("\n");
+    #if MONITOR_ON
+    Serial.print("New beacon: "); Serial.println((long) newBeacon);
+    Serial.print("Neighbourhood: "); Serial.println(neighbourhood, HEX);
+    queue.print();
     #endif
   }
 }

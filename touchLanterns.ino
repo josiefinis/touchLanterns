@@ -1,5 +1,5 @@
 #define USE_TIMER_1          true
-#define MONITOR_ON           true
+#define MONITOR_ON           false
 #define LIMITED_MONITOR_ON   false
 
 

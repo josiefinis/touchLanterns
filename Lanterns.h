@@ -6,10 +6,25 @@
 #include "Candle.h"
 
 
-struct queueNode {
+
+struct node {
   Candle* pCandle;
-  queueNode* next;
+  node* pNext;
 };
+
+class Queue {
+  private:
+    node* pHead;
+    node* pBack;
+
+  public:
+    Queue();
+    bool isEmpty();
+    void enqueue(Candle* candle);
+    Candle* dequeue();
+    void print();
+};
+
 
 /* TODO disable interrupts when building beacon tree.
 */
