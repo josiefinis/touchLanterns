@@ -1,5 +1,4 @@
 #include "Candle.h"
-#include "Arduino.h"
 
 #define BEACON_MIN_DELAY  3     //   / 200 ms
 #define BEACON_MAX_DELAY  8     //   / 200 ms
@@ -30,13 +29,10 @@ uint16_t Candle::getNeighbours() {
   uint8_t randomOrder = cut(SHUFFLE[random(6)]);
   uint8_t neighbour;
   uint8_t order;
-  Serial.print("neighbours "); Serial.println(neighbours, HEX);
-  for ( uint8_t i=0; i<16; i++ ) {
-    Serial.print("random order "); Serial.println(randomOrder, BIN);
-    Serial.print("shuffled neighbours "); Serial.println(shuffledNeighbours, HEX);
+  for ( uint8_t i=0; i<4; i++ ) {
     neighbour = (neighbours >> 4*i & 0xF);
     order = (randomOrder >> 2*i & 0x3);
-    shuffledNeighbours |= (neighbours >> 4*i & 0xF) << 4*(randomOrder >> 2*i & 0x3);
+    shuffledNeighbours |= neighbour << 4*order;
   }
   return shuffledNeighbours;
 }
