@@ -22,40 +22,28 @@ Sensor::Sensor() {
 
 uint16_t Sensor::output() {
 // Return one-hot encoded sensor output.
-  long newInput;
+  sensorOutput = 0;
+  long rawInput = 0;
+  uint16_t normalisedInput = 0;
+  uint16_t highestInput = 0;
   do {
-    newInput = input();
-
-    #if EDGE_DETECTION
-    switch ( detectEdge(newInput) ) {
-      case 0:
-        break;
-      case 1:
-        sensorOutput |= (1 << muxChannel);
-        break;
-      case -1:
-        sensorOutput &= ~(1 << muxChannel);
-        break;
-    }
-    baseline[muxChannel] = newInput;
+    rawInput = input();
+    normalisedInput = normalise(rawInput);
     #if MONITOR_SENSOR_INPUT 
-    Serial.print(newInput); Serial.print("\t");
+    Serial.print(normalisedInput); Serial.print("\t");
     #endif
 
-    #else
-    if ( detectLevel(normalise(newInput)) ) {
-      sensorOutput |= (1 << muxChannel);
+    if ( not detectLevel(normalisedInput) ) {
+      recalibrateBaseline(rawInput);
+      advanceMuxChannel();
+      continue; 
     }
-    else {
-      sensorOutput &= ~(1 << muxChannel);
-      recalibrateBaseline(newInput);
+    if ( normalisedInput < highestInput ) { 
+      advanceMuxChannel();
+      continue;
     }
-    #if MONITOR_SENSOR_INPUT 
-    Serial.print(normalise(newInput)); Serial.print("\t");
-    #endif
-
-    #endif
-
+    sensorOutput = (1 << muxChannel);
+    highestInput = normalisedInput;
     advanceMuxChannel();
   }
   while ( muxChannel % 16 != 0 );
