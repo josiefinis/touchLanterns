@@ -20,7 +20,8 @@ class Sensor {
     uint8_t muxChannel;
     uint8_t normalise(long input);
     bool detectLevel(uint8_t input);
-    void recalibrateBaseline(long input);
+    void adjustBaseline(long input);
+    void adjustHighline(long input);
     int8_t detectEdge(long input);
     long input();
     void advanceMuxChannel();

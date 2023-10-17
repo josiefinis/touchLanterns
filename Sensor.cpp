@@ -13,7 +13,10 @@ CapacitiveSensor Sensor::sensor = CapacitiveSensor(PIN_SENSOR_SEND, PIN_SENSOR_R
 
 
 Sensor::Sensor() {
-  for ( uint8_t i=0; i<16; i++ ) { baseline[i] = 0xFFFFUL * SENSOR_SAMPLES; }
+  for ( uint8_t i=0; i<16; i++ ) { 
+    baseline[i] = 0xFFFFUL * SENSOR_SAMPLES; 
+    highline[i] = 0xFFFFUL * SENSOR_SAMPLES; 
+  }
   i = 0;
   muxChannel = 0;
   sensorOutput = 0;
@@ -22,7 +25,7 @@ Sensor::Sensor() {
 
 uint16_t Sensor::output() {
 // Return one-hot encoded sensor output.
-  long newInput;
+  int32_t newInput;
   do {
     newInput = input();
 
@@ -45,19 +48,20 @@ uint16_t Sensor::output() {
     #else
     if ( detectLevel(normalise(newInput)) ) {
       sensorOutput |= (1 << muxChannel);
-      recalibrateHighline(newInput);
     }
     else {
       sensorOutput &= ~(1 << muxChannel);
-      recalibrateBaseline(newInput);
+      adjustBaseline(newInput);
     }
+    adjustHighline(newInput);
     #if MONITOR_SENSOR_INPUT 
     Serial.print(normalise(newInput)); Serial.print("\t");
     #endif
 
     #endif
 
-    advanceMuxChannel();
+    // TODO if all else fails, only consider channel with highest input for each cycle. 
+    advanceMuxChannel(); // TODO try adding a short wait after switching channel.
   }
   while ( muxChannel % 16 != 0 );
 
@@ -68,21 +72,29 @@ uint16_t Sensor::output() {
 }
 
 
-uint8_t Sensor::normalise(long input)  {
-  int16_t norm = (input - baseline[muxChannel]) * 10 / SENSOR_SAMPLES;
-  return constrain(norm, 0, 255);
+uint8_t Sensor::normalise(int32_t input)  {
+// Normalise the input to be somewhere between 0 and 100;
+  int16_t norm = (input - baseline[muxChannel]) * 100 / highline[muxChannel];
+  return constrain(norm, 0, 100);
 }
 
 
-void Sensor::recalibrateBaseline(long input) {
+void Sensor::adjustBaseline(int32_t input) {
+// Adjust the baseline towards the current input using a weighted average.
   baseline[muxChannel] = (WEIGHT_HISTORY * baseline[muxChannel] + input) / (WEIGHT_HISTORY + 1);
-  
 }
 
 
-void Sensor::recalibrateHighline(long input) {
-  highline[muxChannel] = (WEIGHT_HISTORY * highline[muxChannel] + input) / (WEIGHT_HISTORY + 1);
-  
+void Sensor::adjustHighline(int32_t input) {
+// Set the highline to the highest recorded value over the baseline. Adjust the highline so that it tracks drift in the baseline.
+  int16_t diff = input - baseline[muxChannel];
+  if ( diff > highline[muxChannel] ) {
+    highline[muxChannel] = diff;
+  }
+  else if ( diff < SENSOR_SAMPLES / 8 ) {
+    highline[muxChannel] += diff;
+  }
+  return 0;
 }
 
 
@@ -91,7 +103,7 @@ bool Sensor::detectLevel(uint8_t input) {
 }
 
 
-int8_t Sensor::detectEdge(long input) {
+int8_t Sensor::detectEdge(int32_t input) {
 // Return 1 if rising edge, -1 if falling edge, 0 if no edge.
   int16_t difference = input - baseline[muxChannel];
   if ( abs(difference) < EDGE_THRESHOLD ) { 
@@ -112,7 +124,7 @@ void Sensor::zeroOutput() {
 }
 
 
-long Sensor::input() { 
+int32_t Sensor::input() { 
 // Get sensor input using capacitive sensor library.
   return sensor.capacitiveSensorRaw(SENSOR_SAMPLES);
 }
