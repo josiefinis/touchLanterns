@@ -13,10 +13,14 @@ class Sensor {
 
   private:
     static CapacitiveSensor sensor;
-    uint16_t lastInput[16];
+    uint16_t baseline[16];
+    uint16_t highline[16];
     uint16_t sensorOutput;
     uint8_t i;
     uint8_t muxChannel;
+    uint8_t normalise(long input);
+    bool detectLevel(uint8_t input);
+    void recalibrateBaseline(long input);
     int8_t detectEdge(long input);
     long input();
     void advanceMuxChannel();
