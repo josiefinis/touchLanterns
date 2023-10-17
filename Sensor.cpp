@@ -45,7 +45,6 @@ uint16_t Sensor::output() {
     #else
     if ( detectLevel(normalise(newInput)) ) {
       sensorOutput |= (1 << muxChannel);
-      recalibrateHighline(newInput);
     }
     else {
       sensorOutput &= ~(1 << muxChannel);
@@ -76,12 +75,6 @@ uint8_t Sensor::normalise(long input)  {
 
 void Sensor::recalibrateBaseline(long input) {
   baseline[muxChannel] = (WEIGHT_HISTORY * baseline[muxChannel] + input) / (WEIGHT_HISTORY + 1);
-  
-}
-
-
-void Sensor::recalibrateHighline(long input) {
-  highline[muxChannel] = (WEIGHT_HISTORY * highline[muxChannel] + input) / (WEIGHT_HISTORY + 1);
   
 }
 
