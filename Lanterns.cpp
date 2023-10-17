@@ -120,14 +120,14 @@ void Lanterns::receiveSignal(uint32_t input) {
       pCandleArray[i].toggleIsLitOnCount(0);
       activeCounters++;
       #if MONITOR_BUTTON_PRESS
-      Serial.print("\tLONG PRESS "); Serial.print(i);
+      Serial.print("\tLONG PRESS "); Serial.print(i, HEX);
       #endif
     }
     if ( input >> 2*i & SHORT_PRESS ) { 
       pCandleArray[i].toggleIsLitOnCount(0);
       activeCounters++;
       #if MONITOR_BUTTON_PRESS
-      Serial.print("\tSHORT PRESS "); Serial.print(i);
+      Serial.print("\tSHORT PRESS "); Serial.print(i, HEX);
       #endif
     }
   }
