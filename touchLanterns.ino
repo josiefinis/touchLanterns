@@ -1,5 +1,5 @@
 #define USE_TIMER_1          true
-#define SERIAL_ON            false
+#define SERIAL_ON            true
 #define MONITOR_ON           false
 #define LIMITED_MONITOR_ON   false
 
@@ -16,22 +16,22 @@
 // A candle is given exactly four neighbours, represented by a sequence of four 4-bit indices.
 // Less than four neighbours can be assigned by filling the remining spaces with the candle's own index.
 // For example, if candle 4 has only two neighbours 3 and 6 this is represented by 0x4436. 
-#define NEIGHBOURS_OF_CANDLE_0x0 0x0124
-#define NEIGHBOURS_OF_CANDLE_0x1 0x0234
-#define NEIGHBOURS_OF_CANDLE_0x2 0x0135
-#define NEIGHBOURS_OF_CANDLE_0x3 0x3125
-#define NEIGHBOURS_OF_CANDLE_0x4 0x0167
-#define NEIGHBOURS_OF_CANDLE_0x5 0x2367
-#define NEIGHBOURS_OF_CANDLE_0x6 0x458C
-#define NEIGHBOURS_OF_CANDLE_0x7 0x458C
-#define NEIGHBOURS_OF_CANDLE_0x8 0x679A
-#define NEIGHBOURS_OF_CANDLE_0x9 0x8ABD
-#define NEIGHBOURS_OF_CANDLE_0xA 0xA89B
-#define NEIGHBOURS_OF_CANDLE_0xB 0xB9AF
-#define NEIGHBOURS_OF_CANDLE_0xC 0x67DE
-#define NEIGHBOURS_OF_CANDLE_0xD 0x9CEF
-#define NEIGHBOURS_OF_CANDLE_0xE 0xECDF
-#define NEIGHBOURS_OF_CANDLE_0xF 0xFBDE
+#define NEIGHBOURS_OF_CANDLE_0x0 0x0124UL
+#define NEIGHBOURS_OF_CANDLE_0x1 0x0234UL
+#define NEIGHBOURS_OF_CANDLE_0x2 0x0135UL
+#define NEIGHBOURS_OF_CANDLE_0x3 0x3125UL
+#define NEIGHBOURS_OF_CANDLE_0x4 0x0167UL
+#define NEIGHBOURS_OF_CANDLE_0x5 0x2367UL
+#define NEIGHBOURS_OF_CANDLE_0x6 0x458CUL
+#define NEIGHBOURS_OF_CANDLE_0x7 0x458CUL
+#define NEIGHBOURS_OF_CANDLE_0x8 0x679AUL
+#define NEIGHBOURS_OF_CANDLE_0x9 0x8ABDUL
+#define NEIGHBOURS_OF_CANDLE_0xA 0xA89BUL
+#define NEIGHBOURS_OF_CANDLE_0xB 0xB9AFUL
+#define NEIGHBOURS_OF_CANDLE_0xC 0x67DEUL
+#define NEIGHBOURS_OF_CANDLE_0xD 0x9CEFUL
+#define NEIGHBOURS_OF_CANDLE_0xE 0xECDFUL
+#define NEIGHBOURS_OF_CANDLE_0xF 0xFBDEUL
 
 
 Register shiftRegister;
@@ -60,6 +60,9 @@ void TimerHandler() {
 
 void shortCycle() {
 
+  #if SERIAL_ON
+  Serial.println();
+  #endif
   #if LIMITED_MONITOR_ON
   printLimited();
   #endif
@@ -86,12 +89,14 @@ void shortCycle() {
 
 #if LIMITED_MONITOR_ON
 void printLimited() {
-  Serial.println();
   //Serial.print("u"); Serial.print(Candle::hasUpdatesForRegister()); Serial.print("\t");
   //Serial.print("c"); Serial.print(Candle::activeCounters); Serial.print("\t");  // TODO make getActiveCounters function
   //Serial.print("l"); Serial.print(Candle::getLitCandles(candleArray), BIN); Serial.print("\n");
   Serial.print(minuteCounter); Serial.print("\t");
-  for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }
+  for ( uint8_t i = 0; i < 16; i++ ) { 
+    Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); 
+  }
+  Serial.println();
 }
 #endif
 

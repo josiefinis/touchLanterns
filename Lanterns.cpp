@@ -1,13 +1,14 @@
 #include "Lanterns.h"
 #include "Arduino.h"
 
-#define MONITOR_ON false
-#define LIMITED_MONITOR_ON false
+#define MONITOR_ON              false
+#define LIMITED_MONITOR_ON      false
+#define MONITOR_BUTTON_PRESS    true
 
-#define SHORT_PRESS  0b10    
-#define LONG_PRESS 0b01
-#define MEAN_CANDLE_LIFE 63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
-#define RANGE_CANDLE_LIFE 8     //   / 4 minutes
+#define SHORT_PRESS             0b10U
+#define LONG_PRESS              0b01U
+#define MEAN_CANDLE_LIFE        63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
+#define RANGE_CANDLE_LIFE       8     //   / 4 minutes
 
 
 Queue::Queue() {
@@ -85,7 +86,6 @@ void Lanterns::update() {
   for (uint8_t i=0; i<16; i++ ) {
     candle = pCandleArray + i; 
     if ( candle->isSignaled() ) { 
-      Serial.print(i); Serial.println("signaled!");
       candle->followSuit(); 
       activeCounters++; 
     }
@@ -109,24 +109,26 @@ void Lanterns::update() {
 void Lanterns::receiveSignal(uint32_t input) {
 // Handle input from buttons.
   // If long press, quickly build tree before next interrupt.
-  if ( 0x55555555L & input ) {   
+  if ( 0x55555555UL & input ) {   
     Candle* origin = &pCandleArray[longPressIndex(input)];
     buildBeaconTree(origin);
   }
-
-  #if MONITOR_ON
-  Serial.print("input: "); Serial.print(input, HEX); Serial.print("\n");
-  #endif
 
   for ( uint8_t i=0; i<16; i++ ) {
     if ( input >> 2*i & LONG_PRESS ) {
       pCandleArray[i].toggleIsLit();
       pCandleArray[i].toggleIsLitOnCount(0);
       activeCounters++;
+      #if MONITOR_BUTTON_PRESS
+      Serial.print("\tLONG PRESS "); Serial.print(i);
+      #endif
     }
     if ( input >> 2*i & SHORT_PRESS ) { 
       pCandleArray[i].toggleIsLitOnCount(0);
       activeCounters++;
+      #if MONITOR_BUTTON_PRESS
+      Serial.print("\tSHORT PRESS "); Serial.print(i);
+      #endif
     }
   }
 }
@@ -135,7 +137,7 @@ void Lanterns::receiveSignal(uint32_t input) {
 void Lanterns::burnDown() { 
 // Increment counter for all lit candles 
   for ( uint8_t i = random(4); i < 16; i+=4 ) {
-    if ( pCandleArray[i].getState() == 0xFF ) { 
+    if ( pCandleArray[i].getState() == 0xFFU ) { 
       activeCounters++; 
       return 0; 
     }

@@ -1,10 +1,10 @@
 #include "Button.h"
 #include "Arduino.h"
 
-#define LIMITED_MONITOR_ON false
+#define MONITOR_BUTTON_OUTPUT true
 #define LONG_INTERVAL 6   
-#define SHORT_PRESS 0b10
-#define LONG_PRESS  0b01   
+#define SHORT_PRESS 0b10U
+#define LONG_PRESS  0b01U   
 
 Button::Button() { }
     
@@ -33,8 +33,8 @@ uint32_t Button::output(uint16_t input) {
         break;
     }
   }
-  #if LIMITED_MONITOR_ON
-  Serial.print("B->"); Serial.println(outputBuffer, BIN); 
+  #if MONITOR_BUTTON_OUTPUT
+  Serial.print("\tB "); Serial.print(outputBuffer, HEX); 
   #endif
   return outputBuffer;
 }

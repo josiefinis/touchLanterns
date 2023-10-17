@@ -107,8 +107,8 @@ void Candle::setWatching(Candle* pCandle) {
 
 void Candle::setCounterRemaining(uint8_t value) {
 // Set counter such that it maxes out in 'value' counts.
-  state &= 0xE0;
-  state |= 0x1F & ~value;
+  state &= 0xE0U;
+  state |= 0x1FU & ~value;
 }
 
 
@@ -121,8 +121,8 @@ void Candle::setNotChangedLastCycle() {
 void Candle::setLifeRemaining(uint8_t value) {
 // Set life counter such that it maxes out in 'value' counts.
 // NB The life counter hijacks the isCounting bit (6 bit)
-  state &= 0xC0;
-  state |= 0x3F & ~value;
+  state &= 0xC0U;
+  state |= 0x3FU & ~value;
 }
 
 
