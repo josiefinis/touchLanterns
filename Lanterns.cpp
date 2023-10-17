@@ -5,8 +5,8 @@
 #define LIMITED_MONITOR_ON      false
 #define MONITOR_BUTTON_PRESS    true
 
-#define SHORT_PRESS             0b10U
-#define LONG_PRESS              0b01U
+#define SHORT_PRESS             0b10UL
+#define LONG_PRESS              0b01UL
 #define MEAN_CANDLE_LIFE        63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
 #define RANGE_CANDLE_LIFE       8     //   / 4 minutes
 

@@ -3,8 +3,8 @@
 
 #define MONITOR_BUTTON_OUTPUT true
 #define LONG_INTERVAL 6   
-#define SHORT_PRESS 0b10U
-#define LONG_PRESS  0b01U   
+#define SHORT_PRESS 0b10UL
+#define LONG_PRESS  0b01UL   
 
 Button::Button() { }
     
