@@ -3,7 +3,7 @@
 
 #define MONITOR_ON              false
 #define LIMITED_MONITOR_ON      false
-#define MONITOR_BUTTON_PRESS    true
+#define MONITOR_BUTTON_PRESS    false
 
 #define SHORT_PRESS             0b10UL
 #define LONG_PRESS              0b01UL

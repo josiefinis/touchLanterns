@@ -1,7 +1,7 @@
 #define USE_TIMER_1          true
-#define SERIAL_ON            true
+#define SERIAL_ON            false
 #define MONITOR_ON           false
-#define LIMITED_MONITOR_ON   false
+#define MONITOR_STATE        false
 
 
 #include "Sensor.h"
@@ -34,12 +34,13 @@
 #define NEIGHBOURS_OF_CANDLE_0xF 0xFBDEUL
 
 
-Register shiftRegister;
-ISR_Timer ISR_timer;
-Button button = Button();
-Sensor sensor = Sensor();
-Candle candleArray[16];
-Lanterns lanterns(candleArray);
+// Create class instances.
+Register shiftRegister;             // Writes to SIPO register.
+ISR_Timer ISR_timer;                // Handles timer interrupts.
+Button button = Button();           // Converts output from sensor to long and short 'button' presses.
+Sensor sensor = Sensor();           // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
+Candle candleArray[16];             // State and methods for each individual candle.
+Lanterns lanterns(candleArray);     // Aggregate control of candles. Responds to button input and timer interrupts and changes the state of candles.
 
 
 uint8_t minuteCounter = 1;
@@ -59,27 +60,31 @@ void TimerHandler() {
 
 
 void shortCycle() {
-
+/* Every timer interrupt:
+     scan sensors,
+     update candles,
+     write to register.
+*/
   #if SERIAL_ON
   Serial.println();
   #endif
-  #if LIMITED_MONITOR_ON
-  printLimited();
+  #if MONITOR_STATE
+  printState();
   #endif
 
   uint32_t buttonOutput = button.output(sensor.output());
-  if ( startupCounter > 0 ) {
+  if ( startupCounter > 0 ) {                       // Ignore sensors briefly after start up while they settle and calibrate themselves.
     startupCounter--;
     sensor.zeroOutput();
     return;
   }
-  if ( buttonOutput ) { 
+  if ( buttonOutput ) {                             // Forward button outut to lanterns controler.
     lanterns.receiveSignal(buttonOutput); 
   } 
-  if ( lanterns.getActiveCounters() ) {
+  if ( lanterns.getActiveCounters() ) {             // Apply counter based updates (delay turning candes on/off.
     lanterns.update(); 
   }
-  if ( lanterns.getIsUpdateForRegister() ) { 
+  if ( lanterns.getIsUpdateForRegister() ) {        // Write changes in lit/unlit to register.
     shiftRegister.writeToStorageRegister(lanterns.getLitCandles()); 
     lanterns.setIsUpdateForRegister(false);
   }
@@ -87,12 +92,8 @@ void shortCycle() {
 }
 
 
-#if LIMITED_MONITOR_ON
-void printLimited() {
-  //Serial.print("u"); Serial.print(Candle::hasUpdatesForRegister()); Serial.print("\t");
-  //Serial.print("c"); Serial.print(Candle::activeCounters); Serial.print("\t");  // TODO make getActiveCounters function
-  //Serial.print("l"); Serial.print(Candle::getLitCandles(candleArray), BIN); Serial.print("\n");
-  Serial.print(minuteCounter); Serial.print("\t");
+#if MONITOR_STATE
+void printState() {
   for ( uint8_t i = 0; i < 16; i++ ) { 
     Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); 
   }
@@ -101,25 +102,8 @@ void printLimited() {
 #endif
 
 
-#if false
-void printStates() {
-  Serial.println();
-  Serial.print("Counters: "); Serial.print(lanterns.activeCounters); Serial.print("\n");
-  Serial.print("index   \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(i); Serial.print("\t"); } Serial.print("\n");
-  //Serial.print("address \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print((long) &candleArray[i], HEX); Serial.print("\t"); } Serial.print("\n");
-  Serial.print("state   \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getState(), HEX); Serial.print("\t"); }Serial.print("\n");
-  Serial.print("watching\t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(lanterns.addressToIndex(candleArray[i].getWatching())); Serial.print("\t"); }Serial.print("\n");
-  Serial.print("state_w \t"); for ( uint8_t i = 0; i < 16; i++ ) { Serial.print(candleArray[i].getWatching()->getState(), HEX); Serial.print("\t"); }Serial.print("\n");
-}
-#endif
-
-
-void setup() {
-  #if SERIAL_ON
-  Serial.begin(9600);		
-  while(!Serial) {}
-  #endif
-
+void initialisePins() {
+  // Set pins I/O.
   pinMode(PIN_SENSOR_RECEIVE, INPUT);
   pinMode(PIN_SENSOR_SEND, OUTPUT);
   pinMode(PIN_REGISTER_SER, OUTPUT);
@@ -128,7 +112,28 @@ void setup() {
   pinMode(PIN_REGISTER_SRCLK, OUTPUT);
   pinMode(PIN_REGISTER_NOT_SRCLR, OUTPUT);
   DDRD |= 0b11111100; // set PORTD (digital 7 to 2) to outputs
+}
 
+
+void initialiseTimerInterrupts() {
+// Initialise timer interrupts using timer interrupt library.
+  ITimer1.init();
+  #if MONITOR_ON
+  if (ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler)) {
+    Serial.print(F("Starting  ITimer1 OK, millis() = ")); Serial.println(millis());
+  }
+  else {
+    Serial.println(F("Can't set ITimer1. Select another freq. or timer"));
+  }
+  #else
+  ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
+  #endif
+  ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
+}
+
+
+void assignCandleNeighbourhoods() {
+// Assign a neighbourhood of four candles for each candle (defines a graph).
   candleArray[0x0].setNeighbours(NEIGHBOURS_OF_CANDLE_0x0);
   candleArray[0x1].setNeighbours(NEIGHBOURS_OF_CANDLE_0x1);
   candleArray[0x2].setNeighbours(NEIGHBOURS_OF_CANDLE_0x2);
@@ -145,20 +150,19 @@ void setup() {
   candleArray[0xD].setNeighbours(NEIGHBOURS_OF_CANDLE_0xD);
   candleArray[0xE].setNeighbours(NEIGHBOURS_OF_CANDLE_0xE);
   candleArray[0xF].setNeighbours(NEIGHBOURS_OF_CANDLE_0xF);
-  ITimer1.init();
-  #if MONITOR_ON
-  if (ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler))
-  {
+}
 
-    Serial.print(F("Starting  ITimer1 OK, millis() = ")); Serial.println(millis());
-  }
-  else
-    Serial.println(F("Can't set ITimer1. Select another freq. or timer"));
-  #else
-  ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
+
+void setup() {
+  #if SERIAL_ON
+  Serial.begin(9600);		
+  while(!Serial) {}
   #endif
-  ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
+  initialisePins();
+  initialiseTimerInterrupts();
+  assignCandleNeighbourhoods();
   shiftRegister.reset();
+  RandomSeed(analogRead(0));
 }
 
 void loop() {

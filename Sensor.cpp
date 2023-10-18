@@ -1,8 +1,8 @@
 #include "Arduino.h"
 #include "Sensor.h"
 
-#define MONITOR_SENSOR_INPUT    true
-#define MONITOR_SENSOR_OUTPUT   true
+#define MONITOR_SENSOR_INPUT    false
+#define MONITOR_SENSOR_OUTPUT   false
 #define SENSOR_SAMPLES          100
 #define EDGE_THRESHOLD          80
 #define LEVEL_THRESHOLD         30

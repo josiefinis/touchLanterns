@@ -1,7 +1,7 @@
 #include "Button.h"
 #include "Arduino.h"
 
-#define MONITOR_BUTTON_OUTPUT true
+#define MONITOR_BUTTON_OUTPUT false
 #define LONG_INTERVAL 6   
 #define SHORT_PRESS 0b10UL
 #define LONG_PRESS  0b01UL   
