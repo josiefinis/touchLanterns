@@ -17,6 +17,7 @@ class Candle {
     Candle();
 
     uint8_t getState();
+    uint8_t getLifeRemaining();
     uint16_t getNeighbours();
     Candle* getWatching();
     bool isWatching();

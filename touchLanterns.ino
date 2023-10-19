@@ -1,8 +1,9 @@
-#define USE_TIMER_1          true
-#define SERIAL_ON            false
-#define MONITOR_ON           false
-#define MONITOR_STATE        false
+#define USE_TIMER_1         true
 
+#define SERIAL_ON           false
+#define MONITOR_ON          false
+#define MONITOR_STATE       false
+#define MONITOR_LIFE        false
 
 #include "Sensor.h"
 #include "Button.h"
@@ -33,6 +34,9 @@
 #define NEIGHBOURS_OF_CANDLE_0xE 0xECDFUL
 #define NEIGHBOURS_OF_CANDLE_0xF 0xFBDEUL
 
+
+// Expected life duration is equal to 16 * Lantern/CANDLE_LIFE_COUNT * CANDLE_LIFE_INTERVAL * the timer interrupt interval 
+#define CANDLE_LIFE_INTERVAL      0x80           // NB must be a factor of 256. 
 
 // Create class instances.
 Register shiftRegister;             // Writes to SIPO register.
@@ -65,9 +69,6 @@ void shortCycle() {
      update candles,
      write to register.
 */
-  #if SERIAL_ON
-  Serial.println();
-  #endif
   #if MONITOR_STATE
   printState();
   #endif
@@ -162,12 +163,19 @@ void setup() {
   initialiseTimerInterrupts();
   assignCandleNeighbourhoods();
   shiftRegister.reset();
-  RandomSeed(analogRead(0));
+  randomSeed(analogRead(0));
 }
 
 void loop() {
   if ( not lanterns.getLitCandles() ) { return; }
-  if ( minuteCounter ) { return; }
-  lanterns.burnDown(); 
-  minuteCounter++;
+  if ( minuteCounter % CANDLE_LIFE_INTERVAL == 0 ) { 
+    lanterns.burnDown(); 
+    minuteCounter++;
+    #if MONITOR_LIFE
+    for ( uint8_t i=0; i<16; i++ ) {
+      Serial.print(candleArray[i].getLifeRemaining()); Serial.print("\t");
+    }
+    Serial.println();
+    #endif
+  }
 }

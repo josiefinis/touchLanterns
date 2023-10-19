@@ -1,7 +1,7 @@
 #include "Candle.h"
 
-#define BEACON_MIN_DELAY  3     //   / 200 ms
-#define BEACON_MAX_DELAY  8     //   / 200 ms
+#define BEACON_MIN_DELAY      3     //   / 200 ms
+#define BEACON_MAX_DELAY      8     //   / 200 ms
 
 
 const uint8_t Candle::SHUFFLE[6] = {0x1B, 0x27, 0x4B, 0x63, 0x87, 0x93};
@@ -20,6 +20,11 @@ uint8_t Candle::cut(uint8_t sequence) {
 
 uint8_t Candle::getState() {
   return state;
+}
+
+
+uint8_t Candle::getLifeRemaining() {
+  return 0x1F - (state & 0x1F);
 }
 
 
@@ -119,10 +124,8 @@ void Candle::setNotChangedLastCycle() {
 
 
 void Candle::setLifeRemaining(uint8_t value) {
-// Set life counter such that it maxes out in 'value' counts.
-// NB The life counter hijacks the isCounting bit (6 bit)
   state &= 0xC0U;
-  state |= 0x3FU & ~value;
+  state |= 0x1FU & ~value;
 }
 
 
