@@ -3,12 +3,11 @@
 
 #define MONITOR_ON              false
 #define LIMITED_MONITOR_ON      false
-#define MONITOR_BUTTON_PRESS    true
+#define MONITOR_BUTTON_PRESS    false
 
 #define SHORT_PRESS             0b10UL
 #define LONG_PRESS              0b01UL
-#define MEAN_CANDLE_LIFE        63     //   / 4 minutes  OBS! max 63 aka 0x3F aka 0b0011 1111
-#define RANGE_CANDLE_LIFE       8     //   / 4 minutes
+#define CANDLE_LIFE_COUNT           31           // NB must be integer in range [1, 31].
 
 
 Queue::Queue() {
@@ -92,7 +91,7 @@ void Lanterns::update() {
     if ( candle->isChangedLastCycle() ) { 
       isUpdateForRegister = true;
       if ( candle->isLit() ) { 
-        candle->setLifeRemaining(MEAN_CANDLE_LIFE - random(RANGE_CANDLE_LIFE));
+        candle->setLifeRemaining(CANDLE_LIFE_COUNT);
         litCandles |= (1 << i);
       }
       else {
@@ -135,14 +134,14 @@ void Lanterns::receiveSignal(uint32_t input) {
 
 
 void Lanterns::burnDown() { 
-// Increment counter for all lit candles 
-  for ( uint8_t i = random(4); i < 16; i+=4 ) {
-    if ( pCandleArray[i].getState() == 0xFFU ) { 
-      activeCounters++; 
-      return 0; 
-    }
-    pCandleArray[i].burnDown();
+// Increment counter for a random candle, if lit. 
+  uint8_t i = random(16);
+  if ( pCandleArray[i].getLifeRemaining() == 0 ) { 
+    pCandleArray[i].toggleIsLitOnCount(random(0x1F));
+    activeCounters++; 
+    return 0; 
   }
+  pCandleArray[i].burnDown();
 }
 
 
