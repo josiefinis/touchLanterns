@@ -1,0 +1,25 @@
+# BUGFIX
+
+## Issue 
+Candle 0 turns on and off without being touched.
+Happens sometimes without any input to any candle, i.e. is found to be on at random times. 
+Happens more often when there is input to another candle.
+Can interrupt long press to other sensors.
+
+Possibly also on candle by headphones (index 8?)
+
+
+## Cause
+Presumably issue with capacitive sensing.
+Maybe due to correct reading of unwanted elevated capacitance, e.g. from interference between sensors.
+Maybe a bug in 'Sensor' class.
+Could be significant that it affects index 0 (first in Sensor.output loop).
+Also if affecting index 8 (last in Sensor.output loop).
+Maybe something to do with the Sensor.output loop being interrupted?
+
+
+## Action
+Monitor capacitance (sensor input) to see if it is a correct reading of unwanted elevated capacitance. If so, make 'Sensor' class more robust.
+Try changing loop end condition
+  > while ( muxChannel % 16 != 0 );
+to break on a different index and observe if the problem moves to that index. If so, look for bug in 'Sensor' class.
