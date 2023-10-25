@@ -3,9 +3,9 @@
 
 #define MONITOR_SENSOR_INPUT    false
 #define MONITOR_SENSOR_OUTPUT   false
-#define SENSOR_SAMPLES          100
+#define SENSOR_SAMPLES          50
 #define EDGE_THRESHOLD          80
-#define LEVEL_THRESHOLD         30
+#define LEVEL_THRESHOLD         25
 #define WEIGHT_HISTORY          10
 #define EDGE_DETECTION          false
 
@@ -49,7 +49,7 @@ uint16_t Sensor::output() {
   while ( muxChannel % 16 != 0 );
 
   #if MONITOR_SENSOR_OUTPUT
-  Serial.print("\tS "); Serial.print(sensorOutput, HEX);
+  Serial.print("\tS "); Serial.println(sensorOutput, HEX);
   #endif
   return sensorOutput;
 }
