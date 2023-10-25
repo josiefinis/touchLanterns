@@ -48,7 +48,7 @@ Lanterns lanterns(candleArray);     // Aggregate control of candles. Responds to
 
 
 uint8_t minuteCounter = 1;
-uint8_t startupCounter = 25;
+uint8_t startupCounter = 6;
 
 
 void TimerHandler() {

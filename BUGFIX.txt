@@ -16,10 +16,35 @@ Maybe a bug in 'Sensor' class.
 Could be significant that it affects index 0 (first in Sensor.output loop).
 Also if affecting index 8 (last in Sensor.output loop).
 Maybe something to do with the Sensor.output loop being interrupted?
+If call to capacitive sensor is interrupted before it is finished, maybe the results for those samples are not cleared and carry forward to the next call. 
 
 
 ## Action
-Monitor capacitance (sensor input) to see if it is a correct reading of unwanted elevated capacitance. If so, make 'Sensor' class more robust.
+Monitor capacitance (sensor input) to see if it is a correct reading of unwanted elevated capacitance. If so, make 'Sensor' class more robust. Look at raw input.
 Try changing loop end condition
   > while ( muxChannel % 16 != 0 );
 to break on a different index and observe if the problem moves to that index. If so, look for bug in 'Sensor' class.
+Try smaller number of samples to avoid being interrupted.
+
+
+## Results
+Monitor shows high spike in normalised input (70-100) which does not look like a correct reading. Could be a problem with normalisation, look at raw input.
+Monitor shows a high spike in raw input from baseline of ~1500 to 2000-3000. 
+Changing loop end condition reveals that the issue affects the index that satisfies the end condition, i.e. a change to
+  > while ( muxChannel % 16 != 2 ); 
+moves the problem to the candle with index 2.
+Monitor shows the same large spike in raw input for the first input of the loop.
+Almost certainly a bug in the Sensor.output loop. Is the first index of the loop being run again at the end of the loop? No.
+What is different for this index?
+  mux channel is already set
+
+
+Why does issue occur only some of the time?
+  interrupts?
+
+If call to capacitive sensor is interrupted before it is finished, maybe the results for those samples are not cleared and carry forward to the next call. 
+Try reducing the number of samples so that sensor loop is not interrupted.
+Try out 'focus' branch, which calls capacitive sensor with a small number of samples and if positive, only then calls with a large number of samples.
+Maybe only a small number of samples is necessary.
+
+Could not reproduce issue when running a brief test with a smaller number of samples. Will need to apply this change longer term and see if the issue occurs again.

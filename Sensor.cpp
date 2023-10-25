@@ -1,22 +1,23 @@
 #include "Arduino.h"
 #include "Sensor.h"
 
-#define MONITOR_SENSOR_INPUT    false
-#define MONITOR_SENSOR_OUTPUT   false
-#define SENSOR_SAMPLES          100
-#define EDGE_THRESHOLD          80
-#define LEVEL_THRESHOLD         30
-#define WEIGHT_HISTORY          10
-#define EDGE_DETECTION          false
+#define MONITOR_RAW_INPUT           false
+#define MONITOR_NORMALISED_INPUT    false
+#define MONITOR_SENSOR_OUTPUT       false
+#define SENSOR_SAMPLES              50
+#define NORMALISATION_FACTOR        40
+#define LEVEL_THRESHOLD             100
+#define WEIGHT_HISTORY              10
 
 CapacitiveSensor Sensor::sensor = CapacitiveSensor(PIN_SENSOR_SEND, PIN_SENSOR_RECEIVE);
 
 
 Sensor::Sensor() {
-  for ( uint8_t i=0; i<16; i++ ) { baseline[i] = 0xFFFFUL * SENSOR_SAMPLES; }
+  for ( uint8_t i=0; i<16; i++ ) { baseline[i] = 0xFFFFUL; }
   i = 0;
   muxChannel = 0;
   sensorOutput = 0;
+  initialiseBaseline();
 }
 
 
@@ -24,84 +25,62 @@ uint16_t Sensor::output() {
 // Return one-hot encoded sensor output.
   sensorOutput = 0;
   long rawInput = 0;
-  uint16_t normalisedInput = 0;
+  uint16_t input = 0;
   uint16_t highestInput = 0;
   do {
-    rawInput = input();
-    normalisedInput = normalise(rawInput);
-    #if MONITOR_SENSOR_INPUT 
-    Serial.print(normalisedInput); Serial.print("\t");
+    rawInput = newInput();
+    input = normalise(rawInput);
+    #if MONITOR_RAW_INPUT 
+    Serial.print(rawInput); Serial.print("\t");
+    #endif
+    #if MONITOR_NORMALISED_INPUT 
+    Serial.print(input); Serial.print("\t");
     #endif
 
-    if ( not detectLevel(normalisedInput) ) {
+    if ( not isHigh(input) ) {
       recalibrateBaseline(rawInput);
-      advanceMuxChannel();
+      incrementMuxChannel();
       continue; 
     }
-    if ( normalisedInput < highestInput ) { 
-      advanceMuxChannel();
+    if ( input < highestInput ) { 
+      incrementMuxChannel();
       continue;
     }
     sensorOutput = (1 << muxChannel);
-    highestInput = normalisedInput;
-    advanceMuxChannel();
+    highestInput = input;
+    incrementMuxChannel();
   }
   while ( muxChannel % 16 != 0 );
 
   #if MONITOR_SENSOR_OUTPUT
-  Serial.print("\tS "); Serial.print(sensorOutput, HEX);
+  Serial.print("\tS "); Serial.println(sensorOutput, HEX);
   #endif
   return sensorOutput;
 }
 
 
-uint8_t Sensor::normalise(long input)  {
-  int16_t norm = (input - baseline[muxChannel]) * 10 / SENSOR_SAMPLES;
-  return constrain(norm, 0, 255);
-}
-
-
-void Sensor::recalibrateBaseline(long input) {
-  baseline[muxChannel] = (WEIGHT_HISTORY * baseline[muxChannel] + input) / (WEIGHT_HISTORY + 1);
-  
-}
-
-
-bool Sensor::detectLevel(uint8_t input) {
-  return input > LEVEL_THRESHOLD;
-}
-
-
-int8_t Sensor::detectEdge(long input) {
-// Return 1 if rising edge, -1 if falling edge, 0 if no edge.
-  int16_t difference = input - baseline[muxChannel];
-  if ( abs(difference) < EDGE_THRESHOLD ) { 
-    return 0; 
-  }
-  else if ( difference > 0 ) { 
-    return 1; 
-  }
-  else { 
-    return -1;
-  }
-}
-
-
-void Sensor::zeroOutput() {
-// Set the sensor output to 0.
-  sensorOutput = 0;
-}
-
-
-long Sensor::input() { 
+long Sensor::newInput() { 
 // Get sensor input using capacitive sensor library.
   return sensor.capacitiveSensorRaw(SENSOR_SAMPLES);
 }
 
 
-void Sensor::advanceMuxChannel() {
+uint8_t Sensor::normalise(long rawInput)  {
+// Normalise input to lie between 0 and 255. 
+  int16_t norm = (rawInput - baseline[muxChannel]) * NORMALISATION_FACTOR / SENSOR_SAMPLES;
+  return constrain(norm, 0, 255);
+}
+
+
+bool Sensor::isHigh(uint8_t input) {
+// Return true when the input exceeds the trigger threshold.
+  return input > LEVEL_THRESHOLD;
+}
+
+
+void Sensor::incrementMuxChannel() {
 // Set multiplexer input channel to next in sequence:
-//  0, 2, 3, 1, 5, 7, 6, 4, 12, 14, 15, 13, 9, 11, 10, 8, 0, ...
+//  0, 1, 3, 2, 6, 7, 5, 4, C, D, F, E, A, B, 9, 8, 0, ...
   i++;
   if ( i % 8 == 0 ) { 
     PORTD ^= PIN_MUX_S3; 
@@ -122,3 +101,22 @@ void Sensor::advanceMuxChannel() {
 }
 
 
+void Sensor::initialiseBaseline() {
+// Calibrate baseline multiple times on all channels for capacitive sensor in 'untouched' state.
+  for ( uint8_t i=0; i<0xFF; i++ ) {
+    recalibrateBaseline(newInput());
+    incrementMuxChannel();
+  }
+}
+
+
+void Sensor::recalibrateBaseline(long input) {
+// Calibrate baseline for one channel based on one sensor input.
+  baseline[muxChannel] = (WEIGHT_HISTORY * baseline[muxChannel] + input) / (WEIGHT_HISTORY + 1);
+}
+
+
+void Sensor::zeroOutput() {
+// Set the sensor output to 0.
+  sensorOutput = 0;
+}
