@@ -4,10 +4,10 @@
 #define MONITOR_RAW_INPUT           false
 #define MONITOR_NORMALISED_INPUT    false
 #define MONITOR_SENSOR_OUTPUT       false
-#define SENSOR_SAMPLES              50
-#define NORMALISATION_FACTOR        40
-#define LEVEL_THRESHOLD             100
-#define WEIGHT_HISTORY              10
+#define SENSOR_SAMPLES              32
+#define NORMALISATION_FACTOR        32
+#define LEVEL_THRESHOLD             64
+#define WEIGHT_HISTORY              8
 
 CapacitiveSensor Sensor::sensor = CapacitiveSensor(PIN_SENSOR_SEND, PIN_SENSOR_RECEIVE);
 
@@ -53,7 +53,14 @@ uint16_t Sensor::output() {
   while ( muxChannel % 16 != 0 );
 
   #if MONITOR_SENSOR_OUTPUT
-  Serial.print("\tS "); Serial.println(sensorOutput, HEX);
+  uint16_t buffer = sensorOutput;
+  uint8_t idx = 0;
+  while ( buffer >>= 1 ) {
+    idx++;
+  }
+  Serial.print("\tS "); 
+  if ( sensorOutput ) { Serial.print(idx, HEX); }
+  Serial.print("\n");
   #endif
   return sensorOutput;
 }
