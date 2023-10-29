@@ -18,12 +18,13 @@ class Sensor {
     uint16_t sensorOutput;
     uint8_t i;
     uint8_t muxChannel;
+
+    long newInput();
     uint8_t normalise(long input);
-    bool detectLevel(uint8_t input);
+    bool isHigh(uint8_t input);
+    void incrementMuxChannel();
+    void initialiseBaseline();
     void recalibrateBaseline(long input);
-    int8_t detectEdge(long input);
-    long input();
-    void advanceMuxChannel();
 
   public:
     Sensor::Sensor();
