@@ -1,5 +1,3 @@
-#define USE_TIMER_1         true
-
 #define SERIAL_ON           false
 #define MONITOR_ON          false
 #define MONITOR_STATE       false
@@ -11,8 +9,6 @@
 #include "Lanterns.h"
 #include "Register.h"
 #include "Arduino.h"
-#include <TimerInterrupt.h>
-#include <ISR_Timer.h>
 
 // A candle is given exactly four neighbours, represented by a sequence of four 4-bit indices.
 // Less than four neighbours can be assigned by filling the remining spaces with the candle's own index.
@@ -35,63 +31,71 @@
 #define NEIGHBOURS_OF_CANDLE_0xF 0xFBDEUL
 
 
-// Expected life duration is equal to 16 * Lantern/CANDLE_LIFE_COUNT * CANDLE_LIFE_INTERVAL * the timer interrupt interval 
-#define CANDLE_LIFE_INTERVAL      0x80           // NB must be a factor of 256. 
 
 // Create class instances.
 Register shiftRegister;             // Writes to SIPO register.
-ISR_Timer ISR_timer;                // Handles timer interrupts.
 Button button = Button();           // Converts output from sensor to long and short 'button' presses.
 Sensor sensor = Sensor();           // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
 Candle candleArray[16];             // State and methods for each individual candle.
 Lanterns lanterns(candleArray);     // Aggregate control of candles. Responds to button input and timer interrupts and changes the state of candles.
 
 
-uint8_t minuteCounter = 1;
+uint16_t lastSensorTime = millis();
+uint16_t lastLanternsUpdateTime = millis();
+uint16_t lastRegisterUpdateTime = millis();
+uint16_t lastBurnTime = millis();
+uint16_t lastMonitorTime = millis();
+
 uint8_t startupCounter = 6;
 
 
-void TimerHandler() {
-  ISR_timer.run();
-}
-
-#define HW_TIMER_INTERVAL_MS             100L
-#if MONITOR_ON
-#define TIMER_INTERVAL_200MS             1000L
-#else
-#define TIMER_INTERVAL_200MS             200L
-#endif
+#define SENSOR_INTERVAL                200U
+#define LANTERNS_UPDATE_INTERVAL       200U
+#define REGISTER_UPDATE_INTERVAL       200U
+#define BURN_INTERVAL                60000U   // Expected life duration is equal to 16 * CANDLE_LIFE_COUNT * BURN_INTERVAL
+#define MONITOR_INTERVAL              1000U
 
 
-void shortCycle() {
-/* Every timer interrupt:
-     scan sensors,
-     update candles,
-     write to register.
-*/
-  #if MONITOR_STATE
-  printState();
-  #endif
-
+void pollSensors() {
+// Poll capacitive sensors every SENSOR_INTERVAL ms, convert to button output and forward button ouptut to lanterns controler.
   uint32_t buttonOutput = button.output(sensor.output());
   if ( startupCounter > 0 ) {                       // Ignore sensors briefly after start up while they settle and calibrate themselves.
     startupCounter--;
     sensor.zeroOutput();
-    return;
+    return 0;
   }
-  if ( buttonOutput ) {                             // Forward button outut to lanterns controler.
-    lanterns.receiveSignal(buttonOutput); 
-  } 
-  if ( lanterns.getActiveCounters() ) {             // Apply counter based updates (delay turning candes on/off.
-    lanterns.update(); 
-  }
-  if ( lanterns.getIsUpdateForRegister() ) {        // Write changes in lit/unlit to register.
-    shiftRegister.writeToStorageRegister(lanterns.getLitCandles()); 
-    lanterns.setIsUpdateForRegister(false);
-  }
-  if ( lanterns.getLitCandles() ) { minuteCounter++; }
+  if ( not buttonOutput ) { return 0; }
+  lanterns.receiveSignal(buttonOutput); 
 }
 
+
+void updateLanterns() {
+// Apply counter based updates that control the delay turning candes on/off.
+  if ( not lanterns.getActiveCounters() ) { return 0; }            
+  lanterns.update(); 
+}
+
+
+void updateRegister() {
+// Write changes in lit/unlit to register.
+  if ( not lanterns.getIsUpdateForRegister() ) { return 0; }        
+  lanterns.setIsUpdateForRegister(false);
+  shiftRegister.writeToStorageRegister(lanterns.getLitCandles()); 
+}
+
+
+void burnCandles() {
+// Burn down all lit candles. 
+  if ( not lanterns.getLitCandles() ) { return 0; }
+  lanterns.burnDown(); 
+ 
+  #if MONITOR_LIFE
+  for ( uint8_t i=0; i<16; i++ ) {
+    Serial.print(candleArray[i].getLifeRemaining()); Serial.print("\t");
+  }
+  Serial.println();
+  #endif
+}
 
 #if MONITOR_STATE
 void printState() {
@@ -113,23 +117,6 @@ void initialisePins() {
   pinMode(PIN_REGISTER_SRCLK, OUTPUT);
   pinMode(PIN_REGISTER_NOT_SRCLR, OUTPUT);
   DDRD |= 0b11111100; // set PORTD (digital 7 to 2) to outputs
-}
-
-
-void initialiseTimerInterrupts() {
-// Initialise timer interrupts using timer interrupt library.
-  ITimer1.init();
-  #if MONITOR_ON
-  if (ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler)) {
-    Serial.print(F("Starting  ITimer1 OK, millis() = ")); Serial.println(millis());
-  }
-  else {
-    Serial.println(F("Can't set ITimer1. Select another freq. or timer"));
-  }
-  #else
-  ITimer1.attachInterruptInterval(HW_TIMER_INTERVAL_MS, TimerHandler);
-  #endif
-  ISR_timer.setInterval(TIMER_INTERVAL_200MS, shortCycle);
 }
 
 
@@ -160,22 +147,35 @@ void setup() {
   while(!Serial) {}
   #endif
   initialisePins();
-  initialiseTimerInterrupts();
   assignCandleNeighbourhoods();
   shiftRegister.reset();
   randomSeed(analogRead(0));
 }
 
 void loop() {
-  if ( not lanterns.getLitCandles() ) { return; }
-  if ( minuteCounter % CANDLE_LIFE_INTERVAL == 0 ) { 
-    lanterns.burnDown(); 
-    minuteCounter++;
-    #if MONITOR_LIFE
-    for ( uint8_t i=0; i<16; i++ ) {
-      Serial.print(candleArray[i].getLifeRemaining()); Serial.print("\t");
-    }
-    Serial.println();
-    #endif
+  uint16_t currentTime = millis();
+
+  #if MONITOR_STATE
+  if ( currentTime - lastMonitorTime > MONITOR_INTERVAL ) {
+    lastMonitorTime = currentTime;
+    printState();
+  }
+  #endif
+
+  if ( currentTime - lastSensorTime > SENSOR_INTERVAL ) {
+    lastSensorTime = currentTime;
+    pollSensors();
+  }
+  if ( currentTime - lastLanternsUpdateTime > LANTERNS_UPDATE_INTERVAL ) {
+    lastLanternsUpdateTime = currentTime;
+    updateLanterns();
+  }
+  if ( currentTime - lastRegisterUpdateTime > REGISTER_UPDATE_INTERVAL ) {
+    lastRegisterUpdateTime = currentTime;
+    updateRegister();
+  }
+  if ( currentTime - lastBurnTime > BURN_INTERVAL ) {
+    lastBurnTime = currentTime;
+    burnCandles();
   }
 }
