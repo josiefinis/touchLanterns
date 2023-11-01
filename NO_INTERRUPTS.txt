@@ -1,8 +1,0 @@
-The way a timer interrupt is used to control timing is bad.
-
-Far too much is done in the interrupt function, i.e. nearly everything.
-Interrupt interval needs to be kept long to not cause errors.
-Interrupt is unnecessary.
-
-
-Instead of interrupt, use millis().
