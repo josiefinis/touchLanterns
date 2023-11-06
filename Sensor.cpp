@@ -89,15 +89,15 @@ void Sensor::incrementMuxChannel() {
 // Set multiplexer input channel to next in sequence:
 //  0, 1, 3, 2, 6, 7, 5, 4, C, D, F, E, A, B, 9, 8, 0, ...
   i++;
-  if ( i % 8 == 0 ) { 
+  if ( i & 0b111 == 0 ) { 
     PORTD ^= PIN_MUX_S3; 
     muxChannel ^= 0b1000U;
   }
-  else if ( i % 4 == 0 ) { 
+  else if ( i & 0b11 == 0 ) { 
     PORTD ^= PIN_MUX_S2; 
     muxChannel ^= 0b0100U;
   }
-  else if ( i % 2 == 0 ) { 
+  else if ( i & 0b1 == 0 ) { 
     PORTD ^= PIN_MUX_S1; 
     muxChannel ^= 0b0010U;
   }
