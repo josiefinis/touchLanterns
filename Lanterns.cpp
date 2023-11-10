@@ -7,7 +7,7 @@
 
 #define SHORT_PRESS             0b10UL
 #define LONG_PRESS              0b01UL
-#define CANDLE_LIFE_COUNT           31           // NB must be integer in range [1, 31].
+#define CANDLE_LIFE_COUNT           16           // NB must be integer in range [1, 31].
 
 
 Queue::Queue() {
