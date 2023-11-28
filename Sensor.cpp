@@ -1,9 +1,7 @@
 #include "Arduino.h"
 #include "Sensor.h"
+#include "Global.h"
 
-#define MONITOR_RAW_INPUT           false
-#define MONITOR_NORMALISED_INPUT    false
-#define MONITOR_SENSOR_OUTPUT       false
 #define SENSOR_SAMPLES              32
 #define NORMALISATION_FACTOR        32
 #define LEVEL_THRESHOLD             64
@@ -52,14 +50,7 @@ uint16_t Sensor::output() {
   }
   while ( muxChannel % 16 != 0 );
 
-  #if MONITOR_SENSOR_OUTPUT
-  uint16_t buffer = sensorOutput;
-  uint8_t idx = 0;
-  while ( buffer >>= 1 ) {
-    idx++;
-  }
-  Serial.print("\tS "); 
-  if ( sensorOutput ) { Serial.print(idx, HEX); }
+  #if MONITOR_SENSOR_OUTPUT || MONITOR_RAW_INPUT || MONITOR_NORMALISED_INPUT 
   Serial.print("\n");
   #endif
   return sensorOutput;

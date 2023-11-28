@@ -1,13 +1,7 @@
 #include "Arduino.h"
 #include <CapacitiveSensor.h>
+#include "Global.h"
 
-#define PIN_SENSOR_SEND 8
-#define PIN_SENSOR_RECEIVE 10
-#define HARDWARE_NUMBER_OF_MUX_CHANNELS 16
-#define PIN_MUX_S0 0b00000100 // pin 2 -> S0
-#define PIN_MUX_S1 0b00001000 // pin 3 -> S1
-#define PIN_MUX_S2 0b00010000 // pin 4 -> S2
-#define PIN_MUX_S3 0b00100000 // pin 5 -> S3
 
 class Sensor {
 

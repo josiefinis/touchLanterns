@@ -9,6 +9,7 @@
 #include "Lanterns.h"
 #include "Register.h"
 #include "Arduino.h"
+#include "Global.h"
 
 // A candle is given exactly four neighbours, represented by a sequence of four 4-bit indices.
 // Less than four neighbours can be assigned by filling the remining spaces with the candle's own index.
@@ -116,6 +117,10 @@ void initialisePins() {
   pinMode(PIN_REGISTER_RCLK, OUTPUT);
   pinMode(PIN_REGISTER_SRCLK, OUTPUT);
   pinMode(PIN_REGISTER_NOT_SRCLR, OUTPUT);
+  DDRB |= PIN_REGISTER_SER | PIN_REGISTER_NOT_OE | PIN_REGISTER_RCLK | PIN_REGISTER_SRCLK | PIN_REGISTER_NOT_SRCLR;
+
+
+
   DDRD |= 0b11111100; // set PORTD (digital 7 to 2) to outputs
 }
 
