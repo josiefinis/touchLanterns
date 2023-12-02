@@ -1,6 +1,5 @@
 #include "Global.h"
 
-#include "Stopwatch.h"
 #include "Sensor.h"
 #include "Lantern.h"
 #include "PWMSignal.h"
@@ -12,9 +11,6 @@ Register shiftRegister;         // Writes to SIPO register chip.
 PWMSignal pwmSignal;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
 Sensor sensor = Sensor();       // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
 Lantern lantern[16];            // State machine that controls lantern logic.
-Stopwatch inputTimer;
-Stopwatch updateTimer;
-Stopwatch brightnessTimer;
 
 
 uint8_t idx;

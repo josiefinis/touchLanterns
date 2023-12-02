@@ -159,7 +159,6 @@ bool Lantern::initDown() {
   }
   if ( isInput( TOUCHED, MEDIUM ) ) {       // On medium touch: make lantern flicker as feedback. From FLICKER can go to either AUTO or ROOT.
     state = FLICKER_DOWN; 
-    input = 1;
     return flickerBrightness();
   }
   return lowerBrightness( 32, 128 ); 
@@ -174,7 +173,6 @@ bool Lantern::initUp() {
   }
   if ( isInput( TOUCHED, MEDIUM ) ) {       // Medium duration touch: make lantern flicker as feedback. From FLICKER can go to either AUTO or ROOT.
     state = FLICKER_UP;
-    input = 1;
     return flickerBrightness();
   }
   return raiseBrightness( 32 );
@@ -201,9 +199,9 @@ bool Lantern::flickerDown() {
     state = AUTO_DOWN;    
     return 0;
   }
-  if ( isInput( TOUCHED, LONG ) and not nTreeNodes ) {          // Go to ROOT_FULL_DOWN to put out all lanterns.
+  if ( isInput( TOUCHED, LONG ) and not getParent() ) {          // Go to ROOT_FULL_DOWN to put out all lanterns.
     state = ROOT_FULL_DOWN; 
-    buildTree();
+    makeTree();
     return setBrightness(0);
   }
   return flickerBrightness();
@@ -216,9 +214,9 @@ bool Lantern::flickerUp() {
     state = AUTO_UP;                                                                                                             
     return 0;                                                                                                                    
   }                                                                                                                              
-  if ( isInput( TOUCHED, LONG ) and not nTreeNodes ) {          // Go to ROOT_FULL_UP to light all lanterns to full brightness.                           
+  if ( isInput( TOUCHED, LONG ) and not getParent() ) {          // Go to ROOT_FULL_UP to light all lanterns to full brightness.                           
     state = ROOT_FULL_UP; 
-    buildTree();
+    makeTree();
     return setBrightness( BRIGHTNESS_MAX );
   }
   return flickerBrightness();
@@ -306,9 +304,9 @@ bool Lantern::rootFullUp() {
 
 bool Lantern::rootFlickerDown() {
 // Make lantern flicker until decision is reached. 
-  if ( isInput( TOUCHED, LONG & FALLING ) and not nTreeNodes ) {          // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
+  if ( isInput( TOUCHED, LONG & FALLING ) and not getParent() ) {          // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
     state = ROOT_AUTO_DOWN; 
-    buildTree();
+    makeTree();
     return 0;
   }
   if ( isInput( RELEASED ) ) {                                  // Go to AUTO to allow fine control of this lantern's brightness.
@@ -321,9 +319,9 @@ bool Lantern::rootFlickerDown() {
 
 bool Lantern::rootFlickerUp() {
 // Make lantern flicker until decision is reached. 
-  if ( isInput( TOUCHED, LONG & FALLING ) and not nTreeNodes ) {          // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
+  if ( isInput( TOUCHED, LONG & FALLING ) and not getParent() ) {          // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
     state = ROOT_AUTO_UP; 
-    buildTree();
+    makeTree();
     return 0;
   }
   if ( isInput( RELEASED ) ) {                                  // Go to AUTO to allow fine control of this lantern's brightness.
@@ -548,26 +546,27 @@ void Lantern::pushInput(uint8_t value) {
 }
 
 
-void Lantern::buildTree() {
-// Build a binary tree starting from this lantern. 
-  #if MONITOR_BUILD_TREE
-    Serial.print("Build tree from root "); Serial.println(this->getIndex());
+void Lantern::makeTree() {
+// Create a spanning tree of the neighbour graph, starting from this lantern as root. 
+  #if MONITOR_MAKE_TREE
+    Serial.print("Make tree. Root = "); Serial.println(this->getIndex());
   #endif
+  QLantern queue;
   Lantern* root = this;
   root->setParent(nullptr);
-  QLantern queue;
-  Lantern* lantern = root;
-  queue.enqueue(lantern);
   delay = 1;
+  Lantern* lantern = root;
+  nTreeNodes++;
+  queue.enqueue(lantern);
 
   while ( not queue.isEmpty() ) {
     lantern = queue.dequeue();
-    #if MONITOR_BUILD_TREE
+    #if MONITOR_MAKE_TREE
       lantern->printNeighbours(); 
     #endif
     Lantern* neighbour;
     while ( neighbour = lantern->nextNeighbour() ) {
-      #if MONITOR_BUILD_TREE
+      #if MONITOR_MAKE_TREE
         Serial.print("Lantern "); Serial.print( lantern->getIndex() ); 
         Serial.print(": check neighbour "); Serial.print( neighbour->getIndex() ); Serial.print("\n");
       #endif
@@ -575,7 +574,7 @@ void Lantern::buildTree() {
       if ( neighbour->getParent() ) { continue; }
       if ( neighbour == root ) { continue; }
       
-      #if MONITOR_BUILD_TREE
+      #if MONITOR_MAKE_TREE
         Serial.print("Add lantern "); Serial.print( neighbour->getIndex() ); Serial.print(" to tree under parent ");
         Serial.print( lantern->getIndex() ); Serial.print(".\n"); 
       #endif
@@ -585,11 +584,11 @@ void Lantern::buildTree() {
       delay += 3 + Random::pull(2);
       neighbour->setDelay(delay);
       nTreeNodes++;
+      if ( nTreeNodes == 16 ) { return 0; }
       queue.enqueue(neighbour);
     }
 
-    #if MONITOR_BUILD_TREE
-    Serial.print("New beacon: "); Serial.println(lantern->getIndex());
+    #if MONITOR_MAKE_TREE
     queue.print();
     #endif
   }
@@ -622,7 +621,7 @@ Lantern* Lantern::nextNeighbour() {
 }
 
 
-#if MONITOR_BUILD_TREE
+#if MONITOR_MAKE_TREE
 void Lantern::printNeighbours() {
   neighbourList.print();
 }
@@ -778,7 +777,7 @@ void LinkedList::shuffle() {
 }
 
 
-#if MONITOR_BUILD_TREE
+#if MONITOR_MAKE_TREE
 void LinkedList::print() {
 // Print the list.
   Serial.print(nNodes); Serial.print(" neighbours: ");
@@ -833,7 +832,7 @@ Lantern* QLantern::dequeue() {
 }
 
 
-#if MONITOR_BUILD_TREE
+#if MONITOR_MAKE_TREE
 void QLantern::print() {
 // Print the queue.
   Serial.print("Queue: ");
@@ -895,7 +894,7 @@ uint8_t Qint::peek() {
 }
 
 
-#if MONITOR_BUILD_TREE
+#if MONITOR_MAKE_TREE
 void Qint::print() {
 // Print the queue.
   Serial.print("Brightness queue: ");

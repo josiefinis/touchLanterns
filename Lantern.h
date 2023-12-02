@@ -117,7 +117,7 @@ class Lantern {
     bool flickerBrightness();
     bool pulseBrightness();
     void pushInput(uint8_t value);
-    void buildTree();
+    void makeTree();
     void burnDown();
     void addNeighbour(Lantern* neighbour);
     Lantern* nextNeighbour();

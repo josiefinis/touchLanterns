@@ -1,0 +1,10 @@
+# Testing Branch
+
+## Fixes
+
+* Make sensor input more robust to stray capacitance when standing on floor in socks. Change normalisation factor? Get highest.
+* Change handling of new root state when a tree already exists. i.e. after ROOT_AUTO have to wait for all lanterns to finish adjusting their brightness before allowing ROOT_AUTO again. Should instead start a new tree. Need to destroy the existing tree first.
+
+
+tree class?
+
