@@ -2,19 +2,21 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#define MONITOR_INTERVAL                    1262 // ms
-#define MONITOR_ON                          false
-#define MONITOR_TIMINGS                     false
-#define MONITOR_RAW_INPUT                   false
-#define MONITOR_NORMALISED_INPUT            true
-#define MONITOR_LANTERN_INPUT               false
-#define MONITOR_STATE                       false
-#define MONITOR_BRIGHTNESS                  false
-#define MONITOR_BUILD_TREE                  false
-#define MONITOR_PWM_LIST                    false
-#define MONITOR_REGISTER_SIGNAL             false
-#define MONITOR_DELAY                       false
-#define SERIAL_ON MONITOR_TIMINGS | MONITOR_RAW_INPUT | MONITOR_NORMALISED_INPUT | MONITOR_BUTTON_OUTPUT | MONITOR_BUTTON_PRESS | MONITOR_ON | MONITOR_STATE | MONITOR_BRIGHTNESS | MONITOR_PWM_LIST| MONITOR_REGISTER_SIGNAL | MONITOR_LIFE | MONITOR_BUILD_TREE
+#define MONITOR_INTERVAL                    1000 // ms
+#define MONITOR_ON                          0
+#define MONITOR_TIMINGS                     0
+#define MONITOR_RAW_INPUT                   0
+#define MONITOR_NORMALISED_INPUT            0
+#define MONITOR_LANTERN_INPUT               0
+#define MONITOR_STATE                       0
+#define MONITOR_BRIGHTNESS                  0
+#define MONITOR_BRIGHTNESS_PER_CYCLE        0
+#define MONITOR_BUILD_TREE                  0
+#define MONITOR_PARENT                      0
+#define MONITOR_PWM_LIST                    0
+#define MONITOR_REGISTER_SIGNAL             0
+#define MONITOR_DELAY                       0
+#define SERIAL_ON MONITOR_BRIGHTNESS_PER_CYCLE | MONITOR_TIMINGS | MONITOR_RAW_INPUT | MONITOR_NORMALISED_INPUT | MONITOR_BUTTON_OUTPUT | MONITOR_BUTTON_PRESS | MONITOR_ON | MONITOR_STATE | MONITOR_BRIGHTNESS | MONITOR_PWM_LIST| MONITOR_REGISTER_SIGNAL | MONITOR_LIFE | MONITOR_BUILD_TREE
 
 
 #define PIN_SENSOR_SEND 2
@@ -30,5 +32,7 @@
 #define PIN_REGISTER_RCLK       0b00001000      // B3 (Pin 11)
 #define PIN_REGISTER_SRCLK      0b00010000      // B4 (Pin 12)
 
+#define PWM_PERIOD                   9856U // µs
+#define BURN_INTERVAL             0x8000UL // ms    E[total burn time] = BURN_INTERVAL * 256 * 2
 
 #endif

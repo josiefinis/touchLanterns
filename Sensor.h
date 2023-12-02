@@ -1,29 +1,25 @@
 #include "Arduino.h"
 #include <CapacitiveSensor.h>
-#include "Global.h"
-
 
 class Sensor {
 
   private:
     static CapacitiveSensor sensor;
     uint16_t baseline[16];
-    uint16_t highline[16];
-    uint16_t sensorOutput;
     uint8_t i;
     uint8_t muxChannel;
 
     long newInput();
     uint8_t normalise(long input);
     bool isHigh(uint8_t input);
-    void incrementMuxChannel();
     void initialiseBaseline();
     void recalibrateBaseline(long input);
 
   public:
     Sensor::Sensor();
-    uint16_t output();
-    void zeroOutput();
+    uint8_t getMuxChannel();
+    uint8_t nextMuxChannel();
+    bool output();
 };
 
 /* 
