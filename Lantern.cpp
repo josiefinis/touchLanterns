@@ -137,7 +137,7 @@ bool Lantern::idle() {
     return raiseBrightness( 1, brightnessTarget );
   } 
   if ( getBrightness() > brightnessTarget ) { 
-    return lowerBrightness( 1, brightnessTarget);
+    return lowerBrightness( 1, brightnessTarget );
   }
   return 0;
 }
@@ -266,6 +266,7 @@ bool Lantern::pauseDown() {
     state = GO_IDLE; 
     return 0;
   }
+  return 0;
 }
 
 
@@ -283,6 +284,7 @@ bool Lantern::pauseUp() {
     state = GO_IDLE; 
     return 0;
   }
+  return 0;
 }
 
 
@@ -291,6 +293,7 @@ bool Lantern::rootFullDown() {
   state = FULL_DOWN;
   neighbourList.shuffle(); 
   neighbourList.resetIndex();
+  return 0;
 }
 
 
@@ -299,6 +302,7 @@ bool Lantern::rootFullUp() {
   state = FULL_UP;
   neighbourList.shuffle();
   neighbourList.resetIndex();
+  return 0;
 }
 
 
@@ -372,6 +376,7 @@ bool Lantern::rootPauseDown() {
     neighbourList.resetIndex();
     return 0;
   }
+  return 0;
 }
 
 
@@ -387,6 +392,7 @@ bool Lantern::rootPauseUp() {
     neighbourList.resetIndex();
     return 0;
   }
+  return 0;
 }
 
 
@@ -411,6 +417,14 @@ bool Lantern::wait() {
 
 bool Lantern::waitFullDown() {
 // Wait before going out.
+  if ( ( parent->getState() & 0x1F ) == FULL_UP ) {                             // Go to WAIT_FULL_UP if parent's state has changed.
+    state = WAIT_FULL_UP;
+    return 0;
+  }
+  if ( parent->getState() == WAIT or parent->getState() == FOLLOW ) {           // Go back to WAIT if parent's state has changed.
+    state = WAIT;
+    return 0;
+  }
   if ( delay-- ) { return 0; }
   state = FULL_DOWN; 
   neighbourList.shuffle(); 
@@ -424,6 +438,14 @@ bool Lantern::waitFullDown() {
 
 bool Lantern::waitFullUp() {
 // Wait before lighting to full brightness.
+  if ( ( parent->getState() & 0x1F ) == FULL_DOWN ) {                           // Go to WAIT_FULL_DOWN if parent's state has changed.
+    state = WAIT_FULL_DOWN;                                                                                                          
+    return 0;                                                                                                                        
+  }                                                                                                                                  
+  if ( parent->getState() == WAIT or parent->getState() == FOLLOW ) {           // Go back to WAIT if parent's state has changed.
+    state = WAIT;
+    return 0;
+  }
   if ( delay-- ) { return 0; }
   state = FULL_UP; 
   neighbourList.shuffle(); 
@@ -556,7 +578,6 @@ void Lantern::makeTree() {
   root->setParent(nullptr);
   delay = 1;
   Lantern* lantern = root;
-  nTreeNodes++;
   queue.enqueue(lantern);
 
   while ( not queue.isEmpty() ) {
@@ -584,7 +605,7 @@ void Lantern::makeTree() {
       delay += 3 + Random::pull(2);
       neighbour->setDelay(delay);
       nTreeNodes++;
-      if ( nTreeNodes == 16 ) { return 0; }
+      if ( nTreeNodes == 15 ) { return 0; }
       queue.enqueue(neighbour);
     }
 
