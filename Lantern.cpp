@@ -14,6 +14,14 @@ Lantern::Lantern() {
 }
 
 
+void Lantern::reset() {
+  state = OUT;
+  setBrightness( 0 );
+  parent = nullptr;
+  input = 0;
+}
+
+
 bool Lantern::update() {
   // TODO Consider making this a tree and separate states by brightness up/down.
 
@@ -427,7 +435,9 @@ bool Lantern::rootPauseUp() {
   }
   return 0;
 }
-
+// TODO investigate hanging in ROOT_PAUSE_UP
+// TODO rising edge?
+// TODO pulse?
 
 bool Lantern::wait() {
 // Wait before following parent lantern in tree.
@@ -525,6 +535,7 @@ bool Lantern::follow() {
 void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) {
   if ( brightness >= ceiling ) { return 0; }
   while ( not brightnessQueue.isEmpty() ) { 
+    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   for ( uint8_t i=1; i<=16; i++ ) {
@@ -544,6 +555,7 @@ void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) 
 void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
   if ( brightness <= floor ) { return 0; }
   while ( not brightnessQueue.isEmpty() ) { 
+    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   for ( uint8_t i=1; i<=16; i++ ) {
@@ -564,6 +576,7 @@ void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
 
 void Lantern::flickerBrightness() {
   while ( not brightnessQueue.isEmpty() ) { 
+    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   uint16_t temp = brightness;
@@ -579,6 +592,7 @@ void Lantern::flickerBrightness() {
 
 void Lantern::pulseBrightness() {
   while ( not brightnessQueue.isEmpty() ) { 
+    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   brightnessQueue.enqueue( BRIGHTNESS_MAX );

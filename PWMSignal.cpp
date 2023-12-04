@@ -7,13 +7,25 @@ PWMSignal::PWMSignal() {
   // Make zeroth node with signal = 0 and time = 0
   pZero = newEdge(0, 0);
   nextSignal = 0;
+  nEdges = 0;
 }
 
 
-void PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
+void PWMSignal::reset() {
+// Reset in case of crash recovery. Does not release memory.
+  pZero->signal = 0;
+  pZero->time = 0;
+  pZero->pNext = nullptr; // Does not release memory!
+  periodStart();
+}
+
+
+int8_t PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
   // Change the PWM signal to reflect the new brightness for lantern with index 'index'.
   uint16_t signal = 1 << index;
-  removeEdge(signal);
+  if ( removeEdge(signal) == -1 ) { 
+    return -2; 
+  }
   if ( brightness == 0xFF ) {
     pZero->signal |= signal;
     return 0;
@@ -24,15 +36,25 @@ void PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
   }
 
   uint16_t pulseWidth = pulseWidthQuadratic(brightness);
+  if ( pulseWidth < 0 ) { 
+    Serial.print( "Warning: invalid pulse width: " ); Serial.print( pulseWidth );
+  } 
+  if ( pulseWidth > PWM_PERIOD ) { 
+    Serial.print( "Warning: invalid pulse width: " ); Serial.print( pulseWidth );
+  } 
   if ( pulseWidth > PWM_PERIOD / 2 ) {
     pZero->signal |= signal;
-    insertEdge(signal, pulseWidth);
+    if ( insertEdge(signal, pulseWidth) < 0 ) {
+      return -3;
+    }
   }
   else {
     pZero->signal &= ~signal;
-    insertEdge(signal, PWM_PERIOD - pulseWidth);
+    if ( insertEdge(signal, PWM_PERIOD - pulseWidth) < 0 ) {
+      return -3;
+    }
   }
-  //Serial.print(brightness); Serial.print("\t"); Serial.print(pulseWidth); Serial.print("\n");
+  if ( pZero->time ) { Serial.print( "Warning: pZero = " ); Serial.print( pZero->time ); }
 }
 
 
@@ -48,79 +70,106 @@ uint16_t PWMSignal::getTime() {
 }
 
 
-void PWMSignal::nextEdge() {
+int8_t PWMSignal::nextEdge() {
 // Cue up the next pulse edge
   if ( pEdge->pNext ) {
+    counter++;
+    if ( counter > nEdges ) { return -4; }
     pEdge = pEdge->pNext;
     nextSignal ^= pEdge->signal;
     nextTime = pEdge->time;
     if ( nextTime == 0 ) { 
       nextTime = 0xFFFF; 
     }
+    return 0;
   }
-  else {
-    nextSignal = pZero->signal;
-    nextTime = 0xFFFF;
-  }
+  return 0;
 }
 
 
 void PWMSignal::periodStart() {
   pEdge = pZero;
+  nextSignal = pZero->signal;
+  nextTime = 0xFFFF;
+  counter = 0;
 }
 
 
-#if MONITOR_PWM_LIST
-void PWMSignal::printSignalList() {
-  pulseEdge* pNode = pZero;
+int8_t PWMSignal::printSignalList() {
+  PulseEdge* pNode = pZero;
+  uint8_t countout = 0;
+  Serial.println();
+  Serial.flush();
+  Serial.print( "Signal: " );
   while ( pNode ) {
-    Serial.print("0b"); Serial.print(pNode->signal, BIN); Serial.print(":"); Serial.print(pNode->time); Serial.print("  ->  ");
+    Serial.print("0x"); Serial.print( pNode->signal, HEX ); Serial.print(":"); Serial.print( pNode->time, HEX ); Serial.print(" -> ");
     pNode = pNode->pNext;
+    countout++;
+    if ( countout > nEdges ) { 
+      return -1; 
+    }
   }
+  return 0;
 }
-#endif
 
 
-void PWMSignal::insertEdge(uint16_t signal, uint16_t time) {
+int8_t PWMSignal::insertEdge(uint16_t signal, uint16_t time) {
 // Insert a pulse edge in the list in chronological order.
   if ( not time ) { 
     return 0;
   }
-  pulseEdge* pNode = pZero;
+  PulseEdge* pNode = pZero;
+  uint8_t timeout = 0;
   while ( pNode->pNext ) {
     if ( pNode->pNext->time == time ) {  
       pNode->pNext->signal |= signal;
       return 0;
     }
     if ( pNode->pNext->time > time ) { 
-      pulseEdge* pNew = newEdge(signal, time);
+      PulseEdge* pNew = newEdge(signal, time);
       pNew->pNext = pNode->pNext;
       pNode->pNext = pNew;
       return 0;
     }
     pNode = pNode->pNext;
+
+    timeout++;
+    if ( timeout > 0x20 ) {
+      return -1;
+    }
   }
   pNode->pNext = newEdge(signal, time);
+  return 0;
 }
 
 
-void PWMSignal::removeEdge(uint16_t signal) {
+int8_t PWMSignal::removeEdge(uint16_t signal) {
 // Remove a pulse edge signal from list.
-  pulseEdge* pNode = pZero;
-  while ( pNode = pNode->pNext ) {
-    if ( pNode->signal & signal ) { 
-      pNode->signal &= ~signal;
+  PulseEdge* x = pZero;
+  PulseEdge* y = x->pNext;
+  uint8_t timeout = 0;
+  while ( y = x->pNext ) {
+    if ( y->signal & signal ) { 
+      y->signal &= ~signal;
+      if ( not y->signal ) {
+        deleteEdge(x, y);
+      }
     }
-    if ( not pNode->signal ) {
-      deleteEdge(pNode);
+    x = x->pNext;
+    if ( not x ) { break; }
+    timeout++;
+    if ( timeout > 0x20 ) {
+      return -1;
     }
   }
+  return 0;
 }
 
 
-pulseEdge* PWMSignal::newEdge(uint16_t signal, uint16_t time) { 
+PulseEdge* PWMSignal::newEdge( uint16_t signal, uint16_t time ) { 
 // Create a new pulse edge node.
-  pulseEdge* pNode = new pulseEdge;
+  nEdges++;
+  PulseEdge* pNode = new PulseEdge;
   pNode->signal = signal;
   pNode->time = time;
   pNode->pNext = nullptr;
@@ -128,19 +177,34 @@ pulseEdge* PWMSignal::newEdge(uint16_t signal, uint16_t time) {
 }
 
 
-void PWMSignal::deleteEdge(pulseEdge* pDeadEdge) {
+int8_t PWMSignal::deleteEdge( PulseEdge* edge, PulseEdge* parent ) {
 // Delete node when there is no longer an edge signal on it.
-  pulseEdge* pNode = pZero;
+  parent->pNext = edge->pNext;
+  nEdges--;
+  delete edge;
+}
+
+
+int8_t PWMSignal::cleanUp() {
+  PulseEdge* pNode = pZero;
+  uint8_t timeout = 0;
   while ( pNode->pNext ) {
-    if ( pNode->pNext == pDeadEdge ) {
-      pNode->pNext = pDeadEdge->pNext;
-      delete pDeadEdge;
+    if ( not pNode->pNext->signal ) {
+      PulseEdge* emptyNode = pNode->pNext;
+      pNode->pNext = emptyNode->pNext;
+      nEdges--;
+      delete emptyNode;
       return 0;
     }
     pNode = pNode->pNext;
+    timeout++;
+    if ( timeout > 0x20 ) {
+      return -1; 
+    }
   }
+  return 0;
 }
-
+        
 
 // There is a choice of 4 functions that map brightness to pulse width such that
 //                 f(1)  >  640 µs,         which gives lowest DC voltage that produces light from the LED candles,
@@ -156,7 +220,7 @@ uint16_t PWMSignal::pulseWidthLinear(uint8_t brightness) {
 
 uint16_t PWMSignal::pulseWidthQuadratic(uint16_t brightness) {
 // Map brightness value to pulse width usisng quadratic function f(x) = 4x + 2*(x/4)^2.
-  return 640 + 4 * brightness + brightness / 2 * brightness / 4;
+  return 640UL + 4U * brightness + brightness / 2U * brightness / 4U;
 }
 
 

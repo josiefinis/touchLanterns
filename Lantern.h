@@ -109,6 +109,7 @@ class Lantern {
     static Lantern* root;
     static uint8_t nTreeNodes;
     Lantern();
+    void reset();
 
     bool update();
     void raiseBrightness(uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX);

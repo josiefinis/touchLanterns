@@ -30,6 +30,42 @@ uint16_t signalMONITOR[32];
 #endif
 
 
+void raise( int8_t errorCode ) {
+  Serial.println();
+  switch ( errorCode ) {
+    case -1:
+      Serial.println( "ERROR: undefined error." );
+      break;
+    case -2:
+      Serial.println( "ERROR: looped too many times in PWMSignal.removeEdge." );
+      break;
+    case -3:
+      Serial.println( "ERROR: looped too many times in PWMSignal.insertEdge." );
+      break;
+    case -4:
+      Serial.println( "ERROR: in PWMSignal.nextEdge, next edge should not exist." );
+      break;
+  }
+  pwmSignal.printSignalList();
+  resetAll();
+}
+
+
+void resetAll() {
+  for ( uint8_t i=0; i<16; i++ ) {
+    lantern[i].reset();
+  }
+  pwmSignal.reset();
+  Serial.println();
+  Serial.println( "Forced soft reset. Memory has not been released from PWM signal queue. You need to power off or press arduino reset button." );
+  for ( uint8_t i=30; i>0; i-- ) {
+    Serial.print( "    \rResuming in" ); Serial.print(i); 
+    delay(1000);
+  }
+  Serial.print( ". Done. But seriously, restart." );
+}
+
+
 bool pollSensor() {
 // Poll capacitive sensor
   if ( startupCounter > 0 ) {                       // Ignore sensors briefly after start up while they settle and calibrate themselves.
@@ -46,7 +82,10 @@ void updateLanterns() {
   bool newState = lantern[idx].update();
   for ( uint8_t i=0; i<16; i++ ) {
     if ( lantern[i].nextBrightness() ) {
-      pwmSignal.changeDuty( i, lantern[i].getBrightness() );
+      int8_t err = pwmSignal.changeDuty( i, lantern[i].getBrightness() );
+      if ( err < 0 ) {
+        raise( err );
+      }
     }
   }
   #if MONITOR_EVENTS
@@ -254,7 +293,10 @@ void loop() {                                                   // TODO Monitor 
   if ( currentMicros - pwmPhase0 >= edgeAtMicros ) {
   // Second half of PWM cycle
     updateRegister( pwmSignal.getSignal() );
-    pwmSignal.nextEdge();
+    int8_t err = pwmSignal.nextEdge();
+    if ( err ) { 
+      raise( err ); 
+    }
     edgeAtMicros = pwmSignal.getTime();
   }
 
@@ -266,7 +308,10 @@ void loop() {                                                   // TODO Monitor 
     pwmSignal.periodStart();
     updateRegister( pwmSignal.getSignal() );
     updateLanterns();
-    pwmSignal.nextEdge();
+    int8_t err = pwmSignal.nextEdge();
+    if ( err ) { 
+      raise( err ); 
+    }
     edgeAtMicros = pwmSignal.getTime();
     idx = sensor.nextMuxChannel();
   }

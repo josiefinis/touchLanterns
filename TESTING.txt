@@ -5,6 +5,28 @@
 * Make sensor input more robust to stray capacitance when standing on floor in socks. Change normalisation factor? Get highest.
 * Change handling of new root state when a tree already exists. i.e. after ROOT_AUTO have to wait for all lanterns to finish adjusting their brightness before allowing ROOT_AUTO again. Should instead start a new tree. Need to destroy the existing tree first.
 
+Trying out not destroying the existing tree and instead allowing the creation of a new tree so long as the new root node is not still part of the old tree. The new tree will only span those nodes that don't have a parent i.e. are no longer part of the old tree. The leaf nodes of the new tree will already be parents of nodes in the old tree, and these nodes will be root nodes of their subtrees of the old tree. Therefore a new complete spanning tree will be formed.
 
-tree class?
+* ERROR: 
+    When trying to get to ROOT_AUTO_UP from OUT on lantern 5.
+    Some far away lanterns turned full on when they shouldn't have.
+    Then when continuously touching the sensor lanterns turned on and off in a sort of regular pattern. 
+     - All changes occured at the same time at a regular interval of about 1 second.
+     - At any time all lanterns appeared to be either fully on or fully off.
+     - Semi-alternating pattern, many lanterns switching on/off each second but a few staying the same.
+     - Appeared to be non repeating, but not sure.
+
+* CRITICAL ERROR:
+    Program hangs when lanterns FOLLOW a ROOT_AUTO_UP.
+    Can reliably if not always recreate error by starting ROOT_AUTO_UP from when all lanterns are OUT.
+    Tracked bug to PWMSignal, specifically removal and/or insertion of nodes in signal list.
+    The list appears to get broken in some circumstance leaving a hanging pointer.
+    Unsure exactly why.
+    It happens when there are a lot of changes happening to the list.
+    It seems to always happen when starting from all lanterns OUT, but not when starting from all IDLE.
+    This maybe suggests that it happens when there are a lot of changes happening towards the end of the list? (low brightness)
+    Or perhaps when there are many changes on top of one another? (very similar brightnesses)
+
+    Having difficulty diagnosing error without error handling and progress is slow.
+    Should make program fail more gracefully.
 
