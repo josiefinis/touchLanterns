@@ -4,6 +4,7 @@
 #include "Lantern.h"
 #include "PWMSignal.h"
 #include "Register.h"
+#include "SerialMonitor.h"
 
 
 // Create class instances.
@@ -11,21 +12,21 @@ Register shiftRegister;         // Writes to SIPO register chip.
 PWMSignal pwmSignal;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
 Sensor sensor = Sensor();       // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
 Lantern lantern[16];            // State machine that controls lantern logic.
+SerialMonitor monitor;
 
 
 uint8_t idx;
 uint32_t pwmPhase0 = micros();
-uint32_t edgeAtMicros = ~0;
+uint16_t edgeAtMicros = 0xFFFF;
 uint32_t lastBurnMillis = millis();
 uint8_t startupCounter = 96;
 #if SERIAL_ON
 uint32_t lastMonitorMillis = millis();
+#endif
 #if MONITOR_REGISTER_SIGNAL
 uint8_t MONITORidx = 0;
-uint32_t edgeAtMicrosMONITOR[32];
+uint16_t edgeAtMicrosMONITOR[32];
 uint16_t signalMONITOR[32];
-//uint32_t microsMONITOR[32];
-#endif
 #endif
 
 
@@ -42,12 +43,26 @@ bool pollSensor() {
 
 void updateLanterns() {
   lantern[idx].pushInput( pollSensor() );
-  lantern[idx].update();
+  bool newState = lantern[idx].update();
   for ( uint8_t i=0; i<16; i++ ) {
     if ( lantern[i].nextBrightness() ) {
       pwmSignal.changeDuty( i, lantern[i].getBrightness() );
     }
   }
+  #if MONITOR_EVENTS
+    bool increment = 0;
+    if ( lantern[idx].getInput() ) {
+      monitor.storeInput( idx, lantern[idx].getInput() );
+      increment = 1;
+    }
+    if ( newState ) {
+      monitor.storeState( idx, lantern[idx].getState() );
+      increment = 1;
+    }
+    if ( increment ) { 
+      monitor.incrementIndex(); 
+    }
+  #endif
 }
 
 
@@ -262,6 +277,12 @@ void loop() {                                                   // TODO Monitor 
   }
 
 
+  #if MONITOR_EVENTS
+    if ( monitor.isBufferFull() ) {
+      monitor.printBuffer();
+    }
+  #endif
+
   #if SERIAL_ON
   if ( currentMillis - lastMonitorMillis >= MONITOR_INTERVAL ) {
     lastMonitorMillis = currentMillis;
@@ -269,11 +290,14 @@ void loop() {                                                   // TODO Monitor 
     if ( millis() % (8 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
       printIndices();
     }
-    #if MONITOR_TIMINGS
-    printTimings();
+    #if MONITOR_EVENTS
+      monitor.printBuffer();
     #endif
     #if MONITOR_STATE
     printState();
+    #endif
+    #if MONITOR_TIMINGS
+    printTimings();
     #endif
     #if MONITOR_LANTERN_INPUT
     printLanternInput();

@@ -1,56 +1,124 @@
 #include "SerialMonitor.h"
 
-SerialMonitor::SerialMonitor( Sensor* sensor, Lantern* lantern, PWMSignal* pwm, Register* reg ) {
-  sensor = sensor;
-  lantern = lantern;
-  pwm = pwm;
-  reg = reg;
+SerialMonitor::SerialMonitor() { 
+  #if MONITOR_EVENTS
+    index[0] = 0xFF;
+  #endif
 }
 
     
-void SerialMonitor::printState() {
-  for ( uint8_t i = 0; i < 16; i++ ) { 
-    Serial.print("0x"); Serial.print(lantern[i].getState(), HEX); Serial.print("\t"); 
-  }
-  Serial.println();
+#if MONITOR_EVENTS
+bool SerialMonitor::isBufferFull() {
+  return eventIdx >= BUFFER_SIZE;
 }
+
+
+void SerialMonitor::incrementIndex() {
+  eventIdx++;
+  index[eventIdx] = 0xFF;
+  state[eventIdx] = 0xFF;
+  input[eventIdx] = 0;
+}
+
+
+void SerialMonitor::storeState( uint8_t idx, uint8_t value ) {
+  if ( isBufferFull() ) {
+    Serial.println();
+    Serial.print( "Warning: Buffer full. Could not store change of state event, index: " ); 
+    Serial.print( idx, HEX ); Serial.print( " state: 0x" ); Serial.println( value );
+    return 0;
+  }
+  index[eventIdx] = idx;
+  state[eventIdx] = value;
+}
+
+
+void SerialMonitor::storeInput( uint8_t idx, uint16_t value ) {
+  if ( isBufferFull() ) {
+    Serial.println();
+    Serial.print( "Warning: Buffer full. Could not store input event, index: " ); 
+    Serial.print( idx, HEX ); Serial.print( " input: 0b" ); Serial.println( value );
+    return 0;
+  }
+  index[eventIdx] = idx;
+  input[eventIdx] = value;
+}
+
+
+void SerialMonitor::printBuffer() {
+  uint8_t row = 0;
+  uint8_t column = 0;
+  while ( row < BUFFER_SIZE ) {
+    if ( index[row] == 0xFF ) { 
+      break; 
+    }
+    while ( column < index[row] ) {
+      Serial.print( "\t" );
+      column++;
+    }
+    Serial.print( index[row], HEX ); Serial.print( ". " );
+    if ( state[row] != 0xFF ) {
+      Serial.print( "0x" ); Serial.print( state[row], HEX ); 
+    }
+    Serial.print( "\t<" ); Serial.print( input[row], BIN ); Serial.print( "> " );
+    Serial.println();
+    index[row] = 0xFF;
+    state[row] = 0xFF;
+    input[row] = 0;
+    row++;
+    column = 0;
+  }
+  eventIdx = 0;
+  index[0] = 0xFF;
+}
+#endif
+
+
       
 
 #if MONITOR_PWM_SIGNAL
 void SerialMonitor::storePWM( uint16_t signal, uint16_t time ) {
-  signalMONITOR[MONITORidx & 0x1F] = signal;
-  edgeAtMicrosMONITOR[MONITORidx & 0x1F] = edgeAtMicros;
-  MONITORidx++;
+  pwmSignal[pwmIdx & 0x1F] = signal;
+  pwmTime[pwmIdx & 0x1F] = time;
+  pwmIdx++;
 }
 
 
 void SerialMonitor::printPWM() {
   Serial.print("\nTime\tSignal\n"); 
   for ( uint8_t i=0; i<32; i++ ) {
-    Serial.print(edgeAtMicrosMONITOR[MONITORidx & 0x1F]); Serial.print("\t");
-    Serial.print(signalMONITOR[MONITORidx & 0x1F], BIN); Serial.print("\n");
-    MONITORidx++;
+    Serial.print( pwmTime[pwmIdx & 0x1F] ); Serial.print("\t");
+    Serial.print( pwmSignal[pwmIdx & 0x1F], BIN ); Serial.print("\n");
+    pwmIdx++;
   }
 }
 
 
-void SerialMonitor::printSignalList() {
+void SerialMonitor::printSignalList( PWMSignal* pwmSignal ) {
   pwmSignal.printSignalList(); Serial.print("\n");
 }
 #endif
 
 
-void SerialMonitor::printLanternInput() {
+void SerialMonitor::printState( Lantern* lantern ) {
   for ( uint8_t i = 0; i < 16; i++ ) { 
-    Serial.print(lantern[i].getInput(), BIN); Serial.print("\t");
+    Serial.print( "0x" ); Serial.print( lantern[i].getState() ); Serial.print( "\t" ); 
+  }
+  Serial.println();
+}
+
+void SerialMonitor::printLanternInput( Lantern* lantern ) {
+  for ( uint8_t i = 0; i < 16; i++ ) { 
+    Serial.print( lantern[i].getInput(), BIN ); Serial.print( "\t" );
   }
   Serial.println();
 }
 
 
-void SerialMonitor::printBrightness() {
+void SerialMonitor::printBrightness( Lantern* lantern ) {
   for ( uint8_t i = 0; i < 16; i++ ) { 
-    Serial.print(lantern[i].getBrightness()); Serial.print(":"); Serial.print(lantern[i].getBrightnessTarget()); Serial.print("\t"); 
+    Serial.print( lantern[i].getBrightness() ); Serial.print( ":" ); 
+    Serial.print( lantern[i].getBrightnessTarget() ); Serial.print( "\t" ); 
   }
   Serial.println();
 }
@@ -74,7 +142,7 @@ void SerialMonitor::printTimings() {
 
 void SerialMonitor::printIndices() {
   for ( uint8_t i=0; i<16; i++ ) {
-    Serial.print(lantern[i].getIndex(), HEX); Serial.print("\t");
+    Serial.print( i, HEX ); Serial.print( "\t" );
   }
   Serial.println(); 
   for ( uint8_t i=0; i<16; i++ ) {
@@ -84,7 +152,7 @@ void SerialMonitor::printIndices() {
 }
 
 
-void SerialMonitor::printDelay() {
+void SerialMonitor::printDelay( Lantern* lantern ) {
   for ( uint8_t i=0; i<16; i++ ) { Serial.print(lantern[i].getDelay()); Serial.print(" ds\t"); }
   Serial.println();
 }
