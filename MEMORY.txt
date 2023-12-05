@@ -1,0 +1,23 @@
+# MEMORY BRANCH - Manage memory better.
+
+    It is likely that a memory issue has caused the program to hang. Specifically heap fragmentation caused by dynamic memory allocation of the PWM queue.
+    Have changed the queue implementation in PWM to an array, which now takes up a bunch of space as a global variable on the stack.
+    This is presumably better than it being on the heap but can maybe do better.
+    Should also look at memory use by the rest of the program.
+
+## Actions
+    * Learn more about Arduino memory, continue reading here https://docs.arduino.cc/learn/programming/memory-guide 
+    * Avoid dynamic memory allocation.
+      - Look into changing queue and linked list implementation.
+        * queue in makeTree
+         - not used outside of makeTree, can this be done roughly as is but on the stack?
+        * neighbour list
+          - change to array
+          - is constant, but want to shuffle and have quick access on occasion makeTree is called
+          - can maybe put in program memory and copy to RAM in advance when needed.
+
+    * Reduce memory used by global variables on stack.
+      - neighbour list, see above.
+      - clean up old code
+      - streamline Lantern class maybe
+
