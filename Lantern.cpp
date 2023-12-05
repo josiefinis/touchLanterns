@@ -535,7 +535,6 @@ bool Lantern::follow() {
 void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) {
   if ( brightness >= ceiling ) { return 0; }
   while ( not brightnessQueue.isEmpty() ) { 
-    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   for ( uint8_t i=1; i<=16; i++ ) {
@@ -555,7 +554,6 @@ void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) 
 void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
   if ( brightness <= floor ) { return 0; }
   while ( not brightnessQueue.isEmpty() ) { 
-    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   for ( uint8_t i=1; i<=16; i++ ) {
@@ -576,7 +574,6 @@ void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
 
 void Lantern::flickerBrightness() {
   while ( not brightnessQueue.isEmpty() ) { 
-    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   uint16_t temp = brightness;
@@ -592,7 +589,6 @@ void Lantern::flickerBrightness() {
 
 void Lantern::pulseBrightness() {
   while ( not brightnessQueue.isEmpty() ) { 
-    Serial.print( "dequeue" );
     brightnessQueue.dequeue();
   }
   brightnessQueue.enqueue( BRIGHTNESS_MAX );
@@ -626,7 +622,7 @@ void Lantern::pushInput(uint8_t value) {
 void Lantern::makeTree() {
 // Create a spanning tree of the neighbour graph, starting from this lantern as root. 
   #if MONITOR_MAKE_TREE
-    Serial.print("Make tree. Root = "); Serial.println(this->getIndex());
+    Serial.print( F("Root ") ); Serial.println(this->getIndex());
   #endif
   QLantern queue;
   Lantern* root = this;
@@ -643,16 +639,16 @@ void Lantern::makeTree() {
     Lantern* neighbour;
     while ( neighbour = lantern->nextNeighbour() ) {
       #if MONITOR_MAKE_TREE
-        Serial.print("Lantern "); Serial.print( lantern->getIndex() ); 
-        Serial.print(": check neighbour "); Serial.print( neighbour->getIndex() ); Serial.print("\n");
+        Serial.print( F("Lantern ") ); Serial.print( lantern->getIndex() ); 
+        Serial.print( F(": check neighbour ") ); Serial.print( neighbour->getIndex() ); Serial.println();
       #endif
 
       if ( neighbour->getParent() ) { continue; }
       if ( neighbour == root ) { continue; }
       
       #if MONITOR_MAKE_TREE
-        Serial.print("Add lantern "); Serial.print( neighbour->getIndex() ); Serial.print(" to tree under parent ");
-        Serial.print( lantern->getIndex() ); Serial.print(".\n"); 
+        Serial.print( F("Add lantern ") ); Serial.print( neighbour->getIndex() ); Serial.print( F(" to tree under parent ") );
+        Serial.print( lantern->getIndex() ); Serial.println(); 
       #endif
 
       neighbour->setParent(lantern);
@@ -855,10 +851,10 @@ void LinkedList::shuffle() {
 #if MONITOR_MAKE_TREE
 void LinkedList::print() {
 // Print the list.
-  Serial.print(nNodes); Serial.print(" neighbours: ");
+  Serial.print(nNodes); Serial.print( F(" neighbours: ") );
   Node* pNode = p0;
-  while ( pNode ) { Serial.print(pNode->pLantern->getIndex(), HEX); Serial.print("-> "); pNode = pNode->pNext; }
-  Serial.print("\n");
+  while ( pNode ) { Serial.print(pNode->pLantern->getIndex(), HEX); Serial.print( F("-> ") ); pNode = pNode->pNext; }
+  Serial.println();
 }
 #endif
 
@@ -910,10 +906,10 @@ Lantern* QLantern::dequeue() {
 #if MONITOR_MAKE_TREE
 void QLantern::print() {
 // Print the queue.
-  Serial.print("Queue: ");
+  Serial.print( F("Queue: ") );
   Node* q = pFront;
-  while ( q ) { Serial.print(q->pLantern->getIndex()); Serial.print("->>"); q = q->pNext; }
-  Serial.print("\n");
+  while ( q ) { Serial.print(q->pLantern->getIndex()); Serial.print( F("->>") ); q = q->pNext; }
+  Serial.println();
 }
 #endif
 
@@ -972,9 +968,9 @@ uint8_t Qint::peek() {
 #if MONITOR_MAKE_TREE
 void Qint::print() {
 // Print the queue.
-  Serial.print("Brightness queue: ");
+  Serial.print( F("Brightness queue: ") );
   Node* q = pFront;
-  while ( q ) { Serial.print( q->value ); Serial.print( "->>" ); q = q->pNext; }
-  Serial.print("\n");
+  while ( q ) { Serial.print( q->value ); Serial.print(  F("->>")  ); q = q->pNext; }
+  Serial.println();
 }
 #endif
