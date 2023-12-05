@@ -5,206 +5,71 @@
 
 PWMSignal::PWMSignal() {
   // Make zeroth node with signal = 0 and time = 0
-  pZero = newEdge(0, 0);
-  nextSignal = 0;
-  nEdges = 0;
+  signal = 0;
+  time = 0;
+  edgeQueue.clear();
 }
 
 
-void PWMSignal::reset() {
-// Reset in case of crash recovery. Does not release memory.
-  pZero->signal = 0;
-  pZero->time = 0;
-  pZero->pNext = nullptr; // Does not release memory!
-  periodStart();
-}
-
-
-int8_t PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
+void PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
   // Change the PWM signal to reflect the new brightness for lantern with index 'index'.
-  uint16_t signal = 1 << index;
-  if ( removeEdge(signal) == -1 ) { 
-    return -2; 
-  }
   if ( brightness == 0xFF ) {
-    pZero->signal |= signal;
+    signalAtTimeZero |= 1 << index;
+    edgeQueue.remove( index );
     return 0;
   }
   if ( brightness == 0 ) {
-    pZero->signal &= ~signal;
+    signalAtTimeZero &= ~( 1 << index );
+    edgeQueue.remove( index );
     return 0;
   }
 
   uint16_t pulseWidth = pulseWidthQuadratic(brightness);
-  if ( pulseWidth < 0 ) { 
-    Serial.print( "Warning: invalid pulse width: " ); Serial.print( pulseWidth );
-  } 
-  if ( pulseWidth > PWM_PERIOD ) { 
-    Serial.print( "Warning: invalid pulse width: " ); Serial.print( pulseWidth );
-  } 
   if ( pulseWidth > PWM_PERIOD / 2 ) {
-    pZero->signal |= signal;
-    if ( insertEdge(signal, pulseWidth) < 0 ) {
-      return -3;
-    }
+    signalAtTimeZero |= 1 << index;
+    edgeQueue.insert( index, pulseWidth );
   }
   else {
-    pZero->signal &= ~signal;
-    if ( insertEdge(signal, PWM_PERIOD - pulseWidth) < 0 ) {
-      return -3;
+    signalAtTimeZero &= ~( 1 << index );
+    edgeQueue.insert( index, PWM_PERIOD - pulseWidth );
+  }
+}
+
+
+void PWMSignal::nextEdge() {
+  if ( edgeQueue.isEmpty() ) {
+    time = 0xFFFF;
+    signal = 0;
+    return 0;
+  }
+  time = edgeQueue.peekTime();
+  while ( edgeQueue.peekTime() == time ) {
+    signal |= 1 << edgeQueue.dequeue();
+    if ( edgeQueue.isEmpty() ) {
+      break;
     }
   }
-  if ( pZero->time ) { Serial.print( "Warning: pZero = " ); Serial.print( pZero->time ); }
+}
+
+
+void PWMSignal::periodStart() {
+  time = 0;
+  signal = signalAtTimeZero;
+  edgeQueue.refill();
 }
 
 
 uint16_t PWMSignal::getSignal() {
 // Return the next signal to write to the register.
-  return nextSignal;
+  return signal;
 }
 
 
 uint16_t PWMSignal::getTime() {
 // Return the time when the next signal is due (in microseconds after the start of the PWM period).
-  return nextTime;
+  return time;
 }
 
-
-int8_t PWMSignal::nextEdge() {
-// Cue up the next pulse edge
-  if ( pEdge->pNext ) {
-    counter++;
-    if ( counter > nEdges ) { return -4; }
-    pEdge = pEdge->pNext;
-    nextSignal ^= pEdge->signal;
-    nextTime = pEdge->time;
-    if ( nextTime == 0 ) { 
-      nextTime = 0xFFFF; 
-    }
-    return 0;
-  }
-  return 0;
-}
-
-
-void PWMSignal::periodStart() {
-  pEdge = pZero;
-  nextSignal = pZero->signal;
-  nextTime = 0xFFFF;
-  counter = 0;
-}
-
-
-int8_t PWMSignal::printSignalList() {
-  PulseEdge* pNode = pZero;
-  uint8_t countout = 0;
-  Serial.println();
-  Serial.flush();
-  Serial.print( "Signal: " );
-  while ( pNode ) {
-    Serial.print("0x"); Serial.print( pNode->signal, HEX ); Serial.print(":"); Serial.print( pNode->time, HEX ); Serial.print(" -> ");
-    pNode = pNode->pNext;
-    countout++;
-    if ( countout > nEdges ) { 
-      return -1; 
-    }
-  }
-  return 0;
-}
-
-
-int8_t PWMSignal::insertEdge(uint16_t signal, uint16_t time) {
-// Insert a pulse edge in the list in chronological order.
-  if ( not time ) { 
-    return 0;
-  }
-  PulseEdge* pNode = pZero;
-  uint8_t timeout = 0;
-  while ( pNode->pNext ) {
-    if ( pNode->pNext->time == time ) {  
-      pNode->pNext->signal |= signal;
-      return 0;
-    }
-    if ( pNode->pNext->time > time ) { 
-      PulseEdge* pNew = newEdge(signal, time);
-      pNew->pNext = pNode->pNext;
-      pNode->pNext = pNew;
-      return 0;
-    }
-    pNode = pNode->pNext;
-
-    timeout++;
-    if ( timeout > 0x20 ) {
-      return -1;
-    }
-  }
-  pNode->pNext = newEdge(signal, time);
-  return 0;
-}
-
-
-int8_t PWMSignal::removeEdge(uint16_t signal) {
-// Remove a pulse edge signal from list.
-  PulseEdge* x = pZero;
-  PulseEdge* y = x->pNext;
-  uint8_t timeout = 0;
-  while ( y = x->pNext ) {
-    if ( y->signal & signal ) { 
-      y->signal &= ~signal;
-      if ( not y->signal ) {
-        deleteEdge(x, y);
-      }
-    }
-    x = x->pNext;
-    if ( not x ) { break; }
-    timeout++;
-    if ( timeout > 0x20 ) {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-
-PulseEdge* PWMSignal::newEdge( uint16_t signal, uint16_t time ) { 
-// Create a new pulse edge node.
-  nEdges++;
-  PulseEdge* pNode = new PulseEdge;
-  pNode->signal = signal;
-  pNode->time = time;
-  pNode->pNext = nullptr;
-  return pNode;
-}
-
-
-int8_t PWMSignal::deleteEdge( PulseEdge* edge, PulseEdge* parent ) {
-// Delete node when there is no longer an edge signal on it.
-  parent->pNext = edge->pNext;
-  nEdges--;
-  delete edge;
-}
-
-
-int8_t PWMSignal::cleanUp() {
-  PulseEdge* pNode = pZero;
-  uint8_t timeout = 0;
-  while ( pNode->pNext ) {
-    if ( not pNode->pNext->signal ) {
-      PulseEdge* emptyNode = pNode->pNext;
-      pNode->pNext = emptyNode->pNext;
-      nEdges--;
-      delete emptyNode;
-      return 0;
-    }
-    pNode = pNode->pNext;
-    timeout++;
-    if ( timeout > 0x20 ) {
-      return -1; 
-    }
-  }
-  return 0;
-}
-        
 
 // There is a choice of 4 functions that map brightness to pulse width such that
 //                 f(1)  >  640 µs,         which gives lowest DC voltage that produces light from the LED candles,
@@ -236,3 +101,93 @@ uint16_t PWMSignal::pulseWidthQuartic(uint32_t brightness) {
 }
 
 
+// ==============================================================================================================
+// PRIORITY QUEUE
+// ==============================================================================================================
+
+
+uint8_t PriorityQueue::dequeue() {
+  if ( next == size ) {
+  }
+  return queueArray[next++].index;
+}
+
+
+uint16_t PriorityQueue::peekTime() {
+  return queueArray[next].time;
+}
+
+
+void PriorityQueue::insert( uint8_t index, uint16_t time ) {
+  changeTime( index, time );
+}
+
+
+void PriorityQueue::remove( uint8_t index ) {
+  changeTime( index, 0xFFFF );
+  size--;
+}
+
+
+void PriorityQueue::clear() {
+  next = 0;
+  size = 0;
+  for ( uint8_t i=0; i<16; i++ ) {
+    queueArray[i].index = 0;
+    queueArray[i].time = 0xFFFF;
+  }
+}
+
+
+void PriorityQueue::refill() {
+  next = 0;
+}
+
+
+bool PriorityQueue::isEmpty() {
+  return next == size;
+}
+
+
+#if MONITOR_PWM_LIST
+void PriorityQueue::printQueue() {
+  Serial.println();
+  uint8_t i;
+  while ( i++ < size ) {
+    Serial.print( queueArray[i].index, HEX ); Serial.print(":"); Serial.print( queueArray[i].time, DEC ); Serial.print(" -> ");
+  }
+}
+#endif 
+
+
+void PriorityQueue::changeTime( uint8_t index, uint16_t time ) {
+// Change the time of signal edge and move it to new place in the queue.
+  uint8_t i = 0;
+  while ( i < size ) {      // Find the index in the queue.
+    if ( queueArray[i].index == index ) {
+      break;
+    }
+    i++;
+  }
+  if ( i == size - 1 ) {    // Index not found, append to queue.
+    i = size++;
+    queueArray[i].index = index;
+    queueArray[i].time = time;
+  }
+  while ( i > 0 ) {         // Move up queue, shifting each signal down one place, until an earlier signal than 'time' is reached.
+    i--;
+    if ( queueArray[i].time < time ) {
+      break;
+    }
+    queueArray[i+1] = queueArray[i];
+  }
+  while ( i < size ) {      // Move down queue, shifting each signal up one place, until a later signal than 'time' is reached.
+    i++;
+    if ( queueArray[i].time > time ) {
+      break;
+    }
+    queueArray[i-1] = queueArray[i];
+  }
+  queueArray[i].index = index;
+  queueArray[i].time = time;
+}

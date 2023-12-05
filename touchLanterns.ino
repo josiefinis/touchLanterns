@@ -30,42 +30,6 @@ uint16_t signalMONITOR[32];
 #endif
 
 
-void raise( int8_t errorCode ) {
-  Serial.println();
-  switch ( errorCode ) {
-    case -1:
-      Serial.println( "ERROR: undefined error." );
-      break;
-    case -2:
-      Serial.println( "ERROR: looped too many times in PWMSignal.removeEdge." );
-      break;
-    case -3:
-      Serial.println( "ERROR: looped too many times in PWMSignal.insertEdge." );
-      break;
-    case -4:
-      Serial.println( "ERROR: in PWMSignal.nextEdge, next edge should not exist." );
-      break;
-  }
-  pwmSignal.printSignalList();
-  resetAll();
-}
-
-
-void resetAll() {
-  for ( uint8_t i=0; i<16; i++ ) {
-    lantern[i].reset();
-  }
-  pwmSignal.reset();
-  Serial.println();
-  Serial.println( "Forced soft reset. Memory has not been released from PWM signal queue. You need to power off or press arduino reset button." );
-  for ( uint8_t i=30; i>0; i-- ) {
-    Serial.print( "    \rResuming in" ); Serial.print(i); 
-    delay(1000);
-  }
-  Serial.print( ". Done. But seriously, restart." );
-}
-
-
 bool pollSensor() {
 // Poll capacitive sensor
   if ( startupCounter > 0 ) {                       // Ignore sensors briefly after start up while they settle and calibrate themselves.
@@ -82,10 +46,7 @@ void updateLanterns() {
   bool newState = lantern[idx].update();
   for ( uint8_t i=0; i<16; i++ ) {
     if ( lantern[i].nextBrightness() ) {
-      int8_t err = pwmSignal.changeDuty( i, lantern[i].getBrightness() );
-      if ( err < 0 ) {
-        raise( err );
-      }
+      pwmSignal.changeDuty( i, lantern[i].getBrightness() );
     }
   }
   #if MONITOR_EVENTS
@@ -102,6 +63,24 @@ void updateLanterns() {
       monitor.incrementIndex(); 
     }
   #endif
+}
+
+
+void pwmCycle1stHalf() {
+  pwmSignal.periodStart();
+  updateRegister( pwmSignal.getSignal() );
+  updateLanterns();
+  pwmSignal.nextEdge();
+  edgeAtMicros = pwmSignal.getTime();
+  idx = sensor.nextMuxChannel();
+}
+
+
+void pwmCycle2ndHalf() {
+// Second half of PWM cycle
+  updateRegister( pwmSignal.getSignal() );
+  pwmSignal.nextEdge();
+  edgeAtMicros = pwmSignal.getTime();
 }
 
 
@@ -291,29 +270,13 @@ void loop() {                                                   // TODO Monitor 
   uint32_t currentMicros = micros();
   
   if ( currentMicros - pwmPhase0 >= edgeAtMicros ) {
-  // Second half of PWM cycle
-    updateRegister( pwmSignal.getSignal() );
-    int8_t err = pwmSignal.nextEdge();
-    if ( err ) { 
-      raise( err ); 
-    }
-    edgeAtMicros = pwmSignal.getTime();
+    pwmCycle2ndHalf();
   }
-
   if ( currentMicros - pwmPhase0 >= PWM_PERIOD ) {
     // Mark start of PWM cycle here. For all signals with duty cycle greater than 50% set bit to 1, otherwise set to 0. 
     // The signal is phase shifted by 180 degrees when its duty cycle crosses 50%. This ensures that there is no pulse edge and therefore no need to update the register for the first half of a cycle. All sensor polling, updates and calculations are done during this time. Only register updates at pre calculated times are done during the second half of the cycle.
-
     pwmPhase0 = currentMicros;
-    pwmSignal.periodStart();
-    updateRegister( pwmSignal.getSignal() );
-    updateLanterns();
-    int8_t err = pwmSignal.nextEdge();
-    if ( err ) { 
-      raise( err ); 
-    }
-    edgeAtMicros = pwmSignal.getTime();
-    idx = sensor.nextMuxChannel();
+    pwmCycle1stHalf();
   }
 
   if ( currentMillis - lastBurnMillis >= BURN_INTERVAL ) {
