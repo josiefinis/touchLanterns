@@ -859,45 +859,33 @@ void LinkedList::print() {
 
 QLantern::QLantern() {
 // Queue for Lantern objects.
-  pFront = nullptr;
+  first = 0;
+  size = 0;
 }
 
 
 bool QLantern::isEmpty() {
 // True if queue has no nodes.
-  if ( pFront ) {
-    return false;
-  }
-  else {
-    return true;
-  }
+  return size == 0;
 }
 
 
-void QLantern::enqueue(Lantern* lantern) {
+bool QLantern::enqueue(Lantern* lantern) {
 // Put lantern at back of queue.
-  Node* newNode = new Node;
-  newNode->pLantern = lantern;
-  newNode->pNext = nullptr;
-
-  if ( isEmpty() ) { 
-    pFront = newNode;
+  if ( size == MAX_QUEUE_SIZE ) {
+    return 0;
   }
-  else {
-    pBack->pNext = newNode;
-  }
-  pBack = newNode;
+  queue[(first + size) % MAX_QUEUE_SIZE] = lantern;
+  size++;
+  return 1;
 }
 
 
 Lantern* QLantern::dequeue() {
 // Take lantern from front of queue.
-  Lantern* lantern = pFront->pLantern;
-  Node* oldFront = pFront;
-  pFront = oldFront->pNext;
-  delete oldFront;
-
-  return lantern;
+  size--;
+  first %= MAX_QUEUE_SIZE;
+  return queue[first++];
 }
 
 

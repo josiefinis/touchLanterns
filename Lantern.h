@@ -29,21 +29,20 @@ class LinkedList {
 };
 
 
+#define MAX_QUEUE_SIZE      10
+
 class QLantern {
   public:
     QLantern();
     bool isEmpty();
-    void enqueue(Lantern* lantern);
+    bool enqueue(Lantern* lantern);
     Lantern* dequeue();
     void print();
 
   private:
-    struct Node {
-      Lantern* pLantern;
-      Node* pNext;
-    };
-    Node* pFront;
-    Node* pBack;
+    Lantern* queue[MAX_QUEUE_SIZE];             
+    uint8_t first;
+    uint8_t size;
 };
 
 

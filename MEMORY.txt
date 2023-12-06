@@ -125,9 +125,26 @@ Currently have
   
 ### Change neighbour list.
 
-Look at timeline:
+Look at timeline for when neighbour list is needed in RAM
 
 start               set neighbours, shuffle
 makeTree            get neighbour
 leaves ROOT         shuffle, reset index
 leaves WAIT         shuffle, reset index
+
+Might not be worthwhile to use PROGMEM for neighbours. Shelve idea for now.
+
+Queue implementaton using array.
+Max length of queue:
+
+    in queue    remaining
+    1           15
+    4           10
+    6           7
+    8           4
+    10          1
+
+    
+
+
+
