@@ -29,25 +29,6 @@ class LinkedList {
 };
 
 
-class Qint {
-  public:
-    Qint();
-    bool isEmpty();
-    void enqueue(uint8_t value);
-    uint8_t dequeue();
-    uint8_t peek();
-    void print();
-
-  private:
-    struct Node {
-      uint8_t value;
-      Node* pNext;
-    };
-    Node* pFront;
-    Node* pBack;
-};
-
-
 class QLantern {
   public:
     QLantern();
@@ -93,6 +74,13 @@ class QLantern {
 #define WAIT_FULL_DOWN      0x43
 #define WAIT_FULL_UP        0x53
 
+#define NO_CHANGE         0x0000
+#define PULSE_START       0x4FFF
+#define PULSE             0x4000
+#define PULSE_END         0x5000
+#define FLICKER           0x6000
+#define UP_STATE            0x10
+#define DOWN_STATE          0x00
 #define BRIGHTNESS_MAX      0xFF
 #define BRIGHTNESS_MIN      0x01
 #define BRIGHTNESS_VAR      0x20
@@ -109,81 +97,79 @@ class Lantern {
     static Lantern* root;
     static uint8_t nTreeNodes;
     Lantern();
-    void reset();
+    void reset( void );
 
-    bool update();
-    void raiseBrightness(uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX);
-    void lowerBrightness(uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN);
-    bool nextBrightness();
-    void flickerBrightness();
-    void pulseBrightness();
-    void pushInput(uint8_t value);
-    void makeTree();
-    void burnDown();
-    void addNeighbour(Lantern* neighbour);
-    Lantern* nextNeighbour();
-    void printNeighbours();
+    bool changeState( void );
+    bool changeOutput( void );
+    void burnDown( void );
+    void pushInput( uint8_t value );
+    uint8_t getInput( void );
 
-    uint8_t getIndex();
-    uint8_t getState();
-    uint8_t getInput();
-    uint8_t getBrightness();
-    uint8_t getBrightnessTarget();
-    uint8_t getDelay();
-    Lantern* getParent();
+    void setIndex( uint8_t value );
+    uint8_t getIndex( void );
+    void setState( uint8_t value );
+    uint8_t getState( void );
 
-    void setIndex(uint8_t value);
-    void setState(uint8_t value);
-    void setBrightness(uint8_t value);
-    void setParent(Lantern* pLantern);
-    void setDelay(uint8_t value);
-    void setNeighbours(Lantern* neighbour[4], uint8_t nNeighbours);
+    uint8_t getBrightness( void );
+    uint8_t getReferenceBrightness( void );
+    void setDelay( uint8_t value );
+    uint8_t getDelay( void );
+    void setParent( Lantern* pLantern );
+    Lantern* getParent( void );
+    void setNeighbours( Lantern* neighbour[4], uint8_t nNeighbours );
+    Lantern* nextNeighbour( void );
 
   private:
     uint8_t index;
     uint8_t state;
-    uint16_t input;
-    uint8_t brightness;
-    Qint brightnessQueue;
-    uint8_t brightnessTarget;
+    uint16_t input;                                             // TODO change to uint8_t and check nothing breaks.
+    uint16_t output;
+    uint8_t referenceBrightness;
     uint8_t delay;
     Lantern* parent;
     LinkedList neighbourList;
 
-    void incrementCounter();
-    void decrementCounter();
-    bool out();
-    bool idle();
-    bool goOut();
-    bool goIdle();
-    bool initUp();
-    bool initDown();
-    bool fullUp();
-    bool fullDown();
-    bool autoUp();
-    bool autoDown();
-    bool pauseUp();
-    bool pauseDown();
-    bool flickerUp();
-    bool flickerDown();
-    bool rootInitUp();
-    bool rootInitDown();
-    bool rootFullUp();
-    bool rootFullDown();
-    bool rootAutoUp();
-    bool rootAutoDown();
-    bool rootPauseUp();
-    bool rootPauseDown();
-    bool rootFlickerUp();
-    bool rootFlickerDown();
-    bool wait();
-    bool waitFullUp();
-    bool waitFullDown();
-    bool follow();
 
-    bool isInput(uint8_t value, uint8_t mask=0x01); 
-    bool isTouched(uint8_t duration=0x01);
-    bool isReleased(uint8_t duration=0x01);
-    bool isDoubleTouched();
+    bool isInput( uint8_t value, uint8_t mask=0x01 ); 
+    void makeTree( void );
+    void raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX );
+    void lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN );
+    void setBrightness( uint8_t value );
+    void setRate( uint8_t value );
+    uint8_t getRate( void );
+
+    void setOutput( uint16_t );
+    void getOutput( uint16_t );
+    
+    bool out( void );
+    bool idle( void );
+    bool goOut( void );
+    bool goIdle( void );
+    bool initUp( void );
+    bool initDown( void );
+    bool fullUp( void );
+    bool fullDown( void );
+    bool autoUp( void );
+    bool autoDown( void );
+    bool pauseUp( void );
+    bool pauseDown( void );
+    bool flickerUp( void );
+    bool flickerDown( void );
+    bool rootInitUp( void );
+    bool rootInitDown( void );
+    bool rootFullUp( void );
+    bool rootFullDown( void );
+    bool rootAutoUp( void );
+    bool rootAutoDown( void );
+    bool rootPauseUp( void );
+    bool rootPauseDown( void );
+    bool rootFlickerUp( void );
+    bool rootFlickerDown( void );
+    bool wait( void );
+    bool waitFullUp( void );
+    bool waitFullDown( void );
+    bool follow( void );
+
+    void printNeighbours( void );
 };
 #endif

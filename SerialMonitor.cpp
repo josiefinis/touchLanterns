@@ -118,7 +118,7 @@ void SerialMonitor::printLanternInput( Lantern* lantern ) {
 void SerialMonitor::printBrightness( Lantern* lantern ) {
   for ( uint8_t i = 0; i < 16; i++ ) { 
     Serial.print( lantern[i].getBrightness() ); Serial.print( ":" ); 
-    Serial.print( lantern[i].getBrightnessTarget() ); Serial.print( "\t" ); 
+    Serial.print( lantern[i].getReferenceBrightness() ); Serial.print( "\t" ); 
   }
   Serial.println();
 }

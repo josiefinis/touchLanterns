@@ -43,9 +43,9 @@ bool pollSensor() {
 
 void updateLanterns() {
   lantern[idx].pushInput( pollSensor() );
-  bool newState = lantern[idx].update();
+  bool newState = lantern[idx].changeState();
   for ( uint8_t i=0; i<16; i++ ) {
-    if ( lantern[i].nextBrightness() ) {
+    if ( lantern[i].changeOutput() ) {
       pwmSignal.changeDuty( i, lantern[i].getBrightness() );
     }
   }

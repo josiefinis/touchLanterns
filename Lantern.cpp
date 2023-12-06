@@ -6,24 +6,29 @@ uint8_t Lantern::nTreeNodes = 0;
 Lantern* Lantern::root = nullptr;
 
 
+// TODO Make flicker look better.
+// TODO Make different variations of flicker or other effects.
+
+
 Lantern::Lantern() {
 // State machine for controlling lanterns.
   state = OUT;
-  brightness = 0;
+  input = 0;
+  output = 0;
   parent = nullptr;
 }
 
 
-void Lantern::reset() {
+void Lantern::reset() {                     // TODO delete
   state = OUT;
-  setBrightness( 0 );
+  output;
   parent = nullptr;
   input = 0;
 }
 
 
-bool Lantern::update() {
-  // TODO Consider making this a tree and separate states by brightness up/down.
+bool Lantern::changeState() {
+  output = NO_CHANGE;
 
   switch ( state ) {
     case OUT:                           //                     >>--( rising edge )--> INIT_UP
@@ -109,6 +114,251 @@ bool Lantern::update() {
 }
 
 
+bool Lantern::changeOutput() {
+  switch ( output & 0xF000 ) {
+    case NO_CHANGE:
+      return 0;
+
+    case FLICKER:
+      uint16_t temp = output;
+      temp ^= temp << 2; 
+      temp ^= temp >> 7;
+      setBrightness( temp );
+      return 1;
+
+    case PULSE:
+      output++;
+      return 1;
+
+    case PULSE_END:
+      output = NO_CHANGE;
+      setBrightness( referenceBrightness );
+      return 1;
+
+    default:
+      switch ( state & 0x10 ) {
+        case UP_STATE:
+          if ( referenceBrightness - getBrightness() < getRate() ) {
+            output = NO_CHANGE;
+            setBrightness( referenceBrightness );
+            return 1;
+          }
+          output += getRate();
+          return 1;
+
+        case DOWN_STATE:
+          if ( getBrightness() - referenceBrightness < getRate() ) {
+            output = NO_CHANGE;
+            setBrightness( referenceBrightness );
+            return 1;
+          }
+          output -= getRate();
+          return 1;
+      }
+  }
+}
+
+
+void Lantern::burnDown() { // TODO change so that lanterns stay near full brightness for longer.
+// Expected value = -0.5
+  if ( not getBrightness() ) {
+    return 0;
+  }
+  int16_t newReference = referenceBrightness - Random::pull(3) + 3;
+  if ( newReference < 0 ) {
+    newReference = 0;
+  }
+  if ( newReference > 255 ) { 
+    newReference = 255;
+  }
+  referenceBrightness = newReference;
+}
+
+
+void Lantern::setIndex(uint8_t value) {
+  index = value;
+}
+
+
+uint8_t Lantern::getIndex() {
+  return index;
+}
+
+
+void Lantern::setState(uint8_t value) {
+  state = value;
+}
+
+
+uint8_t Lantern::getState() {
+  return state;
+}
+
+
+uint8_t Lantern::getBrightness() {
+  return output >> 4;
+}
+
+
+uint8_t Lantern::getReferenceBrightness() {
+  return referenceBrightness;
+}
+
+
+void Lantern::pushInput(uint8_t value) {
+  input <<= 1;
+  input |= value;
+}
+
+
+uint8_t Lantern::getInput() {
+  return input;
+}
+
+
+void Lantern::setNeighbours(Lantern* neighbour[4], uint8_t nNeighbours) {
+  for ( uint8_t i=0; i<nNeighbours; i++ ) {
+    neighbourList.put(neighbour[i]);
+  }
+  neighbourList.shuffle();
+  neighbourList.resetIndex();
+}
+
+
+Lantern* Lantern::nextNeighbour() {
+  return neighbourList.next();
+}
+
+
+#if MONITOR_MAKE_TREE
+void Lantern::printNeighbours() {
+  neighbourList.print();
+}
+#endif
+
+
+void Lantern::setDelay(uint8_t value) {
+  delay = value;
+}
+
+
+uint8_t Lantern::getDelay() {
+  return delay;
+}
+
+
+void Lantern::setParent(Lantern* pLantern) {
+  parent = pLantern;
+}
+
+
+Lantern* Lantern::getParent() {
+  return parent;
+}
+
+
+// ========================================================================================================================
+// PRIVATE
+// ========================================================================================================================
+
+
+bool Lantern::isInput(uint8_t value, uint8_t mask=0x01) {
+  return (mask & input) == (mask & value);
+}
+
+
+void Lantern::makeTree() {
+// Create a spanning tree of the neighbour graph, starting from this lantern as root. 
+  #if MONITOR_MAKE_TREE
+    Serial.print( F("Root ") ); Serial.println(this->getIndex());
+  #endif
+  QLantern queue;
+  Lantern* root = this;
+  root->setParent(nullptr);
+  delay = 1;
+  Lantern* lantern = root;
+  queue.enqueue(lantern);
+
+  while ( not queue.isEmpty() ) {
+    lantern = queue.dequeue();
+    #if MONITOR_MAKE_TREE
+      lantern->printNeighbours(); 
+    #endif
+    Lantern* neighbour;
+    while ( neighbour = lantern->nextNeighbour() ) {
+      #if MONITOR_MAKE_TREE
+        Serial.print( F("Lantern ") ); Serial.print( lantern->getIndex() ); 
+        Serial.print( F(": check neighbour ") ); Serial.print( neighbour->getIndex() ); Serial.println();
+      #endif
+
+      if ( neighbour->getParent() ) { continue; }
+      if ( neighbour == root ) { continue; }
+      
+      #if MONITOR_MAKE_TREE
+        Serial.print( F("Add lantern ") ); Serial.print( neighbour->getIndex() ); Serial.print( F(" to tree under parent ") );
+        Serial.print( lantern->getIndex() ); Serial.println(); 
+      #endif
+
+      neighbour->setParent(lantern);
+      neighbour->setState(WAIT);
+      delay += 3 + Random::pull(2);
+      neighbour->setDelay(delay);
+      nTreeNodes++;
+      if ( nTreeNodes == 15 ) { return 0; }
+      queue.enqueue(neighbour);
+    }
+
+    #if MONITOR_MAKE_TREE
+    queue.print();
+    #endif
+  }
+}
+
+
+void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) {
+  if ( getBrightness() >= ceiling ) { 
+    output = NO_CHANGE;
+    return 0; 
+  }
+  setRate( rate );
+  referenceBrightness = ceiling;
+}
+
+
+void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
+  if ( getBrightness() <= floor ) { 
+    output = NO_CHANGE;
+    return 0; 
+  }
+  setRate( rate );
+  referenceBrightness = floor;
+}
+
+
+void Lantern::setRate(uint8_t value) {
+// Store rate as integer log2( value ) in bits 14-12 of 'output' variable.
+  output &= ~0x7000;
+  uint8_t exponent = 0;
+  while ( value >>= 1 ) {
+    exponent++;
+  }
+  output |= ( exponent & 0x7 ) << 12;
+}
+
+
+uint8_t Lantern::getRate() {
+// Calculate and return rate = 1/2 * 2^ilog22x
+  uint8_t exponent = ( output >> 12 ) & 0x7;
+  return 1 << exponent;
+}
+
+
+void Lantern::setBrightness(uint8_t value) {
+  output &= ~0x0FFF;
+  output |= value << 4;
+}
+
+
 bool Lantern::out() {  
 // Unlit, do nothing until lantern receives touch input.
 //     touch: light lantern.
@@ -124,7 +374,7 @@ bool Lantern::out() {
 bool Lantern::goOut() {
 // Transistion state on the way to out.
   state = OUT;
-  brightnessTarget = 0;
+  referenceBrightness = 0;
   return 0;
 }
 
@@ -144,12 +394,12 @@ bool Lantern::idle() {
   if ( delay++ ) { 
     return 0; 
   } 
-  if ( getBrightness() < brightnessTarget ) { 
-    raiseBrightness( 1, brightnessTarget );
+  if ( getBrightness() < referenceBrightness ) { 
+    raiseBrightness( 1, referenceBrightness );
     return 0;
   } 
-  if ( getBrightness() > brightnessTarget ) { 
-    lowerBrightness( 1, brightnessTarget );
+  if ( getBrightness() > referenceBrightness ) { 
+    lowerBrightness( 1, referenceBrightness );
     return 0;
   }
   return 0;
@@ -159,7 +409,7 @@ bool Lantern::idle() {
 bool Lantern::goIdle() {
 // Transistion state on way to IDLE.
   state = IDLE;
-  brightnessTarget = getBrightness();
+  referenceBrightness = getBrightness();
   return 1;
 }
 
@@ -173,7 +423,8 @@ bool Lantern::initDown() {
   }
   if ( isInput( TOUCHED, MEDIUM ) ) {       // On medium touch: make lantern flicker as feedback. From FLICKER can go to either AUTO or ROOT.
     state = FLICKER_DOWN; 
-    flickerBrightness();
+    output = FLICKER;
+    referenceBrightness = getBrightness(); 
     return 1;
   }
   lowerBrightness( 32, 128 ); 
@@ -190,7 +441,8 @@ bool Lantern::initUp() {
   }
   if ( isInput( TOUCHED, MEDIUM ) ) {       // Medium duration touch: make lantern flicker as feedback. From FLICKER can go to either AUTO or ROOT.
     state = FLICKER_UP;
-    flickerBrightness();
+    output = FLICKER;
+    referenceBrightness = getBrightness();
     return 1;
   }
   raiseBrightness( 32 );
@@ -218,15 +470,16 @@ bool Lantern::flickerDown() {
 // Make lantern flicker until decision is reached. 
   if ( isInput( RELEASED ) ) {                                  // Go to AUTO to allow fine control of this lantern's brightness.
     state = AUTO_DOWN;    
+    setBrightness( referenceBrightness );
     return 1;
   }
   if ( isInput( TOUCHED, LONG ) and not getParent() ) {          // Go to ROOT_FULL_DOWN to put out all lanterns.
     state = ROOT_FULL_DOWN; 
     makeTree();
-    setBrightness(0);
+    setBrightness( 0 );
     return 1;
   }
-  flickerBrightness();
+  output = FLICKER;
   return 0;
 }
 
@@ -235,6 +488,7 @@ bool Lantern::flickerUp() {
 // Make lantern flicker until decision is reached. 
   if ( isInput( RELEASED ) ) {                                  // Go to AUTO to allow fine control of this lantern's brightness.
     state = AUTO_UP;                                                                                                             
+    setBrightness( referenceBrightness );
     return 1;                                                                                                                    
   }                                                                                                                              
   if ( isInput( TOUCHED, LONG ) and not getParent() ) {          // Go to ROOT_FULL_UP to light all lanterns to full brightness.                           
@@ -243,7 +497,7 @@ bool Lantern::flickerUp() {
     setBrightness( BRIGHTNESS_MAX );
     return 1;
   }
-  flickerBrightness();
+  output = FLICKER;
   return 0;
 }
 
@@ -256,7 +510,7 @@ bool Lantern::autoDown() {
   }
   if ( isInput( RISING, EDGE ) ) {                      
     state = PAUSE_DOWN; 
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
 
   }
@@ -273,7 +527,7 @@ bool Lantern::autoUp() {
   }
   if ( isInput( RISING, EDGE ) ) {                      
     state = PAUSE_UP; 
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }
   raiseBrightness( 2 );
@@ -285,12 +539,13 @@ bool Lantern::pauseDown() {
 // Maintain steady brightness and wait for input.
   if ( isInput( RISING, EDGE ) ) {                      // New touch: go to back to AUTO but change to AUTO_UP.
     state = AUTO_UP; 
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }
   if ( isInput( TOUCHED, MEDIUM ) ) {                   // Continued touch from AUTO: go to ROOT_FLICKER to allow fine control of all lanterns' brightness. 
     state = ROOT_FLICKER_DOWN;
-    flickerBrightness();
+    output = FLICKER;
+    referenceBrightness = getBrightness();
     return 1;
   }
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
@@ -305,12 +560,13 @@ bool Lantern::pauseUp() {
 // Maintain steady brightness and wait for input.
   if ( isInput( RISING, EDGE ) ) {                      // New touch: go back to AUTO but change to AUTO_DOWN.
     state = AUTO_DOWN;                                                                                                                                         
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }                                                                                                                                                          
   if ( isInput( TOUCHED, MEDIUM ) ) {                   // Continued touch from AUTO: go to ROOT_FLICKER to allow fine control of all lanterns' brightness. 
     state = ROOT_FLICKER_UP;                                                                                                                                 
-    flickerBrightness();                                                                                                                              
+    output = FLICKER;
+    referenceBrightness = getBrightness();
     return 1;
   }                                                                                                                                                          
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
@@ -341,32 +597,36 @@ bool Lantern::rootFullUp() {
 
 bool Lantern::rootFlickerDown() {
 // Make lantern flicker until decision is reached. 
-  if ( isInput( TOUCHED, LONG & FALLING ) and not getParent() ) {          // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
+  if ( isInput( TOUCHED, LONG & FALLING ) and not getParent() ) {           // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
     state = ROOT_AUTO_DOWN; 
+    setBrightness( referenceBrightness );
     makeTree();
     return 1;
   }
-  if ( isInput( RELEASED ) ) {                                  // Go to AUTO to allow fine control of this lantern's brightness.
+  if ( isInput( RELEASED ) ) {                                              // Go to AUTO to allow fine control of this lantern's brightness.
     state = AUTO_DOWN;                                                                                                             
+    setBrightness( referenceBrightness );
     return 1;                                                                                                                    
   }                                                                                                                              
-  flickerBrightness();
+  output = FLICKER;
   return 0;
 }
 
 
 bool Lantern::rootFlickerUp() {
 // Make lantern flicker until decision is reached. 
-  if ( isInput( TOUCHED, LONG & FALLING ) and not getParent() ) {          // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
+  if ( isInput( TOUCHED, LONG & FALLING ) and not getParent() ) {           // Go to ROOT_AUTO to allow fine control of all lanterns' brightness.
     state = ROOT_AUTO_UP; 
+    setBrightness( referenceBrightness );
     makeTree();
     return 1;
   }
-  if ( isInput( RELEASED ) ) {                                  // Go to AUTO to allow fine control of this lantern's brightness.
+  if ( isInput( RELEASED ) ) {                                              // Go to AUTO to allow fine control of this lantern's brightness.
     state = AUTO_UP;                                                                                                             
+    setBrightness( referenceBrightness );
     return 1;                                                                                                                    
   }                                                                                                                              
-  flickerBrightness();
+  output = FLICKER;
   return 0;
 }
 
@@ -379,7 +639,7 @@ bool Lantern::rootAutoDown() {
   }
   if ( isInput( RISING, EDGE ) ) { 
     state = ROOT_PAUSE_DOWN; 
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }
   lowerBrightness();
@@ -395,7 +655,7 @@ bool Lantern::rootAutoUp() {
   }
   if ( isInput( RISING, EDGE ) ) { 
     state = ROOT_PAUSE_UP; 
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }
   raiseBrightness();
@@ -407,7 +667,7 @@ bool Lantern::rootPauseDown() {
 // Maintain steady brightness and wait for input.
   if ( isInput( RISING, EDGE ) ) {                      // New touch: go back to ROOT_AUTO but switch to UP.
     state = ROOT_AUTO_UP;                                                                                                                                  
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }                                                                                                                                                          
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
@@ -424,7 +684,7 @@ bool Lantern::rootPauseUp() {
 // Maintain steady brightness and wait for input.
   if ( isInput( RISING, EDGE ) ) {                      // New touch: go back to ROOT_AUTO but switch to DOWN.
     state = ROOT_AUTO_DOWN;                                                                                                                                    
-    pulseBrightness();
+    output = PULSE_START;
     return 1;
   }                                                                                                                                                          
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
@@ -435,9 +695,7 @@ bool Lantern::rootPauseUp() {
   }
   return 0;
 }
-// TODO investigate hanging in ROOT_PAUSE_UP
-// TODO rising edge?
-// TODO pulse?
+
 
 bool Lantern::wait() {
 // Wait before following parent lantern in tree.
@@ -529,266 +787,6 @@ bool Lantern::follow() {
     return 1;
   }
   return 0;
-}
-
-
-void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) {
-  if ( brightness >= ceiling ) { return 0; }
-  while ( not brightnessQueue.isEmpty() ) { 
-    brightnessQueue.dequeue();
-  }
-  for ( uint8_t i=1; i<=16; i++ ) {
-    uint16_t step = i * rate / 16;
-    if ( step < ceiling - brightness ) {
-      brightnessQueue.enqueue(brightness + step);
-    }
-    else {
-      brightnessQueue.enqueue(ceiling);
-      break;
-    }
-  }
-  return 0;
-}
-
-
-void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
-  if ( brightness <= floor ) { return 0; }
-  while ( not brightnessQueue.isEmpty() ) { 
-    brightnessQueue.dequeue();
-  }
-  for ( uint8_t i=1; i<=16; i++ ) {
-    uint16_t step = i * rate / 16; 
-    if ( step < brightness - floor ) {
-      brightnessQueue.enqueue(brightness - step);
-    }
-    else {
-      brightnessQueue.enqueue(floor);
-      break;
-    }
-  }
-  return 0;
-}
-
-// TODO Make flicker look better.
-// TODO Make different variations of flicker or other effects.
-
-void Lantern::flickerBrightness() {
-  while ( not brightnessQueue.isEmpty() ) { 
-    brightnessQueue.dequeue();
-  }
-  uint16_t temp = brightness;
-  for ( uint8_t i=0; i<15; i++ ) {
-    temp ^= temp << 2;
-    temp ^= temp >> 7;
-    brightnessQueue.enqueue( temp );
-  }
-  brightnessQueue.enqueue( brightness );
-  return 0;
-}
-
-
-void Lantern::pulseBrightness() {
-  while ( not brightnessQueue.isEmpty() ) { 
-    brightnessQueue.dequeue();
-  }
-  brightnessQueue.enqueue( BRIGHTNESS_MAX );
-  brightnessQueue.enqueue( 0 );
-  brightnessQueue.enqueue( brightness );
-  return 0;
-}
-
-
-bool Lantern::nextBrightness() {
-  if ( brightnessQueue.isEmpty() ) { 
-    return 0;
-  }
-  brightness = brightnessQueue.dequeue();
-  if ( brightnessQueue.isEmpty() ) {
-    return 1;
-  }
-  if ( brightness != brightnessQueue.peek() ) {
-    return 1;
-  }
-  return 0;
-}
-
-
-void Lantern::pushInput(uint8_t value) {
-  input <<= 1;
-  input |= value;
-}
-
-
-void Lantern::makeTree() {
-// Create a spanning tree of the neighbour graph, starting from this lantern as root. 
-  #if MONITOR_MAKE_TREE
-    Serial.print( F("Root ") ); Serial.println(this->getIndex());
-  #endif
-  QLantern queue;
-  Lantern* root = this;
-  root->setParent(nullptr);
-  delay = 1;
-  Lantern* lantern = root;
-  queue.enqueue(lantern);
-
-  while ( not queue.isEmpty() ) {
-    lantern = queue.dequeue();
-    #if MONITOR_MAKE_TREE
-      lantern->printNeighbours(); 
-    #endif
-    Lantern* neighbour;
-    while ( neighbour = lantern->nextNeighbour() ) {
-      #if MONITOR_MAKE_TREE
-        Serial.print( F("Lantern ") ); Serial.print( lantern->getIndex() ); 
-        Serial.print( F(": check neighbour ") ); Serial.print( neighbour->getIndex() ); Serial.println();
-      #endif
-
-      if ( neighbour->getParent() ) { continue; }
-      if ( neighbour == root ) { continue; }
-      
-      #if MONITOR_MAKE_TREE
-        Serial.print( F("Add lantern ") ); Serial.print( neighbour->getIndex() ); Serial.print( F(" to tree under parent ") );
-        Serial.print( lantern->getIndex() ); Serial.println(); 
-      #endif
-
-      neighbour->setParent(lantern);
-      neighbour->setState(WAIT);
-      delay += 3 + Random::pull(2);
-      neighbour->setDelay(delay);
-      nTreeNodes++;
-      if ( nTreeNodes == 15 ) { return 0; }
-      queue.enqueue(neighbour);
-    }
-
-    #if MONITOR_MAKE_TREE
-    queue.print();
-    #endif
-  }
-}
-
-
-void Lantern::burnDown() { // TODO change so that lanterns stay near full brightness for longer.
-// Expected value = -0.5
-  if ( not getBrightness() ) {
-    return 0;
-  }
-  int16_t newTarget = brightnessTarget - Random::pull(3) + 3;
-  if ( newTarget < 0 ) {
-    newTarget = 0;
-  }
-  if ( newTarget > 255 ) { 
-    newTarget = 255;
-  }
-  brightnessTarget = newTarget;
-}
-
-
-void Lantern::addNeighbour(Lantern* neighbour) {
-  neighbourList.put(neighbour);
-}
-
-
-Lantern* Lantern::nextNeighbour() {
-  return neighbourList.next();
-}
-
-
-#if MONITOR_MAKE_TREE
-void Lantern::printNeighbours() {
-  neighbourList.print();
-}
-#endif
-
-
-uint8_t Lantern::getIndex() {
-  return index;
-}
-
-
-uint8_t Lantern::getState() {
-  return state;
-}
-
-
-uint8_t Lantern::getInput() {
-  return input;
-}
-
-
-uint8_t Lantern::getBrightness() {
-  return brightness; 
-}
-
-
-uint8_t Lantern::getBrightnessTarget() {
-  return brightnessTarget;
-}
-
-
-uint8_t Lantern::getDelay() {
-  return delay;
-}
-
-
-Lantern* Lantern::getParent() {
-  return parent;
-}
-
-
-void Lantern::setIndex(uint8_t value) {
-  index = value;
-}
-
-
-void Lantern::setState(uint8_t value) {
-  state = value;
-}
-
-
-void Lantern::setBrightness(uint8_t value) {
-  while ( not brightnessQueue.isEmpty() ) {
-    brightnessQueue.dequeue();
-  }
-  brightnessQueue.enqueue(value);
-}
-
-
-void Lantern::setParent(Lantern* pLantern) {
-  parent = pLantern;
-}
-
-
-void Lantern::setDelay(uint8_t value) {
-  delay = value;
-}
-
-
-void Lantern::setNeighbours(Lantern* neighbour[4], uint8_t nNeighbours) {
-  for ( uint8_t i=0; i<nNeighbours; i++ ) {
-    neighbourList.put(neighbour[i]);
-  }
-  neighbourList.shuffle();
-  neighbourList.resetIndex();
-}
-
-
-bool Lantern::isInput(uint8_t value, uint8_t mask=0x01) {
-  return (mask & input) == (mask & value);
-}
-
-
-bool Lantern::isTouched(uint8_t duration=0x01) {
-  return (input & duration) == duration;
-}
-
-
-bool Lantern::isReleased(uint8_t duration=0x01) {
-  return (input & duration) == 0;
-}
-
-
-bool Lantern::isDoubleTouched() {
-  return  (input & 0x3) == 0x1 and (input & 0xFC);
 }
 
 
@@ -909,68 +907,6 @@ void QLantern::print() {
   Serial.print( F("Queue: ") );
   Node* q = pFront;
   while ( q ) { Serial.print(q->pLantern->getIndex()); Serial.print( F("->>") ); q = q->pNext; }
-  Serial.println();
-}
-#endif
-
-
-Qint::Qint() {
-// Queue for integer objects.
-  pFront = nullptr;
-}
-
-
-bool Qint::isEmpty() {
-// True if queue has no nodes.
-  if ( pFront ) {
-    return false;
-  }
-  else {
-    return true;
-  }
-}
-
-
-void Qint::enqueue(uint8_t value) {
-// Put value at back of queue.
-  Node* newNode = new Node;
-  newNode->value = value;
-  newNode->pNext = nullptr;
-
-  if ( isEmpty() ) { 
-    pFront = newNode;
-  }
-  else {
-    pBack->pNext = newNode;
-  }
-  pBack = newNode;
-}
-
-
-uint8_t Qint::dequeue() {
-// Take value from front of queue.
-  if ( not pFront ) { return 0; }
-  uint8_t value = pFront->value;
-  Node* oldFront = pFront;
-  pFront = oldFront->pNext;
-  delete oldFront;
-
-  return value;
-}
-
-
-uint8_t Qint::peek() {
-// Return value from front of queue without removing it from queue.
-  return pFront->value;
-}
-
-
-#if MONITOR_MAKE_TREE
-void Qint::print() {
-// Print the queue.
-  Serial.print( F("Brightness queue: ") );
-  Node* q = pFront;
-  while ( q ) { Serial.print( q->value ); Serial.print(  F("->>")  ); q = q->pNext; }
   Serial.println();
 }
 #endif

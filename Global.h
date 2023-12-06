@@ -3,7 +3,7 @@
 #define GLOBAL_H
 
 #define MONITOR_INTERVAL                    5000 // ms
-#define MONITOR_EVENTS                      1
+#define MONITOR_EVENTS                      0
 #define MONITOR_TIMINGS                     0
 #define MONITOR_RAW_INPUT                   0
 #define MONITOR_NORMALISED_INPUT            0
