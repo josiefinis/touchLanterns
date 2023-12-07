@@ -8,39 +8,35 @@
 
 class Lantern;
 
-class LinkedList {
+#define MAX_LIST_SIZE  4
+
+class ShuffledList {
   public:
-    LinkedList();
-    uint8_t length();
-    Lantern* next();
-    void put(Lantern* lantern);
-    void resetIndex();
-    void shuffle();
-    void print();
+    Lantern* pop( void );
+    append( Lantern* element );
+    void shuffle( void );
+    void print( void );
 
   private:
-    struct Node {
-      Lantern* pLantern;
-      Node* pNext;
-    };
-    Node* p0;
-    Node* pIndex;
-    uint8_t nNodes;
+    Lantern* list[ MAX_LIST_SIZE ];
+    uint8_t size;
 };
 
 
+
+class Queue {
+
 #define MAX_QUEUE_SIZE      10
 
-class QLantern {
   public:
-    QLantern();
+    Queue();
     bool isEmpty();
-    bool enqueue(Lantern* lantern);
+    bool enqueue( Lantern* lantern );
     Lantern* dequeue();
     void print();
 
   private:
-    Lantern* queue[MAX_QUEUE_SIZE];             
+    Lantern* queue[ MAX_QUEUE_SIZE ];             
     uint8_t first;
     uint8_t size;
 };
@@ -126,7 +122,7 @@ class Lantern {
     uint8_t referenceBrightness;
     uint8_t delay;
     Lantern* parent;
-    LinkedList neighbourList;
+    ShuffledList neighbourList;
 
 
     bool isInput( uint8_t value, uint8_t mask=0x01 ); 

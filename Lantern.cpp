@@ -218,15 +218,14 @@ uint8_t Lantern::getInput() {
 
 void Lantern::setNeighbours(Lantern* neighbour[4], uint8_t nNeighbours) {
   for ( uint8_t i=0; i<nNeighbours; i++ ) {
-    neighbourList.put(neighbour[i]);
+    neighbourList.append( neighbour[i] );
   }
   neighbourList.shuffle();
-  neighbourList.resetIndex();
 }
 
 
 Lantern* Lantern::nextNeighbour() {
-  return neighbourList.next();
+  return neighbourList.pop();
 }
 
 
@@ -272,7 +271,7 @@ void Lantern::makeTree() {
   #if MONITOR_MAKE_TREE
     Serial.print( F("Root ") ); Serial.println(this->getIndex());
   #endif
-  QLantern queue;
+  Queue queue;
   Lantern* root = this;
   root->setParent(nullptr);
   delay = 1;
@@ -581,7 +580,6 @@ bool Lantern::rootFullDown() {
 // Put out this lantern, all other lanterns will follow in succession.
   state = FULL_DOWN;
   neighbourList.shuffle(); 
-  neighbourList.resetIndex();
   return 1;
 }
 
@@ -590,7 +588,6 @@ bool Lantern::rootFullUp() {
 // Light to full brightness, all other lanterns will follow in succession.
   state = FULL_UP;
   neighbourList.shuffle();
-  neighbourList.resetIndex();
   return 1;
 }
 
@@ -673,7 +670,6 @@ bool Lantern::rootPauseDown() {
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
     state = GO_IDLE; 
     neighbourList.shuffle();
-    neighbourList.resetIndex();
     return 1;
   }
   return 0;
@@ -690,7 +686,6 @@ bool Lantern::rootPauseUp() {
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
     state = GO_IDLE; 
     neighbourList.shuffle();
-    neighbourList.resetIndex();
     return 1;
   }
   return 0;
@@ -712,7 +707,6 @@ bool Lantern::wait() {
   }
   state = FOLLOW; 
   neighbourList.shuffle(); 
-  neighbourList.resetIndex();
   delay = micros(); // delay counter has another use marking periodic brightness adjustments. Good enough random number here ensures lantern adjustments are staggered.
   return 1;
 }
@@ -733,7 +727,6 @@ bool Lantern::waitFullDown() {
   }
   state = FULL_DOWN; 
   neighbourList.shuffle(); 
-  neighbourList.resetIndex();
   delay = micros(); // delay counter has another use marking periodic brightness adjustments. Good enough random number here ensures lantern adjustments are staggered.
   parent = nullptr;
   nTreeNodes--;
@@ -756,7 +749,6 @@ bool Lantern::waitFullUp() {
   }
   state = FULL_UP; 
   neighbourList.shuffle(); 
-  neighbourList.resetIndex();
   delay = micros(); // delay counter has another use marking periodic brightness adjustments. Good enough random number here ensures lantern adjustments are staggered.
   parent = nullptr;
   nTreeNodes--;
@@ -790,87 +782,71 @@ bool Lantern::follow() {
 }
 
 
-LinkedList::LinkedList() {
-// Linked list for Lantern objects.
-  p0 = nullptr;
-  pIndex = nullptr;
-  nNodes = 0;
-}
+// ============================================================================================================================================
+//          SHUFFLED LIST
+// ============================================================================================================================================
 
-
-Lantern* LinkedList::next() {
-// Return next lantern from list.
-  if ( not pIndex ) {
+Lantern* ShuffledList::pop() {
+// Return and remove the next element from the list.
+  if ( size == 0 ) {
     return nullptr;
   }
-  Node* temp = pIndex;
-  pIndex = pIndex->pNext;
-  return temp->pLantern;
+  return list[ --size ];
 }
 
 
-void LinkedList::resetIndex() {
-// Move index to top of list.
-  pIndex = p0;
+void ShuffledList::append( Lantern* element ) {
+// Append an element to the list.
+  list[ size ] = element;
+  size++;
 }
 
 
-void LinkedList::put(Lantern* lantern) {
-// Put a lantern at the start of the list.
-  Node* newNode = new Node;
-  newNode->pLantern = lantern;
-  newNode->pNext = p0;
-  p0 = newNode;
-  nNodes++;
-}
-
-
-void LinkedList::shuffle() {  
+void ShuffledList::shuffle() {
 // Shuffle the list in place using Fisher-Yates algorithm.
-  uint8_t i = nNodes;
-  Node* iNode = p0;
+  uint8_t i = size;
   uint8_t j;
-  Node* jNode;
   Lantern* temp;
-  while ( iNode->pNext ) {
+  while ( i > 1 ) {
     j = Random::urandom( i-- );
-    jNode = iNode;
-    while ( j-- ) { 
-      jNode = jNode->pNext; 
-    }
-    temp = iNode->pLantern;
-    iNode->pLantern = jNode->pLantern;
-    jNode->pLantern = temp;
-    iNode = iNode->pNext;
+    temp = list[ i ];
+    list[ i ] = list[ j ];
+    list[ j ] = temp;
   }
 }
 
 
 #if MONITOR_MAKE_TREE
-void LinkedList::print() {
-// Print the list.
-  Serial.print(nNodes); Serial.print( F(" neighbours: ") );
-  Node* pNode = p0;
-  while ( pNode ) { Serial.print(pNode->pLantern->getIndex(), HEX); Serial.print( F("-> ") ); pNode = pNode->pNext; }
+void ShuffledList::print() {
+// Print the list to serial monitor.
+  for ( uint8_t i=0; i < size; i++ ) {
+    Serial.print( list[ i ] ); 
+    Serial.print( "->" );
+  }
   Serial.println();
 }
 #endif
 
 
-QLantern::QLantern() {
+
+// ============================================================================================================================================
+//          QUEUE
+// ============================================================================================================================================
+
+Queue::Queue() {
 // Queue for Lantern objects.
   first = 0;
   size = 0;
 }
 
 
-bool QLantern::isEmpty() {
+bool Queue::isEmpty() {
 // True if queue has no nodes.
   return size == 0;
 }
 
 
-bool QLantern::enqueue(Lantern* lantern) {
+bool Queue::enqueue(Lantern* lantern) {
 // Put lantern at back of queue.
   if ( size == MAX_QUEUE_SIZE ) {
     return 0;
@@ -881,20 +857,21 @@ bool QLantern::enqueue(Lantern* lantern) {
 }
 
 
-Lantern* QLantern::dequeue() {
+Lantern* Queue::dequeue() {
 // Take lantern from front of queue.
   size--;
   first %= MAX_QUEUE_SIZE;
-  return queue[first++];
+  return queue[ first++ ];
 }
 
 
 #if MONITOR_MAKE_TREE
-void QLantern::print() {
+void Queue::print() {
 // Print the queue.
-  Serial.print( F("Queue: ") );
-  Node* q = pFront;
-  while ( q ) { Serial.print(q->pLantern->getIndex()); Serial.print( F("->>") ); q = q->pNext; }
+  for ( uint8_t i=0; i < MAX_QUEUE_SIZE; i++ ) {
+    Serial.print( queue[ ( first + i ) % MAX_QUEUE_SIZE ] ); 
+    Serial.print( "->" );
+  }
   Serial.println();
 }
 #endif
