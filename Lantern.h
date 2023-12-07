@@ -111,11 +111,11 @@ class Lantern {
     Lantern();
 
     bool update();
-    void raiseBrightness(uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX);
-    void lowerBrightness(uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN);
+    bool raiseBrightness(uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX);
+    bool lowerBrightness(uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN);
     bool nextBrightness();
-    void flickerBrightness();
-    void pulseBrightness();
+    bool flickerBrightness();
+    bool pulseBrightness();
     void pushInput(uint8_t value);
     void makeTree();
     void burnDown();
@@ -133,7 +133,7 @@ class Lantern {
 
     void setIndex(uint8_t value);
     void setState(uint8_t value);
-    void setBrightness(uint8_t value);
+    bool setBrightness(uint8_t value);
     void setParent(Lantern* pLantern);
     void setDelay(uint8_t value);
     void setNeighbours(Lantern* neighbour[4], uint8_t nNeighbours);
