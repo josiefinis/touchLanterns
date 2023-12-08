@@ -1,73 +1,51 @@
-uint8_t Tree::getTreeParent( uint8_t child ) {
-  return parentList[ child ];
+/*
+======================================================================================================================================================
+             GRAPH
+======================================================================================================================================================
+*/
+
+#include "Graph.h"
+
+
+Graph::Graph( uint16_t* adjacencyList, uint8_t vertexCount ) {
+  adjacencyList = adjacencyList;
+  vertexCount = vertexCount;
 }
 
-void Graph::makeSpanningTree( uint8_t root ) {
-// Construct a spanning tree of the graph, and return a list of each node's parent in the tree.
-  spanningTree.parentList[ root ] = NONE;
-  uint8_t treeSize = 1;
 
-  Queue queue;
+uint8_t Graph::countAdjacent( uint8_t vertex ) {
+// Return the number of adjacent vertices to vertex.
+  uint16_t adjacentVertices = adjacencyList[ vertex ];          // NOTE: It is intentional that e.g. adjacentVertices = 0x4320 will return 4 and 0x0432 will return 3.
+  uint8_t count = 1;                                            //       Also that it assumes at least 1 adjacent vertex so that 0x0 will return 1.
+  while ( adjacentVertices >>= 4 ) {                            //       This is to handle ambiguity and between 0 as 0-index and 0 as no vertex.
+    count++;
+  }
+  return count;
+}
+
+
+void Graph::makeSpanningTree( Tree* spanningTree, uint8_t root ) {
+// Construct and return a random spanning tree of the graph, starting from root.
+  uint8_t queueArray[10];
+  Queue queue = Queue( queueArray, 10 );
   queue.enqueue( root );
+  uint8_t treeSize = 1;
   while ( not queue.isEmpty() ) {
     uint8_t parent = queue.dequeue();
-    ShuffledList adjacent;
-    adjacent.setSize( numberAdjacent[ parent ] );
-    adjacent.setList( adjacencyList[ parent ] );
-    while ( uint8_t vertex = adjacent.next() ) {
-      if ( spanningTree.parentList[ vertex ] ) { 
+    ShuffledList adjacentVertices = ShuffledList( adjacencyList[ parent ], countAdjacent( parent ) );
+
+    while ( uint8_t vertex = adjacentVertices.next() ) {
+      if ( spanningTree->getParent( vertex ) != NONE ) { 
         continue; 
       }
-      spanningTree.parentList[ vertex ] = parent;
-      if ( ++treeSize == 16 ) {
+      if ( vertex == root ) { 
+        continue; 
+      }
+      spanningTree->setParent( vertex, parent );
+      if ( ++treeSize == vertexCount ) {
         break;
       }
       queue.enqueue( vertex );
     }
   }
 }
-
-
-// ============================================================================================================================================
-//          SHUFFLED LIST
-// ============================================================================================================================================
-
-uint8_t ShuffledList::next() {
-// Return the next element from the list.
-  if ( size == 0 ) {
-    return NONE;
-  }
-  return list[ --size ];
-}
-
-
-void ShuffledList::setList( uint8_t array[], uint8_t arraySize ) {
-  list = array;
-  size = arraySize;
-}
-
-
-void ShuffledList::shuffle() {
-// Shuffle the list in place using Fisher-Yates algorithm.
-  uint8_t i = size;
-  uint8_t j;
-  Lantern* temp;
-  while ( i > 1 ) {
-    j = Random::urandom( i-- );
-    temp = list[ i ];
-    list[ i ] = list[ j ];
-    list[ j ] = temp;
-  }
-}
-
-
-#if MONITOR_MAKE_TREE
-void ShuffledList::print() {
-// Print the list to serial monitor.
-  for ( uint8_t i=0; i < size; i++ ) {
-    Serial.print( list[ i ] ); 
-    Serial.print( "->" );
-  }
-  Serial.println();
-}
-#endif
