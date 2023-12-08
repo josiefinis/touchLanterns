@@ -1,9 +1,7 @@
 #include "Lantern.h"
+#include "Graph.h"
 #include "Global.h"
 
-
-uint8_t Lantern::nTreeNodes = 0;
-Lantern* Lantern::root = nullptr;
 
 
 // TODO Make flicker look better.
@@ -16,14 +14,6 @@ Lantern::Lantern() {
   input = 0;
   output = 0;
   parent = nullptr;
-}
-
-
-void Lantern::reset() {                     // TODO delete
-  state = OUT;
-  output;
-  parent = nullptr;
-  input = 0;
 }
 
 
@@ -216,26 +206,6 @@ uint8_t Lantern::getInput() {
 }
 
 
-void Lantern::setNeighbours(Lantern* neighbour[4], uint8_t nNeighbours) {
-  for ( uint8_t i=0; i<nNeighbours; i++ ) {
-    neighbourList.append( neighbour[i] );
-  }
-  neighbourList.shuffle();
-}
-
-
-Lantern* Lantern::nextNeighbour() {
-  return neighbourList.pop();
-}
-
-
-#if MONITOR_MAKE_TREE
-void Lantern::printNeighbours() {
-  neighbourList.print();
-}
-#endif
-
-
 void Lantern::setDelay(uint8_t value) {
   delay = value;
 }
@@ -268,48 +238,22 @@ bool Lantern::isInput(uint8_t value, uint8_t mask=0x01) {
 
 void Lantern::makeTree() {
 // Create a spanning tree of the neighbour graph, starting from this lantern as root. 
-  #if MONITOR_MAKE_TREE
-    Serial.print( F("Root ") ); Serial.println(this->getIndex());
-  #endif
-  Queue queue;
-  Lantern* root = this;
-  root->setParent(nullptr);
-  delay = 1;
-  Lantern* lantern = root;
-  queue.enqueue(lantern);
-
-  while ( not queue.isEmpty() ) {
-    lantern = queue.dequeue();
-    #if MONITOR_MAKE_TREE
-      lantern->printNeighbours(); 
-    #endif
-    Lantern* neighbour;
-    while ( neighbour = lantern->nextNeighbour() ) {
-      #if MONITOR_MAKE_TREE
-        Serial.print( F("Lantern ") ); Serial.print( lantern->getIndex() ); 
-        Serial.print( F(": check neighbour ") ); Serial.print( neighbour->getIndex() ); Serial.println();
-      #endif
-
-      if ( neighbour->getParent() ) { continue; }
-      if ( neighbour == root ) { continue; }
-      
-      #if MONITOR_MAKE_TREE
-        Serial.print( F("Add lantern ") ); Serial.print( neighbour->getIndex() ); Serial.print( F(" to tree under parent ") );
-        Serial.print( lantern->getIndex() ); Serial.println(); 
-      #endif
-
-      neighbour->setParent(lantern);
-      neighbour->setState(WAIT);
-      delay += 3 + Random::pull(2);
-      neighbour->setDelay(delay);
-      nTreeNodes++;
-      if ( nTreeNodes == 15 ) { return 0; }
-      queue.enqueue(neighbour);
-    }
-
-    #if MONITOR_MAKE_TREE
-    queue.print();
-    #endif
+  uint8_t parentList[16];
+  Tree tree = Tree( parentList, 16 );
+  uint16_t neighbourList[16] = { 0x421 , 0x4320, 0x5310, 0x521 ,
+                                 0x7610, 0x7632, 0xC854, 0xC854,
+                                 0xA976, 0xDBA8, 0xB98 , 0xFA9 ,
+                                 0xED76, 0xFEC9, 0xFDC , 0xEDB 
+                               };
+  Graph neighbourGraph = Graph( neighbourList, 16 );                    
+  neighbourGraph.makeSpanningTree( &tree, this->getIndex() );            
+  for ( uint8_t i=0; i<16; i++ ) {
+    Lantern* parent = getLantern( tree.getParent( i ) );
+    Lantern* child = getLantern( i );
+    child->setParent( parent );
+    child->setState( WAIT );
+    delay = 3 + Random::pull( 2 );
+    child->setDelay( delay );
   }
 }
 
@@ -355,6 +299,11 @@ uint8_t Lantern::getRate() {
 void Lantern::setBrightness(uint8_t value) {
   output &= ~0x0FFF;
   output |= value << 4;
+}
+
+
+Lantern* Lantern::getLantern( uint8_t index ) {
+  return this - this->getIndex() + index;
 }
 
 
@@ -579,7 +528,6 @@ bool Lantern::pauseUp() {
 bool Lantern::rootFullDown() { 
 // Put out this lantern, all other lanterns will follow in succession.
   state = FULL_DOWN;
-  neighbourList.shuffle(); 
   return 1;
 }
 
@@ -587,7 +535,6 @@ bool Lantern::rootFullDown() {
 bool Lantern::rootFullUp() { 
 // Light to full brightness, all other lanterns will follow in succession.
   state = FULL_UP;
-  neighbourList.shuffle();
   return 1;
 }
 
@@ -669,7 +616,6 @@ bool Lantern::rootPauseDown() {
   }                                                                                                                                                          
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
     state = GO_IDLE; 
-    neighbourList.shuffle();
     return 1;
   }
   return 0;
@@ -685,7 +631,6 @@ bool Lantern::rootPauseUp() {
   }                                                                                                                                                          
   if ( isInput( RELEASED, LONG ) ) {                    // Not touched for a LONG duration: go to IDLE.
     state = GO_IDLE; 
-    neighbourList.shuffle();
     return 1;
   }
   return 0;
@@ -694,6 +639,9 @@ bool Lantern::rootPauseUp() {
 
 bool Lantern::wait() {
 // Wait before following parent lantern in tree.
+  if ( parent->getState() == WAIT ) {
+    return 0;
+  }
   if ( ( parent->getState() & 0x1F ) == FULL_DOWN ) {       // Go to WAIT_FULL because the parent lantern may already have changed and be IDLE before delay is over.
     state = WAIT_FULL_DOWN;
     return 1;
@@ -706,7 +654,6 @@ bool Lantern::wait() {
     return 0; 
   }
   state = FOLLOW; 
-  neighbourList.shuffle(); 
   delay = micros(); // delay counter has another use marking periodic brightness adjustments. Good enough random number here ensures lantern adjustments are staggered.
   return 1;
 }
@@ -714,6 +661,9 @@ bool Lantern::wait() {
 
 bool Lantern::waitFullDown() {
 // Wait before going out.
+  if ( parent->getState() == WAIT_FULL_DOWN ) {
+    return 0;
+  }
   if ( ( parent->getState() & 0x1F ) == FULL_UP ) {                             // Go to WAIT_FULL_UP if parent's state has changed.
     state = WAIT_FULL_UP;
     return 1;
@@ -726,16 +676,17 @@ bool Lantern::waitFullDown() {
     return 0; 
   }
   state = FULL_DOWN; 
-  neighbourList.shuffle(); 
   delay = micros(); // delay counter has another use marking periodic brightness adjustments. Good enough random number here ensures lantern adjustments are staggered.
   parent = nullptr;
-  nTreeNodes--;
   return 1;
 }
 
 
 bool Lantern::waitFullUp() {
 // Wait before lighting to full brightness.
+  if ( parent->getState() == WAIT_FULL_UP ) {
+    return 0;
+  }
   if ( ( parent->getState() & 0x1F ) == FULL_DOWN ) {                           // Go to WAIT_FULL_DOWN if parent's state has changed.
     state = WAIT_FULL_DOWN;                                                                                                          
     return 1;                                                                                                                        
@@ -748,10 +699,8 @@ bool Lantern::waitFullUp() {
     return 0; 
   }
   state = FULL_UP; 
-  neighbourList.shuffle(); 
   delay = micros(); // delay counter has another use marking periodic brightness adjustments. Good enough random number here ensures lantern adjustments are staggered.
   parent = nullptr;
-  nTreeNodes--;
   return 1;
 }
 
@@ -769,109 +718,12 @@ bool Lantern::follow() {
   if ( parent->getState() == IDLE ) { 
     state = GO_IDLE; 
     parent = nullptr;
-    nTreeNodes--;
     return 1;
   }
   if ( parent->getState() == OUT ) { 
     state = GO_OUT; 
     parent = nullptr;
-    nTreeNodes--;
     return 1;
   }
   return 0;
 }
-
-
-// ============================================================================================================================================
-//          SHUFFLED LIST
-// ============================================================================================================================================
-
-Lantern* ShuffledList::pop() {
-// Return and remove the next element from the list.
-  if ( size == 0 ) {
-    return nullptr;
-  }
-  return list[ --size ];
-}
-
-
-void ShuffledList::append( Lantern* element ) {
-// Append an element to the list.
-  list[ size ] = element;
-  size++;
-}
-
-
-void ShuffledList::shuffle() {
-// Shuffle the list in place using Fisher-Yates algorithm.
-  uint8_t i = size;
-  uint8_t j;
-  Lantern* temp;
-  while ( i > 1 ) {
-    j = Random::urandom( i-- );
-    temp = list[ i ];
-    list[ i ] = list[ j ];
-    list[ j ] = temp;
-  }
-}
-
-
-#if MONITOR_MAKE_TREE
-void ShuffledList::print() {
-// Print the list to serial monitor.
-  for ( uint8_t i=0; i < size; i++ ) {
-    Serial.print( list[ i ] ); 
-    Serial.print( "->" );
-  }
-  Serial.println();
-}
-#endif
-
-
-
-// ============================================================================================================================================
-//          QUEUE
-// ============================================================================================================================================
-
-Queue::Queue() {
-// Queue for Lantern objects.
-  first = 0;
-  size = 0;
-}
-
-
-bool Queue::isEmpty() {
-// True if queue has no nodes.
-  return size == 0;
-}
-
-
-bool Queue::enqueue(Lantern* lantern) {
-// Put lantern at back of queue.
-  if ( size == MAX_QUEUE_SIZE ) {
-    return 0;
-  }
-  queue[(first + size) % MAX_QUEUE_SIZE] = lantern;
-  size++;
-  return 1;
-}
-
-
-Lantern* Queue::dequeue() {
-// Take lantern from front of queue.
-  size--;
-  first %= MAX_QUEUE_SIZE;
-  return queue[ first++ ];
-}
-
-
-#if MONITOR_MAKE_TREE
-void Queue::print() {
-// Print the queue.
-  for ( uint8_t i=0; i < MAX_QUEUE_SIZE; i++ ) {
-    Serial.print( queue[ ( first + i ) % MAX_QUEUE_SIZE ] ); 
-    Serial.print( "->" );
-  }
-  Serial.println();
-}
-#endif

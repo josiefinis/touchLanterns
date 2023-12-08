@@ -4,43 +4,7 @@
 
 #include "Arduino.h"
 #include "Random.h"
-
-
-class Lantern;
-
-#define MAX_LIST_SIZE  4
-
-class ShuffledList {
-  public:
-    Lantern* pop( void );
-    append( Lantern* element );
-    void shuffle( void );
-    void print( void );
-
-  private:
-    Lantern* list[ MAX_LIST_SIZE ];
-    uint8_t size;
-};
-
-
-
-class Queue {
-
-#define MAX_QUEUE_SIZE      10
-
-  public:
-    Queue();
-    bool isEmpty();
-    bool enqueue( Lantern* lantern );
-    Lantern* dequeue();
-    void print();
-
-  private:
-    Lantern* queue[ MAX_QUEUE_SIZE ];             
-    uint8_t first;
-    uint8_t size;
-};
-
+#include "Graph.h"
 
 #define OUT                 0x00
 #define IDLE                0x10
@@ -89,11 +53,7 @@ class Queue {
 
 class Lantern {
   public:
-    static Lantern* root;
-    static uint8_t nTreeNodes;
     Lantern();
-    void reset( void );
-
     bool changeState( void );
     bool changeOutput( void );
     void burnDown( void );
@@ -111,8 +71,6 @@ class Lantern {
     uint8_t getDelay( void );
     void setParent( Lantern* pLantern );
     Lantern* getParent( void );
-    void setNeighbours( Lantern* neighbour[4], uint8_t nNeighbours );
-    Lantern* nextNeighbour( void );
 
   private:
     uint8_t index;
@@ -122,20 +80,16 @@ class Lantern {
     uint8_t referenceBrightness;
     uint8_t delay;
     Lantern* parent;
-    ShuffledList neighbourList;
-
 
     bool isInput( uint8_t value, uint8_t mask=0x01 ); 
-    void makeTree( void );
     void raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX );
     void lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN );
     void setBrightness( uint8_t value );
     void setRate( uint8_t value );
     uint8_t getRate( void );
+    Lantern* getLantern( uint8_t index );
+    void makeTree();
 
-    void setOutput( uint16_t );
-    void getOutput( uint16_t );
-    
     bool out( void );
     bool idle( void );
     bool goOut( void );

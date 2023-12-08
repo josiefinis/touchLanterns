@@ -207,48 +207,12 @@ void initialisePins() {
 }
 
 
-void assignNeighbours() { 
-  #define NONE 0xFF
-  uint8_t neighbourArray[16][4] = { 
-    { 0x01, 0x02, 0x04, NONE }, 
-    { 0x00, 0x02, 0x03, 0x04 },
-    { 0x00, 0x01, 0x03, 0x05 },
-    { 0x01, 0x02, 0x05, NONE },
 
-    { 0x00, 0x01, 0x06, 0x07 },
-    { 0x02, 0x03, 0x06, 0x07 },
-    { 0x04, 0x05, 0x08, 0x0C },
-    { 0x04, 0x05, 0x08, 0x0C },
-    
-    { 0x06, 0x07, 0x09, 0x0A },   
-    { 0x08, 0x0A, 0x0B, 0x0D },  
-    { 0x08, 0x09, 0x0B, NONE },  
-    { 0x09, 0x0A, 0x0F, NONE },  
-                             
-    { 0x06, 0x07, 0x0D, 0x0E },  
-    { 0x09, 0x0C, 0x0E, 0x0F },  
-    { 0x0C, 0x0D, 0x0F, NONE },  
-    { 0x0B, 0x0D, 0x0E, NONE }
-  };
-  uint8_t neighbourIdx;
-  for ( uint8_t i=0; i<16; i++ ) {
-    Lantern* neighbour[4];
-    uint8_t nNeighbours = 0;
-    for ( uint8_t j=0; j<4; j++ ) {
-      neighbourIdx = neighbourArray[i][j];
-      if ( neighbourIdx == NONE ) { continue; }
-      neighbour[j] = &lantern[neighbourIdx];
-      nNeighbours++;
-    }
-    lantern[i].setNeighbours(neighbour, nNeighbours); 
-  }
-}
                         
 
 void setup() {
   for ( uint8_t i=0; i<16; i++ ) { lantern[i].setIndex(i); }
   initialisePins();
-  assignNeighbours();
   shiftRegister.reset();
 
   #if SERIAL_ON
