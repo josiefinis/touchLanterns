@@ -4,12 +4,16 @@
 ============================================================================================================================================
 */
 
+#include "ShuffledList.h"
+#include "Random.h"
+#include "Random.cpp"
+
 #if UINT16_IMPLEMENTATION
 
 
 ShuffledList::ShuffledList( uint16_t list, uint8_t size ) {
-  list = list;
-  size = size;
+  this->list = list;
+  this->size = size;
   shuffle();
 }
 
@@ -19,7 +23,7 @@ uint8_t ShuffledList::next() {
   if ( size == 0 ) {
     return NONE;
   }
-  return ( list >> 4 * size-- );
+  return getElement( --size );
 }
 
 
@@ -44,7 +48,7 @@ uint8_t ShuffledList::getElement( uint8_t index ) {
 
 void ShuffledList::setElement( uint8_t index, uint8_t value ) {
   list &= ~( 0xF << 4 * index );
-  list |= ( 0xF & value ) << 4 * index
+  list |= ( 0xF & value ) << 4 * index;
 }
 
 

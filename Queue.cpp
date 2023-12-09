@@ -4,24 +4,17 @@
 
 #include "Queue.h"
 
-
-Queue::Queue( uint8_t* queueArray, uint8_t maxSize ) {
-  queue = queueArray;
-  maxSize = maxSize;
+Queue::Queue( uint8_t* queue, uint8_t maxSize ) {
+  this->queue = queue;
+  this->maxSize = maxSize;
   first = 0;
   size = 0;
 }
 
 
-bool Queue::isEmpty() {
-// True if queue has no nodes.
-  return size == 0;
-}
-
-
 bool Queue::enqueue( uint8_t value ) {
 // Put value at back of queue.
-  if ( size == maxSize ) {
+  if ( size >= maxSize ) {
     return 0;
   }
   queue[ ( first + size ) % maxSize ] = value;
@@ -32,9 +25,18 @@ bool Queue::enqueue( uint8_t value ) {
 
 uint8_t Queue::dequeue() {
 // Take value from front of queue.
+  if ( isEmpty() ) {
+    return NONE;
+  }
   size--;
   first %= maxSize;
   return queue[ first++ ];
+}
+
+
+bool Queue::isEmpty() {
+// True if queue has no nodes.
+  return size == 0;
 }
 
 

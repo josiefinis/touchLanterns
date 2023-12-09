@@ -9,12 +9,14 @@
 
 #include "Arduino.h"
 
+#define NONE    0xFF
+
 class Queue {
   public:
-    Queue( uint8_t* queueArray, uint8_t maxSize );
-    bool isEmpty();
+    Queue( uint8_t* queue, uint8_t maxSize );
     bool enqueue( uint8_t value );
     uint8_t dequeue();
+    bool isEmpty();
     void print();
 
   private:
