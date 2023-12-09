@@ -6,11 +6,11 @@
 
 class Random {
   public:
-    Random::Random();
-    static uint8_t urandom(uint16_t n);
+    Random();
+    static uint8_t urandom(uint8_t n);
     static void seed(uint8_t bits);
     static void push(uint8_t bits);
-    static uint8_t pull(uint16_t n);
+    static uint8_t pull(uint8_t n);
 
   private:
     static uint8_t stackSize;

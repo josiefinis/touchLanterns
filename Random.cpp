@@ -44,7 +44,7 @@ void Random::push(uint8_t bits) {
 }
 
 
-uint8_t Random::pull(uint16_t n) {
+uint8_t Random::pull(uint8_t n) {
 // Pull n bits from stack.
   if ( stackSize < n ) {
     fillStack();
@@ -56,6 +56,6 @@ uint8_t Random::pull(uint16_t n) {
 }
 
 
-uint8_t Random::urandom(uint16_t n) {
-  return pull(n >> 1) % n;
+uint8_t Random::urandom(uint8_t n) {
+  return n * pull( 8 ) / 256;
 }
