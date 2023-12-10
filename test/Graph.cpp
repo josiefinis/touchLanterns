@@ -5,11 +5,15 @@
 */
 
 #include "Graph.h"
+#include "Tree.cpp"
+#include "Queue.cpp"
+#include "ShuffledList.cpp"
+#include <iostream>
 
 
 Graph::Graph( uint16_t* adjacencyList, uint8_t vertexCount ) {
-  adjacencyList = adjacencyList;
-  vertexCount = vertexCount;
+  this->adjacencyList = adjacencyList;
+  this->vertexCount = vertexCount;
 }
 
 
@@ -32,9 +36,11 @@ void Graph::makeSpanningTree( Tree* spanningTree, uint8_t root ) {
   uint8_t treeSize = 1;
   while ( not queue.isEmpty() ) {
     uint8_t parent = queue.dequeue();
-    ShuffledList adjacentVertices = ShuffledList( adjacencyList[ parent ], countAdjacent( parent ) );
+    std::cout << "dequeue " << ( int ) parent << std::endl;
+    ShuffledList adjacentToParent = ShuffledList( adjacencyList[ parent ], countAdjacent( parent ) );
 
-    while ( uint8_t vertex = adjacentVertices.next() ) {
+    while ( not adjacentToParent.isEmpty() ) {
+      uint8_t vertex = adjacentToParent.next(); 
       if ( spanningTree->getParent( vertex ) != NONE ) { 
         continue; 
       }
@@ -46,6 +52,7 @@ void Graph::makeSpanningTree( Tree* spanningTree, uint8_t root ) {
         break;
       }
       queue.enqueue( vertex );
+      std::cout << "enqueue " << ( int ) vertex << std::endl;
     }
   }
 }

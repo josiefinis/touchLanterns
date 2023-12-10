@@ -13,6 +13,7 @@ Minimal graph implementation that tries to be frugal with memory and does not al
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include <cstdint>
 #include "Tree.h"
 #include "Queue.h"
 #include "ShuffledList.h"

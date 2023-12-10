@@ -11,7 +11,7 @@ Tree structure is defined as a list of each nodes parents.
 #ifndef TREE_H
 #define TREE_H
 
-#include "Arduino.h"
+#include <cstdint>
 
 #define NONE    0xFF
 

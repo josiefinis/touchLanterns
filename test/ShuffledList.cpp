@@ -41,6 +41,11 @@ void ShuffledList::shuffle() {
 }
 
 
+bool ShuffledList::isEmpty() {
+  return size == 0;
+}
+
+
 uint8_t ShuffledList::getElement( uint8_t index ) {
   return ( list >> 4 * index ) & 0xF;
 }

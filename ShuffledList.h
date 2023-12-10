@@ -25,6 +25,7 @@ uint16 implementation uses a list of at most four 4-bit values represented as a 
       ShuffledList( uint16_t list, uint8_t size );
       uint8_t next( void );
       void shuffle( void );
+      bool isEmpty( void );
       void print( void );
   
     private:

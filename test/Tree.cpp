@@ -6,8 +6,8 @@
 
 
 Tree::Tree( uint8_t* parentList, uint8_t size ) {
-  parentList = parentList;
-  size = size;
+  this->parentList = parentList;
+  this->size = size;
   for ( uint8_t i=0; i<size; i++ ) {
     parentList[i] = NONE;
   }
