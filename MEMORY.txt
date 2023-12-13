@@ -145,6 +145,11 @@ Max length of queue:
     10          1
 
     
+Finished and tested new data structure implementations.
 
+Should break up and simplify Lantern class
+
+  Lantern
+  StateMachine
 
 
