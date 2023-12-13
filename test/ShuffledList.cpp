@@ -11,9 +11,10 @@
 #if UINT16_IMPLEMENTATION
 
 
-ShuffledList::ShuffledList( uint16_t list, uint8_t size ) {
-  this->list = list;
-  this->size = size;
+ShuffledList::ShuffledList( uint16_t list, uint8_t size ) 
+  : list( list )
+  , size( size )
+{
   shuffle();
 }
 

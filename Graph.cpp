@@ -5,16 +5,12 @@
 */
 
 #include "Graph.h"
-#include "Tree.cpp"
-#include "Queue.cpp"
-#include "ShuffledList.cpp"
-#include <iostream>
 
 
-Graph::Graph( uint16_t* adjacencyList, uint8_t vertexCount ) {
-  this->adjacencyList = adjacencyList;
-  this->vertexCount = vertexCount;
-}
+Graph::Graph( uint16_t* adjacencyList, uint8_t vertexCount )
+  : adjacencyList( adjacencyList )
+  , vertexCount( vertexCount )
+{}
 
 
 uint8_t Graph::countAdjacent( uint8_t vertex ) {

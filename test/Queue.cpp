@@ -4,12 +4,12 @@
 
 #include "Queue.h"
 
-Queue::Queue( uint8_t* queue, uint8_t maxSize ) {
-  this->queue = queue;
-  this->maxSize = maxSize;
-  first = 0;
-  size = 0;
-}
+Queue::Queue( uint8_t* queue, uint8_t maxSize ) 
+  : queue( queue ) 
+  , maxSize( maxSize ) 
+  , first( 0 ) 
+  , size( 0 ) 
+{}
 
 
 bool Queue::enqueue( uint8_t value ) {

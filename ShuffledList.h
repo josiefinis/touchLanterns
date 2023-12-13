@@ -13,6 +13,7 @@ uint16 implementation uses a list of at most four 4-bit values represented as a 
 #define SHUFFLED_LIST_H
 
 #include "Arduino.h"
+#include "Random.h"
 
 #define UINT16_IMPLEMENTATION       1
 #define ARRAY_IMPLEMENTATION        !UINT16_IMPLEMENTATION
