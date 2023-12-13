@@ -9,39 +9,31 @@
 
 
 StateMachine::StateMachine( const TransitionMatrix& matrix )
-  : transitionMatrix( matrix ), state( 0 ), input( 0 ), output( 0 )
+  : transitionMatrix( matrix )
+  , state( 0 )
+  , output( 0 )
   {}
 
 
-void StateMachine::pushInput( bool value ) {
-  input <<= 1;
-  input |= value;
-}
-
-
-bool StateMachine::next( void ) {
+bool StateMachine::next( uint8_t input ) {
   uint8_t index = transitionMatrix.find( state, input );
-  if ( index == NOT_FOUND ) {
-    return 0;
+  if ( index != 0xFF ) {
+    state = transitionMatrix.getNextState( index );
+    output = transitionMatrix.getNextOutput( index );
+    return 1;
   }
-  state = transitionMatrix.getNextState( index );
-  output = transitionMatrix.getNextOutput( index );
-  return 1;
-}
-
-
-void StateMachine::setInput( uint8_t value ) {
-  input = value;
+  index = transitionMatrix.find( state, DONT_CARE );
+  if ( index != 0xFF ) {
+    state = transitionMatrix.getNextState( index );
+    output = transitionMatrix.getNextOutput( index );
+    return 1;
+  }
+  return 0;
 }
 
 
 uint8_t StateMachine::getState( void ) {
   return state;
-}
-
-
-uint8_t StateMachine::getInput( void ) {
-  return input;
 }
 
 
