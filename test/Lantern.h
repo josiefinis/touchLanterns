@@ -14,17 +14,14 @@ class Lantern : public StateMachine {
     Lantern();
 
     void burnDown( void );
-    void raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX );
-    void lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN );
     uint8_t getBrightness( void );
-    void setBrightness( uint8_t value );
     uint8_t getReferenceBrightness( void );
-    void setReferenceBrightness( uint8_t );
     Lantern* getParent( void );
     void setParent( Lantern* pLantern );
 
   private:
     uint8_t referenceBrightness;
+    uint8_t brightness;
     Lantern* parent;
 };
 #endif

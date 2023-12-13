@@ -12,7 +12,7 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   { OUT,                    RISING_EDGE,                INIT_UP,                                },
   { GO_OUT,                 DONT_CARE,                  OUT,                                    },
   { IDLE,                   RISING_EDGE,                INIT_DOWN,                              },
-  { IDLE,                   ZERO_BRIGHTNESS,            INIT_DOWN,                              },
+  { IDLE,                   AT_ZERO_BRIGHTNESS,         INIT_DOWN,                              },
   { GO_IDLE,                DONT_CARE,                  IDLE,                                   },
   { INIT_DOWN,              FALLING_EDGE,               FULL_DOWN,                              },
   { INIT_DOWN,              MEDIUM_TOUCH,               FLICKER_DOWN,                           },
@@ -58,9 +58,13 @@ static const TransitionMatrix Lantern::transitionMatrix = TransitionMatrix( TRAN
 
 
 Lantern::Lantern() 
-  : StateMachine( transitionMatrix ), parent( nullptr ) {}
+  : StateMachine( transitionMatrix )
+  , parent( nullptr ) 
+{}
 
 
+#define EDGE    0x3
+#define NOW     0x1
 uint8_t Lantern::classifyInput( uint8_t value ) {
   switch ( value ) {
     case 0x00:
@@ -71,19 +75,20 @@ uint8_t Lantern::classifyInput( uint8_t value ) {
 
     case 0xFE:
       return LONG_TOUCH_FALLING_EDGE;
-  }
-  switch ( value & 0xF ) {
+
     case 0x0F:
       return MEDIUM_TOUCH;
   }
-  switch ( value & 0x3 ) {
+
+  switch ( value & EDGE ) {
     case 0x1:
       return RISING_EDGE;
     
     case 0x2:
       return FALLING_EDGE;
   }
-  switch ( value & 1 ) {
+
+  switch ( value & NOW ) {
     case 1:
       return IS_TOUCHED;
     
@@ -92,7 +97,20 @@ uint8_t Lantern::classifyInput( uint8_t value ) {
   }
 }
 
-      
+
+bool Lantern::changeBrightness( void ) {
+  switch ( output ) {
+    case NO_CHANGE:
+      return 0;
+
+    case FLICKER:
+      brightness ^= brightness << 2;
+      brightness ^= brightness >> 7;
+      return 1;
+
+    case 
+  }
+}
 
 
 bool Lantern::changeOutput() {
@@ -156,11 +174,6 @@ void Lantern::burnDown() { // TODO change so that lanterns stay near full bright
 }
 
 
-uint8_t Lantern::getBrightness() {
-  return output >> 4;
-}
-
-
 uint8_t Lantern::getReferenceBrightness() {
   return referenceBrightness;
 }
@@ -172,11 +185,6 @@ void Lantern::pushInput(uint8_t value) {
 }
 
 
-uint8_t Lantern::getInput() {
-  return input;
-}
-
-
 void Lantern::setParent(Lantern* pLantern) {
   parent = pLantern;
 }
@@ -184,58 +192,4 @@ void Lantern::setParent(Lantern* pLantern) {
 
 Lantern* Lantern::getParent() {
   return parent;
-}
-
-
-// ========================================================================================================================
-// PRIVATE
-// ========================================================================================================================
-
-
-void Lantern::raiseBrightness( uint8_t rate=2, uint8_t ceiling=BRIGHTNESS_MAX ) {
-  if ( getBrightness() >= ceiling ) { 
-    output = NO_CHANGE;
-    return 0; 
-  }
-  setRate( rate );
-  referenceBrightness = ceiling;
-}
-
-
-void Lantern::lowerBrightness( uint8_t rate=2, uint8_t floor=BRIGHTNESS_MIN ) {
-  if ( getBrightness() <= floor ) { 
-    output = NO_CHANGE;
-    return 0; 
-  }
-  setRate( rate );
-  referenceBrightness = floor;
-}
-
-
-void Lantern::setRate(uint8_t value) {
-// Store rate as integer log2( value ) in bits 14-12 of 'output' variable.
-  output &= ~0x7000;
-  uint8_t exponent = 0;
-  while ( value >>= 1 ) {
-    exponent++;
-  }
-  output |= ( exponent & 0x7 ) << 12;
-}
-
-
-uint8_t Lantern::getRate() {
-// Calculate and return rate = 1/2 * 2^ilog22x
-  uint8_t exponent = ( output >> 12 ) & 0x7;
-  return 1 << exponent;
-}
-
-
-void Lantern::setBrightness(uint8_t value) {
-  output &= ~0x0FFF;
-  output |= value << 4;
-}
-
-
-Lantern* Lantern::getLantern( uint8_t index ) {
-  return this - this->getIndex() + index;
 }
