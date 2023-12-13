@@ -4,32 +4,34 @@
 ======================================================================================================================================================
 */
 
-constexpr StateTransition::StateTransition( const uint8_t state, const uint8_t input, const uint8_t nextState, const uint8_t nextOutput=NO_CHANGE ) {
-  this->state = state;
-  this->input = input;
-  this->nextState = nextState;
-  this->nextOutput = nextOutput;
+#include "StateTransition.h"
 
+
+bool StateTransition::operator == ( const StateTransition& object ) const {
+// Equal when both state and input are the same.
+  return state == object.state and input == object.input;
 }
 
 
-bool StateTransition:: operator < ( const StateTransition& object ) {
-  if ( this->state > object->state ) {
-    return 0;
+bool StateTransition::operator < ( const StateTransition& object ) const {
+// Less than: first compare state, then input.
+  if ( state < object.state ) {
+    return 1;
   }
-  if ( this->input >= object->input ) {
-    return 0;
-  }
-  return 1;
+  return state == object.state and input < object.input;
 }
 
 
-bool StateTransition::operator > ( const StateTransition& object ) {
-  if ( this->state < object->state ) {
-    return 0;
+bool StateTransition::operator > ( const StateTransition& object ) const {
+// Greater than: first compare state, then input.
+  if ( state > object.state ) {
+    return 1;
   }
-  if ( this->input <= object->input ) {
-    return 0;
-  }
-  return 1;
+  return state == object.state and input > object.input;
+}
+
+
+void StateTransition::print( void ) const {
+// Print state transition T: state, input --> nextState, nextOutput.
+  std::cout << std::hex << "StateTransition : " << ( int ) state << ", " << ( int ) input << " --> " << ( int ) nextState << ", " << ( int ) nextOutput << std::dec << std::endl;
 }

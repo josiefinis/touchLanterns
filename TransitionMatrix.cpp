@@ -4,39 +4,53 @@
 ======================================================================================================================================================
 */
 
-#include "TransititionMatrix.h"
+#include "TransitionMatrix.h"
+#include "StateTransition.cpp"
+#include <iostream>
 
 
-static const StateTransition transitionMatrix[ TRANSISTION_MATRIX_ROWS ] = {
+TransitionMatrix::TransitionMatrix( const uint8_t rows, const StateTransition* matrix ) 
+  : rows( rows )
+  , matrix( matrix ) {}
+   
 
-
-uint8_t TransitionMatrix::find( uint8_t state, uint8_t input ) {
+uint8_t TransitionMatrix::find( const uint8_t state, const uint8_t input ) const {
 // Find the state transition from 'state' on 'input' and return its row index in the transition matrix.
-  StateTransition searchTerm, searchResult;
-  searchTerm = { state, input };
-  uint8_t start = 0;
-  uint8_t end = TRANSITION_MATRIX_ROWS;
-  while ( start != end ) {
-    uint8_t searchIndex = ( end - start ) / 2;
-    searchResult = { matrix[ searchIndex ].state, matrix[ searchIndex ].input };
-    if ( searchResult == searchIndex ) {
+  StateTransition searchTerm = { state, input };
+  int lowerBound = 0;
+  int upperBound = rows - 1;
+  while ( lowerBound <= upperBound ) {
+    uint8_t searchIndex = ( upperBound + lowerBound ) / 2;
+    StateTransition searchResult = matrix[ searchIndex ];
+    if ( searchResult == searchTerm ) {
       return searchIndex;
     }
     if ( searchTerm > searchResult ) {
-      start = searchIndex;
+      lowerBound = searchIndex + 1;
+      continue;
     }
-    else {
-      end = searchIndex;
+    if ( searchTerm < searchResult ) {
+      upperBound = searchIndex - 1;
+      continue;
     }
   }
+  return NOT_FOUND;
 }
 
 
-uint8_t TransitionMatrix::getNextState( uint8_t index ) {
+uint8_t TransitionMatrix::getNextState( uint8_t index ) const {
+// Get nextState of indexed StateTransition.
+  if ( index >= rows ) {
+    return NOT_FOUND;
+  }
   return matrix[ index ].nextState;
 }
 
 
-uint8_t TransitionMatrix::getNextOutput( uint8_t index ) {
+uint8_t TransitionMatrix::getNextOutput( uint8_t index ) const {
+// Get nextOutput of indexed StateTransition.
+  if ( index >= rows ) {
+    return NOT_FOUND;
+  }
   return matrix[ index ].nextOutput;
 }
