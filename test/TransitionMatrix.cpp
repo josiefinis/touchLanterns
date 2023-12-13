@@ -10,7 +10,8 @@
 
 
 TransitionMatrix::TransitionMatrix( const uint8_t rows, const StateTransition* matrix ) 
-  : rows( rows ), matrix( matrix ) {}
+  : rows( rows )
+  , matrix( matrix ) {}
    
 
 uint8_t TransitionMatrix::find( const uint8_t state, const uint8_t input ) const {
@@ -38,6 +39,7 @@ uint8_t TransitionMatrix::find( const uint8_t state, const uint8_t input ) const
 
 
 uint8_t TransitionMatrix::getNextState( uint8_t index ) const {
+// Get nextState of indexed StateTransition.
   if ( index >= rows ) {
     return NOT_FOUND;
   }
@@ -46,6 +48,7 @@ uint8_t TransitionMatrix::getNextState( uint8_t index ) const {
 
 
 uint8_t TransitionMatrix::getNextOutput( uint8_t index ) const {
+// Get nextOutput of indexed StateTransition.
   if ( index >= rows ) {
     return NOT_FOUND;
   }

@@ -2,6 +2,14 @@
 ======================================================================================================================================================
                 TRANSITION MATRIX
 ======================================================================================================================================================
+
+An array where each row is a StateTransition instance that defines a state transition for a given input,
+  T: state, input --> nextState, nextOutput.
+
+Needs to be sorted by state then input.
+
+Find state transition for a given state, input.
+Then get nextState and nextOutput.
 */
 
 #ifndef TRANSITION_MATRIX_H

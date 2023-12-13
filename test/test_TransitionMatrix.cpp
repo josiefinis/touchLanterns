@@ -33,7 +33,12 @@ void test_getNextState( void ) {
   if ( transitionMatrix.getNextState( 3 ) != 0xFF ) {
     errorCount++;
   }
-  std::cout << errorCount << " errors." << std::endl;
+  if ( errorCount ) {
+    std::cout << errorCount << " errors." << std::endl;
+  }
+  else {
+    std::cout << "OK." << std::endl;
+  }
 }
 
 
@@ -59,12 +64,18 @@ void test_getNextOutput( void ) {
   if ( transitionMatrix.getNextOutput( 3 ) != 0xFF ) {
     errorCount++;
   }
-  std::cout << errorCount << " errors." << std::endl;
+  if ( errorCount ) {
+    std::cout << errorCount << " errors." << std::endl;
+  }
+  else {
+    std::cout << "OK." << std::endl;
+  }
 }
 
 
 void test_find( void ) {
-  uint8_t errorCount = 0;
+  std::cout << "Test find." << std::endl;
+  int errorCount = 0;
   const StateTransition T[3] = { 
      { 0x00, 0x01, 0x02, 0x04 },
      { 0x02, 0x00, 0x03, 0x40 },
@@ -98,7 +109,7 @@ void test_find( void ) {
     std::cout << "{ 0x00, 0x00 } found at index " << ( int ) index << ". Should be 255." << std::endl;
   }
   if ( errorCount ) {
-    std::cout << ( int ) errorCount << " errors." << std::endl;
+    std::cout << errorCount << " errors." << std::endl;
   }
   else {
     std::cout << "OK." << std::endl;

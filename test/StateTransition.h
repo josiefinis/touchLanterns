@@ -2,6 +2,11 @@
 ======================================================================================================================================================
                 STATE TRANSITION
 ======================================================================================================================================================
+
+A single state transition 
+    T: state, input --> nextState, nextOutput.
+
+Instances ordered for comparison by state then input.
 */
 
 #ifndef STATE_TRANSITION_H
@@ -9,9 +14,6 @@
 
 #include <cstdint>
 #include <iostream>
-
-
-#define NO_CHANGE 0xFF
 
 
 class StateTransition {
