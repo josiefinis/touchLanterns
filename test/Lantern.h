@@ -29,6 +29,7 @@ class Lantern : public StateMachine {
     void setBrightness( uint8_t value );
     uint8_t getStepSize( void );
     void setStepSize();
+    void setDelay();
     Lantern* getParent( void );
     void setParent( Lantern* pLantern );
 
@@ -37,6 +38,7 @@ class Lantern : public StateMachine {
     uint8_t referenceBrightness;
     uint16_t brightness;
     Lantern* parent;
+    uint8_t delay;
     bool isUndershoot();
     bool isOvershoot();
 };
@@ -78,6 +80,7 @@ class Lantern : public StateMachine {
         Input
 ========================================
 */
+#define NO_INPUT                    0x00
 #define RISING_EDGE                 0x01    
 #define FALLING_EDGE                0x02
 #define MEDIUM_TOUCH                0x03
@@ -85,8 +88,9 @@ class Lantern : public StateMachine {
 #define LONG_TOUCH_FALLING_EDGE     0x05
 #define LONG_RELEASE                0x06
 #define AT_ZERO_BRIGHTNESS          0x07
-#define AT_MIN_BRIGHTNESS           0x08
-#define AT_MAX_BRIGHTNESS           0x09 
+#define AT_ONE_BRIGHTNESS           0x08
+#define AT_FULL_BRIGHTNESS          0x09 
+#define WAITING                     0x0A 
 #define DONT_CARE                   0xFF
 /*
 ========================================
@@ -94,22 +98,25 @@ class Lantern : public StateMachine {
 ========================================
 */
 #define NO_CHANGE                   0x00
-#define FLICKER                     0x01
-#define PULSE                       0x02
-#define SET_BRIGHTNESS_TO_0         0x03
-#define SET_BRIGHTNESS_TO_MAX       0x04
-#define SET_BRIGHTNESS_TO_REF       0x05
-#define SET_REFERENCE_TO_0          0x06 
-#define TRACK_REFERENCE             0x07
-#define MAKE_TREE                   0x08  
-#define LOWER_BRIGHTNESS            0x80      // Specify step size e.g. LOWER_BRIGHTNESS | 0x02
-#define RAISE_BRIGHTNESS            0xC0      // Specify step size e.g. RAISE_BRIGHTNESS | 0x04
+#define START_FLICKER               0x01 
+#define FLICKER                     0x02
+#define PULSE                       0x03
+#define SET_BRIGHTNESS_TO_ZERO      0x04
+#define SET_BRIGHTNESS_TO_FULL      0x05
+#define SET_BRIGHTNESS_TO_REF       0x06
+#define SET_REFERENCE_TO_ZERO       0x07 
+#define TRACK_REFERENCE             0x08
+#define MAKE_TREE                   0x09  
+#define REDUCE_DELAY                0x0A      
+#define SET_DELAY                   0x40      // Specify delay e.g. SET_DELAY | 8
+#define LOWER_BRIGHTNESS            0x80      // Specify step size e.g. LOWER_BRIGHTNESS | 1
+#define RAISE_BRIGHTNESS            0xC0      // Specify step size e.g. RAISE_BRIGHTNESS | 5
                       
                       
                       
                       
 
-#define MAX_BRIGHTNESS              0xFF
-#define MIN_BRIGHTNESS              0x01
+#define FULL_BRIGHTNESS             0xFF
+#define ONE_BRIGHTNESS              0x01
 
 #endif
