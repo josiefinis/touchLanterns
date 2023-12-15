@@ -11,8 +11,9 @@
 // TODO Make flicker look better.
 // TODO Make different variations of flicker or other effects.
 // TODO handle INIT_DOWN when low brightness
+// TODO set delay 0 when coming out of WAITING (or make sure it doesn't matter)
 
-#define TRANSITION_MATRIX_ROWS      57
+#define TRANSITION_MATRIX_ROWS      67
 
 const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = { 
 
@@ -20,8 +21,10 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     GO_OUT                  , DONT_CARE                     , OUT                       , NO_CHANGE                     }  
   , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 4          } 
   , {     IDLE                    , AT_ZERO_BRIGHTNESS            , GO_OUT                    , SET_REFERENCE_TO_ZERO         } 
-    
-  , {     GO_IDLE                 , DONT_CARE                     , IDLE                      , TRACK_REFERENCE               } 
+  , {     IDLE                    , AT_ZERO_DELAY                 , IDLE                      , TRACK_REFERENCE               } 
+  , {     IDLE                    , DONT_CARE                     , IDLE                      , REDUCE_DELAY                  }
+  , {     GO_IDLE                 , DONT_CARE                     , IDLE                      , SET_REF_TO_BRIGHTNESS         } 
+
   , {     INIT_DOWN               , FALLING_EDGE                  , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
   , {     INIT_DOWN               , MEDIUM_TOUCH                  , FLICKER_DOWN              , START_FLICKER                 } 
   , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 3          } 
@@ -29,9 +32,10 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     INIT_UP                 , FALLING_EDGE                  , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
   , {     INIT_UP                 , MEDIUM_TOUCH                  , FLICKER_UP                , START_FLICKER                 } 
   , {     INIT_UP                 , DONT_CARE                     , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
+
   , {     FULL_DOWN               , DONT_CARE                     , GO_OUT                    , SET_BRIGHTNESS_TO_ZERO        } 
-    
   , {     FULL_UP                 , DONT_CARE                     , GO_IDLE                   , SET_BRIGHTNESS_TO_FULL        } 
+
   , {     FLICKER_DOWN            , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
   , {     FLICKER_DOWN            , LONG_TOUCH                    , ROOT_FULL_DOWN            , MAKE_TREE                     } 
   , {     FLICKER_DOWN            , DONT_CARE                     , FLICKER_DOWN              , FLICKER                       } 
@@ -39,29 +43,33 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     FLICKER_UP              , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
   , {     FLICKER_UP              , LONG_TOUCH                    , ROOT_FULL_UP              , MAKE_TREE                     } 
   , {     FLICKER_UP              , DONT_CARE                     , FLICKER_UP                , FLICKER                       } 
+
   , {     AUTO_DOWN               , RISING_EDGE                   , PAUSE_DOWN                , PULSE                         } 
-    
   , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 8                 } 
   , {     AUTO_DOWN               , DONT_CARE                     , AUTO_DOWN                 , LOWER_BRIGHTNESS | 1          } 
+
   , {     AUTO_UP                 , RISING_EDGE                   , PAUSE_UP                  , PULSE                         } 
   , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 8                 } 
-    
   , {     AUTO_UP                 , DONT_CARE                     , AUTO_UP                   , RAISE_BRIGHTNESS | 1          } 
+
   , {     PAUSE_DOWN              , RISING_EDGE                   , AUTO_UP                   , PULSE                         } 
   , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 8                 } 
   , {     PAUSE_DOWN              , MEDIUM_TOUCH                  , ROOT_FLICKER_DOWN         , START_FLICKER                 } 
-    
-  , {     PAUSE_DOWN              , WAITING                       , PAUSE_DOWN                , REDUCE_DELAY                  } 
-  , {     PAUSE_DOWN              , DONT_CARE                     , IDLE                                                      } 
+  , {     PAUSE_DOWN              , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
+  , {     PAUSE_DOWN              , DONT_CARE                     , PAUSE_DOWN                , REDUCE_DELAY                  } 
+
   , {     PAUSE_UP                , RISING_EDGE                   , AUTO_DOWN                 , PULSE                         } 
   , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 8                 } 
-    
   , {     PAUSE_UP                , MEDIUM_TOUCH                  , ROOT_FLICKER_UP           , START_FLICKER                 } 
-  , {     PAUSE_UP                , WAITING                       , PAUSE_UP                  , REDUCE_DELAY                  } 
-  , {     PAUSE_UP                , DONT_CARE                     , IDLE                                                      } 
-  , {     ROOT_FULL_DOWN          , DONT_CARE                     , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
+  , {     PAUSE_UP                , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
+  , {     PAUSE_UP                , DONT_CARE                     , PAUSE_UP                  , REDUCE_DELAY                  } 
+
+  , {     ROOT_FULL_DOWN          , LONG_TOUCH_FALLING_EDGE       , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
+  , {     ROOT_FULL_DOWN          , DONT_CARE                     , ROOT_FULL_DOWN            , LOWER_BRIGHTNESS | 8          } 
     
-  , {     ROOT_FULL_UP            , DONT_CARE                     , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
+  , {     ROOT_FULL_UP            , LONG_TOUCH_FALLING_EDGE       , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
+  , {     ROOT_FULL_UP            , DONT_CARE                     , ROOT_FULL_UP              , RAISE_BRIGHTNESS | 8          } 
+
   , {     ROOT_FLICKER_DOWN       , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
   , {     ROOT_FLICKER_DOWN       , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_DOWN            , MAKE_TREE                     } 
   , {     ROOT_FLICKER_DOWN       , DONT_CARE                     , ROOT_FLICKER_DOWN         , FLICKER                       } 
@@ -69,19 +77,25 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     ROOT_FLICKER_UP         , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
   , {     ROOT_FLICKER_UP         , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_UP              , MAKE_TREE                     } 
   , {     ROOT_FLICKER_UP         , DONT_CARE                     , ROOT_FLICKER_UP           , FLICKER                       } 
+
   , {     ROOT_AUTO_DOWN          , RISING_EDGE                   , ROOT_PAUSE_DOWN           , PULSE                         } 
-    
   , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN                                           } 
   , {     ROOT_AUTO_DOWN          , DONT_CARE                     , ROOT_AUTO_DOWN            , LOWER_BRIGHTNESS | 1          } 
+
   , {     ROOT_AUTO_UP            , RISING_EDGE                   , ROOT_PAUSE_UP             , PULSE                         } 
   , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP                                             } 
-    
   , {     ROOT_AUTO_UP            , DONT_CARE                     , ROOT_AUTO_UP              , RAISE_BRIGHTNESS | 1          } 
+
   , {     ROOT_PAUSE_DOWN         , RISING_EDGE                   , ROOT_AUTO_UP              , PULSE                         } 
-  , {     ROOT_PAUSE_DOWN         , LONG_RELEASE                  , IDLE                                                      } 
+  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 8                 } 
+  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   ,                               } 
+  , {     ROOT_PAUSE_DOWN         , DONT_CARE                     , ROOT_PAUSE_DOWN           , REDUCE_DELAY                  } 
+
   , {     ROOT_PAUSE_UP           , RISING_EDGE                   , ROOT_AUTO_DOWN            , PULSE                         } 
-    
-  , {     ROOT_PAUSE_UP           , LONG_RELEASE                  , IDLE                                                      } 
+  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 8                 } 
+  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   ,                               } 
+  , {     ROOT_PAUSE_UP           , DONT_CARE                     , ROOT_PAUSE_UP             , REDUCE_DELAY                  } 
+
   , {     WAIT                                                                                                                } 
   , {     WAIT_FULL_DOWN                                                                                                      } 
   , {     WAIT_FULL_UP                                                                                                        } 
@@ -96,7 +110,7 @@ Lantern::Lantern()
   , inputRegister( 0 )
   , brightness( 0 )
   , referenceBrightness( 0 )
-  , delay( 0 )
+  , delay( 0xFF )
   , parent( nullptr ) 
 {}
 
@@ -127,9 +141,11 @@ uint8_t Lantern::classifyInput( void ) {
     case 0x2:
       return FALLING_EDGE;
   }
-  if ( delay ) {
-    return WAITING;
+
+  if ( delay == 0 ) {                                    // TODO does delay cause problem by blocking brightness inputs?
+    return AT_ZERO_DELAY;
   }
+
   switch ( getBrightness() ) {
     case 0:
       return AT_ZERO_BRIGHTNESS;
@@ -177,7 +193,6 @@ bool Lantern::updateOutput( void ) {
 
     case START_FLICKER:
       referenceBrightness = getBrightness();
-      setOutput( FLICKER );
 
     case FLICKER:
       // TODO ensure brightness != 0
@@ -204,6 +219,9 @@ bool Lantern::updateOutput( void ) {
       return 0;
 
     case TRACK_REFERENCE:
+      setOutput( 0 );
+      setStepSize();
+      delay--;
       return 1;
     
     case MAKE_TREE:
@@ -222,6 +240,11 @@ bool Lantern::changeBrightness( void ) {
     case NO_CHANGE:
       return 0;
 
+    case START_FLICKER:
+      brightness ^= brightness << 2; 
+      brightness ^= brightness >> 7;
+      return 1;
+
     case FLICKER:
       brightness ^= brightness << 2; 
       brightness ^= brightness >> 7;
@@ -239,6 +262,16 @@ bool Lantern::changeBrightness( void ) {
       }
       setBrightness( 1 );
       return 1;
+
+    case TRACK_REFERENCE:
+      if ( getBrightness() > referenceBrightness ) {
+        brightness -= getStepSize();
+        return 1;
+      }
+      if ( getBrightness() < referenceBrightness ) {
+        brightness += getStepSize();
+        return 1;
+      }
   }
 
   switch ( getOutput() & 0xC0 ) {
@@ -309,6 +342,11 @@ void Lantern::setStepSize( void ) {
 
 void Lantern::setDelay( void ) {
   delay = getOutput() & 0x3F;
+}
+
+
+int Lantern::getDelay( void ) {
+  return delay;
 }
 
 

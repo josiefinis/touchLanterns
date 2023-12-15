@@ -33,6 +33,8 @@ class Lantern : public StateMachine {
     Lantern* getParent( void );
     void setParent( Lantern* pLantern );
 
+    int getDelay();
+
   private:
     uint8_t inputRegister;
     uint8_t referenceBrightness;
@@ -90,7 +92,7 @@ class Lantern : public StateMachine {
 #define AT_ZERO_BRIGHTNESS          0x07
 #define AT_ONE_BRIGHTNESS           0x08
 #define AT_FULL_BRIGHTNESS          0x09 
-#define WAITING                     0x0A 
+#define AT_ZERO_DELAY               0x0A 
 #define DONT_CARE                   0xFF
 /*
 ========================================
@@ -105,9 +107,10 @@ class Lantern : public StateMachine {
 #define SET_BRIGHTNESS_TO_FULL      0x05
 #define SET_BRIGHTNESS_TO_REF       0x06
 #define SET_REFERENCE_TO_ZERO       0x07 
-#define TRACK_REFERENCE             0x08
-#define MAKE_TREE                   0x09  
-#define REDUCE_DELAY                0x0A      
+#define SET_REF_TO_BRIGHTNESS       0x08 
+#define TRACK_REFERENCE             0x09
+#define MAKE_TREE                   0x0A  
+#define REDUCE_DELAY                0x0B      
 #define SET_DELAY                   0x40      // Specify delay e.g. SET_DELAY | 8
 #define LOWER_BRIGHTNESS            0x80      // Specify step size e.g. LOWER_BRIGHTNESS | 1
 #define RAISE_BRIGHTNESS            0xC0      // Specify step size e.g. RAISE_BRIGHTNESS | 5

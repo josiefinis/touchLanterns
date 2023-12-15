@@ -1,5 +1,23 @@
 #include "Lantern.h"
 
+void printInput( uint8_t input ) {
+  switch ( input ) {
+    case NO_INPUT:                    std::cout << "NO_I";      return;
+    case RISING_EDGE:                 std::cout << "+EDG";      return;
+    case FALLING_EDGE:                std::cout << "-EDG";      return;
+    case MEDIUM_TOUCH:                std::cout << "MEDM";      return;
+    case LONG_TOUCH:                  std::cout << "LONG";      return;
+    case LONG_TOUCH_FALLING_EDGE:     std::cout << "LG-E";      return;
+    case LONG_RELEASE:                std::cout << "LG_R";      return;
+    case AT_ZERO_BRIGHTNESS:          std::cout << "@ZRO";      return;
+    case AT_ONE_BRIGHTNESS:           std::cout << "@ONE";      return;
+    case AT_FULL_BRIGHTNESS:          std::cout << "@FUL";      return;
+    case AT_ZERO_DELAY:               std::cout << "@DLY";      return;
+    case DONT_CARE:                   std::cout << "DTCR";      return;
+  }
+}
+
+
 void printState( uint8_t state ) {
   switch ( state ) {
     case OUT:               std::cout << " OUT";        return;
@@ -47,6 +65,7 @@ void printOutput( uint8_t output ) {
     case SET_BRIGHTNESS_TO_FULL:    std::cout << "B=FUL";      return;
     case SET_BRIGHTNESS_TO_REF:     std::cout << "B=REF";      return;
     case SET_REFERENCE_TO_ZERO:     std::cout << "REF=0";      return;
+    case SET_REF_TO_BRIGHTNESS:     std::cout << "REF=B";      return;
     case TRACK_REFERENCE:           std::cout << "TRACK";      return; 
     case MAKE_TREE:                 std::cout << "TREE ";      return;       
     case REDUCE_DELAY:              std::cout << "DLY--";      return;    
@@ -54,19 +73,34 @@ void printOutput( uint8_t output ) {
 }
 
 
-void printInput( uint8_t input ) {
-  switch ( input ) {
-    case NO_INPUT:                    std::cout << "NO_I";      return;
-    case RISING_EDGE:                 std::cout << "+EDG";      return;
-    case FALLING_EDGE:                std::cout << "-EDG";      return;
-    case MEDIUM_TOUCH:                std::cout << "MEDM";      return;
-    case LONG_TOUCH:                  std::cout << "LONG";      return;
-    case LONG_TOUCH_FALLING_EDGE:     std::cout << "LG-E";      return;
-    case LONG_RELEASE:                std::cout << "LG_R";      return;
-    case AT_ZERO_BRIGHTNESS:          std::cout << "@ZRO";      return;
-    case AT_ONE_BRIGHTNESS:           std::cout << "@ONE";      return;
-    case AT_FULL_BRIGHTNESS:          std::cout << "@FUL";      return;
-    case WAITING:                     std::cout << "WTNG";      return;
-    case DONT_CARE:                   std::cout << "DTCR";      return;
+void printInstruction( Instruction instruction ) {
+  switch ( instruction.instruction ) {
+    case START_TEST:            
+      std::cout << "START_TEST"; 
+      break;
+      
+    case END_TEST:              
+      std::cout << "END_TEST";   
+      break;
+
+    case SET_INPUT:             
+      std::cout << "SET_INPUT " << ( int ) instruction.value;   
+      break;
+
+    case ASSERT_INPUT_EQ:
+      std::cout << "ASSERT_INPUT_EQ  ";
+      printInput( instruction.value );
+      break;
+
+    case ASSERT_STATE_EQ:
+      std::cout << "ASSERT_STATE_EQ  ";
+      printState( instruction.value );
+      break;
+
+    case ASSERT_OUPUT_EQ:
+      std::cout << "ASSERT_OUPUT_EQ  ";
+      printOutput( instruction.value );
+      break;
   }
+  std::cout << " at time " << instruction.time;
 }
