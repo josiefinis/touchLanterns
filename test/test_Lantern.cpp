@@ -38,13 +38,13 @@ void test_Lantern( void ) {
 
 Result updateLantern( int t, Lantern& lantern, bool input, bool verbose=0 ) {
   Result result;
-  lantern.pushInput( input );
-  result.input = lantern.classifyInput();
+  lantern.pushSensor( input );
+  result.input = lantern.prioritiseInput();
   if ( verbose ) {
     std::cout << std::endl << t << "\t" << ( int ) input << " T: "; 
     printState( lantern.getState() ); 
     std::cout << ",  "; 
-    printInput( lantern.classifyInput() );
+    printInput( lantern.prioritiseInput() );
     std::cout << " ";
   }
   lantern.nextState();

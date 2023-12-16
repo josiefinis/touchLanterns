@@ -13,7 +13,7 @@
 // TODO handle INIT_DOWN when low brightness
 // TODO set delay 0 when coming out of WAITING (or make sure it doesn't matter)
 
-#define TRANSITION_MATRIX_ROWS      67
+#define TRANSITION_MATRIX_ROWS      77
 
 const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = { 
 
@@ -79,35 +79,47 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     ROOT_FLICKER_UP         , DONT_CARE                     , ROOT_FLICKER_UP           , FLICKER                       } 
 
   , {     ROOT_AUTO_DOWN          , RISING_EDGE                   , ROOT_PAUSE_DOWN           , PULSE                         } 
-  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN                                           } 
+  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 8                 } 
   , {     ROOT_AUTO_DOWN          , DONT_CARE                     , ROOT_AUTO_DOWN            , LOWER_BRIGHTNESS | 1          } 
 
   , {     ROOT_AUTO_UP            , RISING_EDGE                   , ROOT_PAUSE_UP             , PULSE                         } 
-  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP                                             } 
+  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 8                 } 
   , {     ROOT_AUTO_UP            , DONT_CARE                     , ROOT_AUTO_UP              , RAISE_BRIGHTNESS | 1          } 
 
   , {     ROOT_PAUSE_DOWN         , RISING_EDGE                   , ROOT_AUTO_UP              , PULSE                         } 
   , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 8                 } 
-  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   ,                               } 
+  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
   , {     ROOT_PAUSE_DOWN         , DONT_CARE                     , ROOT_PAUSE_DOWN           , REDUCE_DELAY                  } 
 
   , {     ROOT_PAUSE_UP           , RISING_EDGE                   , ROOT_AUTO_DOWN            , PULSE                         } 
   , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 8                 } 
-  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   ,                               } 
+  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
   , {     ROOT_PAUSE_UP           , DONT_CARE                     , ROOT_PAUSE_UP             , REDUCE_DELAY                  } 
 
-  , {     WAIT                                                                                                                } 
-  , {     WAIT_FULL_DOWN                                                                                                      } 
-  , {     WAIT_FULL_UP                                                                                                        } 
+  , {     WAIT                    , AT_ZERO_DELAY                 , FOLLOW                    , REDUCE_DELAY                  } 
+  , {     WAIT                    , PARENT_IS_FULL_DOWN           , WAIT_FULL_DOWN            , REDUCE_DELAY                  } 
+  , {     WAIT                    , PARENT_IS_FULL_UP             , WAIT_FULL_UP              , REDUCE_DELAY                  } 
+  , {     WAIT                    , DONT_CARE                     , WAIT                      , REDUCE_DELAY                  } 
 
-  , {     FOLLOW                                                                                                              }
+  , {     WAIT_FULL_DOWN          , AT_ZERO_DELAY                 , FULL_DOWN                 , REDUCE_DELAY                  } 
+  , {     WAIT_FULL_DOWN          , PARENT_IS_FULL_UP             , WAIT_FULL_UP              , REDUCE_DELAY                  } 
+  , {     WAIT_FULL_DOWN          , PARENT_IS_WAIT_OR_FOLLOW      , WAIT                      , REDUCE_DELAY                  } 
+  , {     WAIT_FULL_DOWN          , DONT_CARE                     , WAIT_FULL_DOWN            , REDUCE_DELAY                  } 
+
+  , {     WAIT_FULL_UP            , AT_ZERO_DELAY                 , FULL_UP                   , REDUCE_DELAY                  } 
+  , {     WAIT_FULL_UP            , PARENT_IS_FULL_DOWN           , WAIT_FULL_DOWN            , REDUCE_DELAY                  } 
+  , {     WAIT_FULL_UP            , PARENT_IS_WAIT_OR_FOLLOW      , WAIT                      , REDUCE_DELAY                  } 
+  , {     WAIT_FULL_UP            , DONT_CARE                     , WAIT_FULL_UP              , REDUCE_DELAY                  } 
+
+  , {     FOLLOW                  , PARENT_IS_IDLE                , GO_IDLE                   , LEAVE_TREE                    }
+  , {     FOLLOW                  , DONT_CARE                     , FOLLOW                    , TRACK_PARENT                  }
 };
 const TransitionMatrix Lantern::transitionMatrix = TransitionMatrix( TRANSITION_MATRIX_ROWS, matrix );
 
 
 Lantern::Lantern() 
   : StateMachine( transitionMatrix )
-  , inputRegister( 0 )
+  , sensorRegister( 0 )
   , brightness( 0 )
   , referenceBrightness( 0 )
   , delay( 0xFF )
@@ -115,15 +127,15 @@ Lantern::Lantern()
 {}
 
 
-void Lantern::pushInput( bool value ) {
-  inputRegister <<= 1;
-  inputRegister |= value;
+void Lantern::pushSensor( bool value ) {
+  sensorRegister <<= 1;
+  sensorRegister |= value;
 }
 
 
 #define EDGE    0x3
-uint8_t Lantern::classifyInput( void ) {
-  switch ( inputRegister ) {
+uint8_t Lantern::classifySensorInput( void ) {
+  switch ( sensorRegister ) {
     case 0xFF:
       return LONG_TOUCH;
 
@@ -133,19 +145,18 @@ uint8_t Lantern::classifyInput( void ) {
     case 0x0F:
       return MEDIUM_TOUCH;
   }
-
-  switch ( inputRegister & EDGE ) {
+  switch ( sensorRegister & EDGE ) {
     case 0x1:
       return RISING_EDGE;
     
     case 0x2:
       return FALLING_EDGE;
   }
+  return DONT_CARE;
+}
 
-  if ( delay == 0 ) {                                    // TODO does delay cause problem by blocking brightness inputs?
-    return AT_ZERO_DELAY;
-  }
 
+uint8_t Lantern::classifyBrightnessInput( void ) {
   switch ( getBrightness() ) {
     case 0:
       return AT_ZERO_BRIGHTNESS;
@@ -160,9 +171,51 @@ uint8_t Lantern::classifyInput( void ) {
 }
 
 
+uint8_t Lantern::classifyParentInput( void ) {
+  switch ( parent->getState() ) {
+    case IDLE:
+      return PARENT_IS_IDLE; 
+
+    case FULL_DOWN:
+      return PARENT_IS_FULL_DOWN; 
+
+    case WAIT_FULL_DOWN:
+      return PARENT_IS_FULL_DOWN; 
+
+    case FULL_UP:
+      return PARENT_IS_FULL_UP; 
+
+    case WAIT_FULL_UP:
+      return PARENT_IS_FULL_UP; 
+
+    case WAIT:
+      return PARENT_IS_WAIT_OR_FOLLOW; 
+
+    case FOLLOW:
+      return PARENT_IS_WAIT_OR_FOLLOW; 
+  }
+  return DONT_CARE;
+}
+
+
+uint8_t Lantern::prioritiseInput( void ) {
+  if ( delay == 0 ) {                                    
+    return AT_ZERO_DELAY;
+  }
+  if ( parent ) {
+    return classifyParentInput();
+  }
+  if ( classifySensorInput() == DONT_CARE ) {
+    return classifyBrightnessInput();
+  }
+  return classifySensorInput();
+}
+
+
 bool Lantern::nextState( void ) {
-// Change to new state and/or output based on current state and sensor input.
-  if ( next( classifyInput() ) ) {
+// Change to new state and/or output based on current state and input.
+  uint8_t input = prioritiseInput();
+  if ( next( input ) ) {
     return 1;
   }
   return 0;
@@ -195,7 +248,9 @@ bool Lantern::updateOutput( void ) {
       referenceBrightness = getBrightness();
 
     case FLICKER:
-      // TODO ensure brightness != 0
+      if ( brightness == 0 ) {
+        brightness = Random::pull(4);
+      }
       return 0;
 
     case PULSE:
@@ -222,13 +277,22 @@ bool Lantern::updateOutput( void ) {
       setOutput( 0 );
       setStepSize();
       delay--;
-      return 1;
+      return 0;
     
     case MAKE_TREE:
       return 0;
 
     case REDUCE_DELAY:
       delay--;
+      return 0;
+
+    case TRACK_PARENT:
+      setOutput( 1 );
+      setStepSize();
+      return 0;
+
+    case LEAVE_TREE:
+      setParent( nullptr );
       return 0;
   }
   return 0;
@@ -269,6 +333,17 @@ bool Lantern::changeBrightness( void ) {
         return 1;
       }
       if ( getBrightness() < referenceBrightness ) {
+        brightness += getStepSize();
+        return 1;
+      }
+
+    case TRACK_PARENT:
+      if ( not parent ) { return 0; };
+      if ( getBrightness() > parent->getBrightness() ) {
+        brightness -= getStepSize();
+        return 1;
+      }
+      if ( getBrightness() < parent->getBrightness() ) {
         brightness += getStepSize();
         return 1;
       }
@@ -355,8 +430,8 @@ Lantern* Lantern::getParent() {
 }
 
 
-void Lantern::setParent(Lantern* pLantern) {
-  parent = pLantern;
+void Lantern::setParent( Lantern* parent ) {
+  this->parent = parent;
 }
 
 

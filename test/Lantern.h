@@ -18,8 +18,11 @@ class Lantern : public StateMachine {
     static const TransitionMatrix transitionMatrix;
     Lantern();
 
-    void pushInput( bool value );
-    uint8_t classifyInput( void );
+    void pushSensor( bool value );
+    uint8_t classifySensorInput( void );
+    uint8_t classifyParentInput( void );
+    uint8_t classifyBrightnessInput( void );
+    uint8_t prioritiseInput( void );
     bool nextState( void );
     bool updateOutput( void );
     bool changeBrightness( void );
@@ -31,12 +34,12 @@ class Lantern : public StateMachine {
     void setStepSize();
     void setDelay();
     Lantern* getParent( void );
-    void setParent( Lantern* pLantern );
+    void setParent( Lantern* parent );
 
     int getDelay();
 
   private:
-    uint8_t inputRegister;
+    uint8_t sensorRegister;
     uint8_t referenceBrightness;
     uint16_t brightness;
     Lantern* parent;
@@ -93,6 +96,10 @@ class Lantern : public StateMachine {
 #define AT_ONE_BRIGHTNESS           0x08
 #define AT_FULL_BRIGHTNESS          0x09 
 #define AT_ZERO_DELAY               0x0A 
+#define PARENT_IS_IDLE              0x0B
+#define PARENT_IS_FULL_DOWN         0x0C
+#define PARENT_IS_FULL_UP           0x0D
+#define PARENT_IS_WAIT_OR_FOLLOW    0x0E
 #define DONT_CARE                   0xFF
 /*
 ========================================
@@ -109,8 +116,10 @@ class Lantern : public StateMachine {
 #define SET_REFERENCE_TO_ZERO       0x07 
 #define SET_REF_TO_BRIGHTNESS       0x08 
 #define TRACK_REFERENCE             0x09
-#define MAKE_TREE                   0x0A  
-#define REDUCE_DELAY                0x0B      
+#define TRACK_PARENT                0x0A
+#define MAKE_TREE                   0x0B  
+#define LEAVE_TREE                  0x0C  
+#define REDUCE_DELAY                0x0D      
 #define SET_DELAY                   0x40      // Specify delay e.g. SET_DELAY | 8
 #define LOWER_BRIGHTNESS            0x80      // Specify step size e.g. LOWER_BRIGHTNESS | 1
 #define RAISE_BRIGHTNESS            0xC0      // Specify step size e.g. RAISE_BRIGHTNESS | 5
