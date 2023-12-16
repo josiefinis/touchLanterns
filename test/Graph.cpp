@@ -11,9 +11,9 @@
 #include <iostream>
 
 
-Graph::Graph( uint16_t* adjacencyList, uint8_t vertexCount )
-  : adjacencyList( adjacencyList )
-  , vertexCount( vertexCount )
+Graph::Graph( const uint8_t vertexCount, const uint16_t* adjacencyList )
+  : vertexCount( vertexCount )
+  , adjacencyList( adjacencyList )
 {}
 
 
@@ -36,7 +36,6 @@ void Graph::makeSpanningTree( Tree* spanningTree, uint8_t root ) {
   uint8_t treeSize = 1;
   while ( not queue.isEmpty() ) {
     uint8_t parent = queue.dequeue();
-    std::cout << "dequeue " << ( int ) parent << std::endl;
     ShuffledList adjacentToParent = ShuffledList( adjacencyList[ parent ], countAdjacent( parent ) );
 
     while ( not adjacentToParent.isEmpty() ) {
@@ -52,7 +51,6 @@ void Graph::makeSpanningTree( Tree* spanningTree, uint8_t root ) {
         break;
       }
       queue.enqueue( vertex );
-      std::cout << "enqueue " << ( int ) vertex << std::endl;
     }
   }
 }

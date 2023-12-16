@@ -1,3 +1,6 @@
+#ifndef RANDOM_CPP
+#define RANDOM_CPP
+
 #include "Random.h"
 
 
@@ -56,3 +59,4 @@ uint8_t Random::pull(uint8_t n) {
 uint8_t Random::urandom(uint8_t n) {
   return n * pull( 8 ) / 256;
 }
+#endif

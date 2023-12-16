@@ -45,6 +45,12 @@ uint8_t StateMachine::getOutput( void ) {
 }
 
 
+void StateMachine::setState( uint8_t value ) {
+// Set the current state.
+  state = value;
+}
+
+
 void StateMachine::setOutput( uint8_t value ) {
 // Set the current output.
   output = value;
