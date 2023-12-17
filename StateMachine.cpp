@@ -43,3 +43,15 @@ uint8_t StateMachine::getOutput( void ) {
 // Get the current output.
   return output;
 }
+
+
+void StateMachine::setState( uint8_t value ) {
+// Set the current state.
+  state = value;
+}
+
+
+void StateMachine::setOutput( uint8_t value ) {
+// Set the current output.
+  output = value;
+}

@@ -3,13 +3,18 @@
              GRAPH
 ======================================================================================================================================================
 */
+#ifndef GRAPH_CPP
+#define GRAPH_CPP
 
 #include "Graph.h"
+#include "Tree.cpp"
+#include "Queue.cpp"
+#include "ShuffledList.cpp"
 
 
-Graph::Graph( uint16_t* adjacencyList, uint8_t vertexCount )
-  : adjacencyList( adjacencyList )
-  , vertexCount( vertexCount )
+Graph::Graph( const uint8_t vertexCount, const uint16_t* adjacencyList )
+  : vertexCount( vertexCount )
+  , adjacencyList( adjacencyList )
 {}
 
 
@@ -50,3 +55,4 @@ void Graph::makeSpanningTree( Tree* spanningTree, uint8_t root ) {
     }
   }
 }
+#endif

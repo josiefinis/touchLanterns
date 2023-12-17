@@ -6,7 +6,6 @@
 
 #include "TransitionMatrix.h"
 #include "StateTransition.cpp"
-#include <iostream>
 
 
 TransitionMatrix::TransitionMatrix( const uint8_t rows, const StateTransition* matrix ) 
