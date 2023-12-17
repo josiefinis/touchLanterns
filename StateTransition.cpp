@@ -4,6 +4,9 @@
 ======================================================================================================================================================
 */
 
+#ifndef STATE_TRANSITION_CPP
+#define STATE_TRANSITION_CPP
+
 #include "StateTransition.h"
 
 
@@ -29,9 +32,4 @@ bool StateTransition::operator > ( const StateTransition& object ) const {
   }
   return state == object.state and input > object.input;
 }
-
-
-void StateTransition::print( void ) const {
-// Print state transition T: state, input --> nextState, nextOutput.
-  std::cout << std::hex << "StateTransition : " << ( int ) state << ", " << ( int ) input << " --> " << ( int ) nextState << ", " << ( int ) nextOutput << std::dec << std::endl;
-}
+#endif

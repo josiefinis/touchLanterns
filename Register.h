@@ -2,10 +2,17 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 #include "Arduino.h"
-#endif
 
 
 class Register {
+  public:
+    Register();
+
+    void writeEvery2ndBit(uint32_t bits);
+    void storeShiftRegister();
+    void writeToStorageRegister(uint16_t word);
+    void reset();
+
   private:
     void writeToShiftRegister(uint16_t word);
     void writeBit(bool bit);
@@ -15,11 +22,5 @@ class Register {
     void shiftRegisterClockPulse();
     void storageRegisterClockPulse();
 
-  public:
-    Register();
-
-    void writeEvery2ndBit(uint32_t bits);
-    void storeShiftRegister();
-    void writeToStorageRegister(uint16_t word);
-    void reset();
 };
+#endif

@@ -17,7 +17,6 @@ class Queue {
     bool enqueue( uint8_t value );
     uint8_t dequeue();
     bool isEmpty();
-    void print();
 
   private:
     uint8_t* queue;

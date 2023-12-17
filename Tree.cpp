@@ -2,6 +2,9 @@
 //          TREE
 // ======================================================================================================================================================
 
+#ifndef TREE_CPP
+#define TREE_CPP
+
 #include "Tree.h"
 
 
@@ -28,3 +31,4 @@ uint8_t Tree::getParent( uint8_t index ) {
 uint8_t Tree::getSize() {
   return size;
 }
+#endif

@@ -4,8 +4,10 @@
 ======================================================================================================================================================
 */
 
+#ifndef STATE_MACHINE_CPP
+#define STATE_MACHINE_CPP
+
 #include "StateMachine.h"
-#include "TransitionMatrix.cpp"
 
 
 StateMachine::StateMachine( const TransitionMatrix& matrix )
@@ -55,3 +57,4 @@ void StateMachine::setOutput( uint8_t value ) {
 // Set the current output.
   output = value;
 }
+#endif

@@ -4,8 +4,10 @@
 ======================================================================================================================================================
 */
 
+#ifndef TRANSITION_MATRIX_CPP
+#define TRANSITION_MATRIX_CPP
+
 #include "TransitionMatrix.h"
-#include "StateTransition.cpp"
 
 
 TransitionMatrix::TransitionMatrix( const uint8_t rows, const StateTransition* matrix ) 
@@ -53,3 +55,4 @@ uint8_t TransitionMatrix::getNextOutput( uint8_t index ) const {
   }
   return matrix[ index ].nextOutput;
 }
+#endif

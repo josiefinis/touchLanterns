@@ -2,6 +2,9 @@
 //          QUEUE
 // ============================================================================================================================================
 
+#ifndef QUEUE_CPP
+#define QUEUE_CPP
+
 #include "Queue.h"
 
 Queue::Queue( uint8_t* queue, uint8_t maxSize ) 
@@ -37,16 +40,5 @@ uint8_t Queue::dequeue() {
 bool Queue::isEmpty() {
 // True if queue has no nodes.
   return size == 0;
-}
-
-
-#if MONITOR_MAKE_TREE
-void Queue::print() {
-// Print the queue.
-  for ( uint8_t i=0; i < maxSize; i++ ) {
-    Serial.print( queue[ ( first + i ) % maxSize ] ); 
-    Serial.print( "->" );
-  }
-  Serial.println();
 }
 #endif

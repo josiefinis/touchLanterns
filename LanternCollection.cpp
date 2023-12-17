@@ -7,8 +7,7 @@
 #ifndef LANTERN_COLLECTION_CPP
 #define LANTERN_COLLECTION_CPP
 
-#include "Graph.cpp"
-#include "Lantern.cpp"
+#include "LanternCollection.h"
 
 
 LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjacencyList ) 

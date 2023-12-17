@@ -4,9 +4,10 @@
 ======================================================================================================================================================
 */ 
 
+#ifndef LANTERN_CPP
+#define LANTERN_CPP
+
 #include "Lantern.h"
-#include "StateMachine.cpp"
-#include "Random.cpp"
 
 // TODO Make flicker look better.
 // TODO Make different variations of flicker or other effects.
@@ -442,3 +443,4 @@ bool Lantern::isUndershoot ( void ) {
 bool Lantern::isOvershoot ( void ) {
   return 16 * ( referenceBrightness - getBrightness() ) < getStepSize();
 }
+#endif
