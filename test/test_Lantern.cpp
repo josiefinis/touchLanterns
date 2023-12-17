@@ -1,26 +1,5 @@
 #include "Lantern.h"
 #include "Lantern.cpp"
-
-
-#define START_TEST          0
-#define END_TEST         0xFF
-#define SET_INPUT           1
-#define ASSERT_INPUT_EQ     2
-#define ASSERT_STATE_EQ     3
-#define ASSERT_OUPUT_EQ     4
-
-
-struct Instruction {
-  Instruction( int time, uint8_t instruction, uint8_t value=0 )
-    : time( time )
-    , instruction( instruction )
-    , value( value )
-  {}
-  int time;
-  uint8_t instruction; 
-  uint8_t value;
-};
-
 #include "PrintText.cpp"
 
 struct Result {
@@ -511,7 +490,7 @@ void test_ROOT_FULL( bool verbose=0 ) {
 
 int main( void ) {
   test_Lantern();
-  test_FULL();
+  test_FULL(1);
   test_AUTO();
   test_PAUSE();
   test_dontLetGo();

@@ -91,15 +91,14 @@ class Lantern : public StateMachine {
 #define MEDIUM_TOUCH                0x03
 #define LONG_TOUCH                  0x04
 #define LONG_TOUCH_FALLING_EDGE     0x05
-#define LONG_RELEASE                0x06
-#define AT_ZERO_BRIGHTNESS          0x07
-#define AT_ONE_BRIGHTNESS           0x08
-#define AT_FULL_BRIGHTNESS          0x09 
-#define AT_ZERO_DELAY               0x0A 
-#define PARENT_IS_IDLE              0x0B
-#define PARENT_IS_FULL_DOWN         0x0C
-#define PARENT_IS_FULL_UP           0x0D
-#define PARENT_IS_WAIT_OR_FOLLOW    0x0E
+#define AT_ZERO_BRIGHTNESS          0x06
+#define AT_ONE_BRIGHTNESS           0x07
+#define AT_FULL_BRIGHTNESS          0x08 
+#define AT_ZERO_DELAY               0x09 
+#define PARENT_IS_IDLE              0x0A
+#define PARENT_IS_FULL_DOWN         0x0B
+#define PARENT_IS_FULL_UP           0x0C
+#define PARENT_IS_WAIT_OR_FOLLOW    0x0D
 #define DONT_CARE                   0xFF
 /*
 ========================================

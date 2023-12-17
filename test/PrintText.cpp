@@ -1,4 +1,115 @@
+#ifndef PRINT_TEXT_CPP
+#define PRINT_TEXT_CPP
+
 #include "Lantern.h"
+
+#define START_TEST          0
+#define END_TEST         0xFF
+#define SET_INPUT           1
+#define ASSERT_INPUT_EQ     2
+#define ASSERT_STATE_EQ     3
+#define ASSERT_OUPUT_EQ     4
+
+#define PRINT_INPUT         1
+#define PRINT_STATE         2
+#define PRINT_OUTPUT        4
+#define PRINT_BRIGHTNESS    8
+
+
+
+struct Instruction {
+  Instruction( int time, uint8_t instruction, uint8_t value=0, uint8_t idx=0 )
+    : time( time )
+    , instruction( instruction )
+    , value( value )
+    , idx( idx )
+  {}
+  int time;
+  uint8_t instruction; 
+  uint8_t value;
+  uint8_t idx;
+};
+
+
+struct TestData {
+  uint8_t input;
+  uint8_t nextState;
+  uint8_t nextOutput;
+  uint8_t brightness;
+};
+
+
+
+void printBrief( uint8_t input, uint8_t state, uint8_t output ) {
+  switch ( input ) {
+    case NO_INPUT:                    std::cout << " ";      break;
+    case RISING_EDGE:                 std::cout << "+";      break;
+    case FALLING_EDGE:                std::cout << "-";      break;
+    case MEDIUM_TOUCH:                std::cout << "M";      break;
+    case LONG_TOUCH:                  std::cout << "L";      break;
+    case LONG_TOUCH_FALLING_EDGE:     std::cout << "l";      break;
+    case AT_ZERO_BRIGHTNESS:          std::cout << "0";      break;
+    case AT_ONE_BRIGHTNESS:           std::cout << "1";      break;
+    case AT_FULL_BRIGHTNESS:          std::cout << "F";      break;
+    case AT_ZERO_DELAY:               std::cout << "D";      break;
+    case PARENT_IS_IDLE:              std::cout << "I";      break;
+    case PARENT_IS_FULL_DOWN:         std::cout << "p";      break;
+    case PARENT_IS_FULL_UP:           std::cout << "P";      break;
+    case PARENT_IS_WAIT_OR_FOLLOW:    std::cout << "W";      break;
+    case DONT_CARE:                   std::cout << "?";      break;
+  }
+  switch ( state ) {
+    case OUT:               std::cout << "OU";        break;
+    case GO_OUT:            std::cout << "GO";        break;
+    case IDLE:              std::cout << "ID";        break;
+    case GO_IDLE:           std::cout << "GI";        break;
+    case INIT_DOWN:         std::cout << "in";        break;
+    case INIT_UP:           std::cout << "IN";        break;
+    case FULL_DOWN:         std::cout << "fu";        break;
+    case FULL_UP:           std::cout << "FU";        break;
+    case FLICKER_DOWN:      std::cout << "fk";        break;
+    case FLICKER_UP:        std::cout << "FK";        break;
+    case AUTO_DOWN:         std::cout << "au";        break;
+    case AUTO_UP:           std::cout << "AU";        break;
+    case PAUSE_DOWN:        std::cout << "ps";        break;
+    case PAUSE_UP:          std::cout << "PS";        break;
+    case ROOT_FULL_DOWN:    std::cout << "rf";        break;
+    case ROOT_FULL_UP:      std::cout << "RF";        break;
+    case ROOT_FLICKER_DOWN: std::cout << "rk";        break;
+    case ROOT_FLICKER_UP:   std::cout << "RK";        break;
+    case ROOT_AUTO_DOWN:    std::cout << "ra";        break;
+    case ROOT_AUTO_UP:      std::cout << "RA";        break;
+    case ROOT_PAUSE_DOWN:   std::cout << "rp";        break;
+    case ROOT_PAUSE_UP:     std::cout << "RP";        break;
+    case WAIT:              std::cout << "W ";        break;
+    case WAIT_FULL_DOWN:    std::cout << "wf";        break;
+    case WAIT_FULL_UP:      std::cout << "WF";        break;
+    case FOLLOW:            std::cout << "FW";        break;
+  }
+  switch ( output & 0xC0 ) {
+    case LOWER_BRIGHTNESS:          std::cout << "↓ ";      break;
+    case RAISE_BRIGHTNESS:          std::cout << "^ ";      break;
+    case SET_DELAY:                 std::cout << "D=";      break;       
+    default: break;
+  }
+  switch ( output ) {
+    case NO_CHANGE:                 std::cout << "  ";      break;       
+    case START_FLICKER:             std::cout << "SK";      break;   
+    case FLICKER:                   std::cout << "FK";      break;         
+    case PULSE:                     std::cout << "PU";      break;           
+    case SET_BRIGHTNESS_TO_ZERO:    std::cout << "B0";      break;
+    case SET_BRIGHTNESS_TO_FULL:    std::cout << "BF";      break;
+    case SET_BRIGHTNESS_TO_REF:     std::cout << "BR";      break;
+    case SET_REFERENCE_TO_ZERO:     std::cout << "R0";      break;
+    case SET_REF_TO_BRIGHTNESS:     std::cout << "RB";      break;
+    case TRACK_REFERENCE:           std::cout << "TR";      break; 
+    case TRACK_PARENT:              std::cout << "TP";      break; 
+    case MAKE_TREE:                 std::cout << "MT";      break;       
+    case LEAVE_TREE:                std::cout << "LT";      break;       
+    case REDUCE_DELAY:              std::cout << "D-";      break;    
+  }
+}
+
 
 void printInput( uint8_t input ) {
   switch ( input ) {
@@ -8,7 +119,6 @@ void printInput( uint8_t input ) {
     case MEDIUM_TOUCH:                std::cout << "MEDM";      return;
     case LONG_TOUCH:                  std::cout << "LONG";      return;
     case LONG_TOUCH_FALLING_EDGE:     std::cout << "LG-E";      return;
-    case LONG_RELEASE:                std::cout << "LG_R";      return;
     case AT_ZERO_BRIGHTNESS:          std::cout << "@ZRO";      return;
     case AT_ONE_BRIGHTNESS:           std::cout << "@ONE";      return;
     case AT_FULL_BRIGHTNESS:          std::cout << "@FUL";      return;
@@ -104,3 +214,4 @@ void printInstruction( Instruction instruction ) {
   }
   std::cout << " at time " << instruction.time;
 }
+#endif
