@@ -42,6 +42,11 @@ uint8_t LanternCollection::getBrightness( uint8_t idx ) {
 }
 
 
+void LanternCollection::burnDown( uint8_t idx ) {
+  collection[ idx ].burnDown();
+}
+
+
 void LanternCollection::makeTree( uint8_t root ) {
   uint8_t delay = 0;
   uint8_t parentList[ 16 ];

@@ -24,6 +24,7 @@ class LanternCollection : public Graph {
     bool update( uint8_t idx );
     bool changeBrightness( uint8_t idx );
     uint8_t getBrightness( uint8_t idx );
+    void burnDown( uint8_t idx);
 
   private:
     const uint8_t size;

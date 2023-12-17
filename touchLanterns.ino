@@ -11,7 +11,15 @@
 Register shiftRegister;         // Writes to SIPO register chip.
 PWMSignal pwmSignal;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
 Sensor sensor = Sensor();       // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
-Lantern lantern[16];            // State machine that controls lantern logic.
+const uint16_t neighbourList[16] = 
+{ 
+  0x421 , 0x4320, 0x5310, 0x521 ,
+  0x7610, 0x7632, 0xC854, 0xC854,
+  0xA976, 0xDBA8, 0xB98 , 0xFA9 ,
+  0xED76, 0xFEC9, 0xFDC , 0xEDB 
+};
+
+LanternCollection lantern = LanternCollection( 16, neighbourList );
 SerialMonitor monitor;
 
 
@@ -42,16 +50,15 @@ bool pollSensor() {
 
 
 void updateLanterns() {
-  lantern[idx].pushInput( pollSensor() );
-  bool newState = lantern[idx].changeState();
+  lantern.pushInput( idx, pollSensor() );
+  lantern.update( idx );
   for ( uint8_t i=0; i<16; i++ ) {
-    if ( lantern[i].changeOutput() ) {
-      pwmSignal.changeDuty( i, lantern[i].getBrightness() );
+      pwmSignal.changeDuty( i, lantern.getBrightness( i ) );
     }
   }
   #if MONITOR_EVENTS
     bool increment = 0;
-    if ( lantern[idx].getInput() ) {
+    if ( lantern.getInput() ) {
       monitor.storeInput( idx, lantern[idx].getInput() );
       increment = 1;
     }
@@ -69,7 +76,12 @@ void updateLanterns() {
 void pwmCycle1stHalf() {
   pwmSignal.periodStart();
   updateRegister( pwmSignal.getSignal() );
-  updateLanterns();
+  lantern.pushInput( idx, pollSensor() );
+  lantern.update( idx );
+  for ( uint8_t i=0; i<16; i++ ) {
+      pwmSignal.changeDuty( i, lantern.getBrightness( i ) );
+    }
+  }
   pwmSignal.nextEdge();
   edgeAtMicros = pwmSignal.getTime();
   idx = sensor.nextMuxChannel();
@@ -99,7 +111,7 @@ void updateRegister(uint16_t signal) {
 void burnLanterns() {
 // Burn down all lit lanterns. 
   for ( uint8_t i=0; i<16; i++ ) {
-    lantern[i].burnDown(); 
+    lantern.burnDown( i ); 
   }
 }
 
@@ -211,7 +223,6 @@ void initialisePins() {
                         
 
 void setup() {
-  for ( uint8_t i=0; i<16; i++ ) { lantern[i].setIndex(i); }
   initialisePins();
   shiftRegister.reset();
 
