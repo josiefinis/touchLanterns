@@ -6,7 +6,7 @@
 #define MONITOR_EVENTS                      0
 #define MONITOR_TIMINGS                     0
 #define MONITOR_RAW_INPUT                   0
-#define MONITOR_NORMALISED_INPUT            0
+#define MONITOR_NORMALISED_INPUT            1
 #define MONITOR_LANTERN_INPUT               0
 #define MONITOR_STATE                       0
 #define MONITOR_BRIGHTNESS                  0

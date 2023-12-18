@@ -8,7 +8,7 @@
 
 // Create class instances.
 Register shiftRegister;         // Writes to SIPO register chip.
-PWMSignal pwmSignal;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
+PWMSignal pwm;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
 Sensor sensor = Sensor();       // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
 const uint16_t neighbourList[16] = 
 { 
@@ -43,30 +43,8 @@ void updateLanterns() {
   lantern.pushSensor( idx, pollSensor() );
   lantern.update( idx );
   for ( uint8_t i=0; i<16; i++ ) {
-      pwmSignal.changeDuty( i, lantern.getBrightness( i ) );
+      pwm.changeDuty( i, lantern.getBrightness( i ) );
   }
-}
-
-
-void pwmCycle1stHalf() {
-  pwmSignal.periodStart();
-  shiftRegister.writeToStorageRegister( pwmSignal.getSignal() );
-  lantern.pushSensor( idx, pollSensor() );
-  lantern.update( idx );
-  for ( uint8_t i=0; i<16; i++ ) {
-      pwmSignal.changeDuty( i, lantern.getBrightness( i ) );
-  }
-  pwmSignal.nextEdge();
-  edgeAtMicros = pwmSignal.getTime();
-  idx = sensor.nextMuxChannel();
-}
-
-
-void pwmCycle2ndHalf() {
-// Second half of PWM cycle
-  shiftRegister.writeToStorageRegister( pwmSignal.getSignal() );
-  pwmSignal.nextEdge();
-  edgeAtMicros = pwmSignal.getTime();
 }
 
 
@@ -78,12 +56,34 @@ void burnLanterns() {
 }
 
 
+void pwmCycle1stHalf() {
+  pwm.periodStart();
+  shiftRegister.writeToStorageRegister( pwm.getSignal() ); // TODO change to shorter name
+  lantern.pushSensor( idx, pollSensor() );
+  lantern.update( idx );
+  for ( uint8_t i=0; i<16; i++ ) {
+      pwm.changeDuty( i, lantern.getBrightness( i ) );
+  }
+  pwm.nextEdge();
+  edgeAtMicros = pwm.getTime();
+  idx = sensor.nextMuxChannel();
+}
+
+
+void pwmCycle2ndHalf() {
+// Second half of PWM cycle
+  shiftRegister.writeToStorageRegister( pwm.getSignal() );
+  pwm.nextEdge();
+  edgeAtMicros = pwm.getTime();
+}
+
+
 void initialisePins() {
   // Set pins I/O.
-  pinMode(PIN_SENSOR_RECEIVE, INPUT);
-  pinMode(PIN_SENSOR_SEND, OUTPUT);
   DDRB |= PIN_REGISTER_SER | PIN_REGISTER_NOT_OE | PIN_REGISTER_NOT_SRCLR | PIN_REGISTER_RCLK | PIN_REGISTER_SRCLK;
   DDRD |= PIN_MUX_S0 | PIN_MUX_S1 | PIN_MUX_S2 | PIN_MUX_S3;
+  pinMode(PIN_SENSOR_RECEIVE, INPUT);
+  pinMode(PIN_SENSOR_SEND, OUTPUT);
 }
 
 

@@ -9,7 +9,7 @@
 #include "Arduino.h"
 
 
-PWMSignal::PWMSignal()
+PWMSignal::PWMSignal() {
   // Make zeroth node with signal = 0 and time = 0
   : signal( 0 )
   , time( 0 )
