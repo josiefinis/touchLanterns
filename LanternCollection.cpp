@@ -8,6 +8,7 @@
 #define LANTERN_COLLECTION_CPP
 
 #include "LanternCollection.h"
+#include "Global.h"
 
 
 LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjacencyList ) 
@@ -47,24 +48,21 @@ void LanternCollection::burnDown( uint8_t idx ) {
 
 
 void LanternCollection::makeTree( uint8_t root ) {
-  uint8_t delay = 0;
   uint8_t parentList[ 16 ];
   Tree tree = Tree( 16, parentList );
   makeSpanningTree( &tree, root );            
-  printTree( tree );
+  //printTree( tree );
   for ( uint8_t i=0; i<16; i++ ) {
-    delay += 3 + Random::pull( 2 );                         // TODO delay should increase down the tree not with increasing index.
     if ( i == root ) { continue; }
     Lantern* parent = &collection[ tree.getParent( i ) ];
     Lantern* child = &collection[ i ];
     child->setParent( parent );
     child->setState( WAIT );
-    child->setOutput( SET_DELAY | delay );                  // TODO SET_DELAY as implemented cannot set a delay longer than 0x3F. implement as log value? or shorter delay? 
-    child->setDelay();                                      //      0x3F * 160 ms = 10 s which should be long enough.
   }
 }
 
 
+#if SERIAL_ON
   void LanternCollection::printTree( const Tree& tree ) {
     Serial.println();
     for ( uint8_t i=0; i<16; i++ ) {
@@ -87,4 +85,5 @@ void LanternCollection::makeTree( uint8_t root ) {
   uint8_t LanternCollection::getOutput( uint8_t idx ) {
     return collection[ idx ].getOutput();
   }
+#endif
 #endif

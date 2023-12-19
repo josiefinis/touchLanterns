@@ -77,9 +77,10 @@ class Lantern : public StateMachine {
 #define ROOT_PAUSE_DOWN             0x14
 #define ROOT_PAUSE_UP               0x15
 #define WAIT                        0x16
-#define WAIT_FULL_DOWN              0x17
-#define WAIT_FULL_UP                0x18
-#define FOLLOW                      0x19
+#define GO_FULL_DOWN                0x17
+#define GO_FULL_UP                  0x18
+#define GO_FOLLOW                   0x19
+#define FOLLOW                      0x1A
 /*
 ========================================
         Input
@@ -100,7 +101,7 @@ class Lantern : public StateMachine {
 #define PARENT_IS_IDLE              0x0C
 #define PARENT_IS_FULL_DOWN         0x0D
 #define PARENT_IS_FULL_UP           0x0E
-#define PARENT_IS_WAIT_OR_FOLLOW    0x0F
+#define PARENT_IS_FOLLOW            0x0F
 #define DONT_CARE                   0xFF
 /*
 ========================================
@@ -121,15 +122,17 @@ class Lantern : public StateMachine {
 #define MAKE_TREE                   0x0B  
 #define LEAVE_TREE                  0x0C  
 #define REDUCE_DELAY                0x0D      
-#define SET_DELAY                   0x40      // Specify delay e.g. SET_DELAY | 8
-#define LOWER_BRIGHTNESS            0x80      // Specify step size e.g. LOWER_BRIGHTNESS | 1
-#define RAISE_BRIGHTNESS            0xC0      // Specify step size e.g. RAISE_BRIGHTNESS | 5
+#define SET_DELAY                   0x40      // Specify log2 delay e.g. SET_DELAY | 3
+#define LOWER_BRIGHTNESS            0x80      // Specify log2 step size e.g. LOWER_BRIGHTNESS | 1
+#define RAISE_BRIGHTNESS            0xC0      // Specify log2 step size e.g. RAISE_BRIGHTNESS | 5
                       
                       
                       
                       
 
 #define FULL_BRIGHTNESS             0xFF
+#define HALF_BRIGHTNESS             0x80
 #define ONE_BRIGHTNESS              0x01
+#define RANDOM_DELAY                0x20        // Specify log2 upperbound e.g. SET_DELAY | RANDOM_DELAY | 3
 
 #endif

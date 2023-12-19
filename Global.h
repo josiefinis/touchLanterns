@@ -7,9 +7,9 @@
 #define MONITOR_TIMINGS                     0
 #define MONITOR_RAW_INPUT                   0
 #define MONITOR_NORMALISED_INPUT            0
-#define MONITOR_INPUT                       1
-#define MONITOR_STATE                       1
-#define MONITOR_OUTPUT                      1
+#define MONITOR_INPUT                       0
+#define MONITOR_STATE                       0
+#define MONITOR_OUTPUT                      0
 #define MONITOR_BRIGHTNESS                  0
 #define MONITOR_BRIGHTNESS_PER_CYCLE        0
 #define MONITOR_MAKE_TREE                   0

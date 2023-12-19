@@ -47,15 +47,6 @@ bool pollSensor() {
 }
 
 
-void updateLanterns() {
-  lantern.sense( idx, pollSensor() );
-  lantern.update( idx );
-  for ( uint8_t i=0; i<16; i++ ) {
-      pwm.changeDuty( i, lantern.getBrightness( i ) );
-  }
-}
-
-
 void burnLanterns() {
 // Burn down all lit lanterns. 
   for ( uint8_t i=0; i<16; i++ ) {

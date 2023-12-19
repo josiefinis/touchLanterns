@@ -1,0 +1,13 @@
+* failure to exit FLICKER. missing FALLING_EDGE? HOW?
+  - could try adding another case for edges or modifying existing   e.g. 100 and 1000
+  - really shouldn't be missing them though.
+* PULSE to mark end of PAUSE
+* floor at 128 for INIT_DOWN
+* check speed
+* reduce memory used by global variables
+  - reduce size of transition matrix or try putting it in PROGMEM
+* play with DELAY timings for tree.
+
+
+
+
