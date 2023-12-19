@@ -25,22 +25,22 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     IDLE                    , DONT_CARE                     , IDLE                      , REDUCE_DELAY                  }
   , {     GO_IDLE                 , DONT_CARE                     , IDLE                      , SET_REF_TO_BRIGHTNESS         } 
 
-  , {     INIT_DOWN               , FALLING_EDGE                  , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
+  , {     INIT_DOWN               , NOT_TOUCHED                   , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
   , {     INIT_DOWN               , MEDIUM_TOUCH                  , FLICKER_DOWN              , START_FLICKER                 } 
   , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 3          } 
     
-  , {     INIT_UP                 , FALLING_EDGE                  , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
+  , {     INIT_UP                 , NOT_TOUCHED                   , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
   , {     INIT_UP                 , MEDIUM_TOUCH                  , FLICKER_UP                , START_FLICKER                 } 
   , {     INIT_UP                 , DONT_CARE                     , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
 
   , {     FULL_DOWN               , DONT_CARE                     , GO_OUT                    , SET_BRIGHTNESS_TO_ZERO        } 
   , {     FULL_UP                 , DONT_CARE                     , GO_IDLE                   , SET_BRIGHTNESS_TO_FULL        } 
 
-  , {     FLICKER_DOWN            , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
+  , {     FLICKER_DOWN            , NOT_TOUCHED                   , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
   , {     FLICKER_DOWN            , LONG_TOUCH                    , ROOT_FULL_DOWN            , MAKE_TREE                     } 
   , {     FLICKER_DOWN            , DONT_CARE                     , FLICKER_DOWN              , FLICKER                       } 
     
-  , {     FLICKER_UP              , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
+  , {     FLICKER_UP              , NOT_TOUCHED                   , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
   , {     FLICKER_UP              , LONG_TOUCH                    , ROOT_FULL_UP              , MAKE_TREE                     } 
   , {     FLICKER_UP              , DONT_CARE                     , FLICKER_UP                , FLICKER                       } 
 
@@ -70,11 +70,11 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     ROOT_FULL_UP            , LONG_TOUCH_FALLING_EDGE       , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
   , {     ROOT_FULL_UP            , DONT_CARE                     , ROOT_FULL_UP              , RAISE_BRIGHTNESS | 8          } 
 
-  , {     ROOT_FLICKER_DOWN       , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
+  , {     ROOT_FLICKER_DOWN       , NOT_TOUCHED                   , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
   , {     ROOT_FLICKER_DOWN       , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_DOWN            , MAKE_TREE                     } 
   , {     ROOT_FLICKER_DOWN       , DONT_CARE                     , ROOT_FLICKER_DOWN         , FLICKER                       } 
     
-  , {     ROOT_FLICKER_UP         , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
+  , {     ROOT_FLICKER_UP         , NOT_TOUCHED                   , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
   , {     ROOT_FLICKER_UP         , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_UP              , MAKE_TREE                     } 
   , {     ROOT_FLICKER_UP         , DONT_CARE                     , ROOT_FLICKER_UP           , FLICKER                       } 
 
@@ -127,7 +127,7 @@ Lantern::Lantern()
 {}
 
 
-void Lantern::pushSensor( bool value ) {
+void Lantern::sense( bool value ) {
   sensorRegister <<= 1;
   sensorRegister |= value;
 }
@@ -151,6 +151,13 @@ uint8_t Lantern::classifySensorInput( void ) {
     
     case 0x2:
       return FALLING_EDGE;
+  }
+  switch ( sensorRegister & 1 ) {
+    case 0x0:
+      return NOT_TOUCHED;
+    
+    case 0x1:
+      return TOUCHED;
   }
   return DONT_CARE;
 }

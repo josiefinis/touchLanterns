@@ -26,6 +26,14 @@ uint32_t pwmPhase0 = micros();
 uint16_t edgeAtMicros = 0xFFFF;
 uint32_t lastBurnMillis = millis();
 uint8_t startupCounter = 96;
+#if SERIAL_ON
+uint32_t lastMonitorMillis = millis();
+#endif
+#if MONITOR_REGISTER_SIGNAL
+uint8_t MONITORidx = 0;
+uint16_t edgeAtMicrosMONITOR[32];
+uint16_t signalMONITOR[32];
+#endif
 
 
 bool pollSensor() {
@@ -40,7 +48,7 @@ bool pollSensor() {
 
 
 void updateLanterns() {
-  lantern.pushSensor( idx, pollSensor() );
+  lantern.sense( idx, pollSensor() );
   lantern.update( idx );
   for ( uint8_t i=0; i<16; i++ ) {
       pwm.changeDuty( i, lantern.getBrightness( i ) );
@@ -59,10 +67,11 @@ void burnLanterns() {
 void pwmCycle1stHalf() {
   pwm.periodStart();
   shiftRegister.writeToStorageRegister( pwm.getSignal() ); // TODO change to shorter name
-  lantern.pushSensor( idx, pollSensor() );
+  lantern.sense( idx, pollSensor() );
   lantern.update( idx );
   for ( uint8_t i=0; i<16; i++ ) {
-      pwm.changeDuty( i, lantern.getBrightness( i ) );
+    lantern.changeBrightness( i );
+    pwm.changeDuty( i, lantern.getBrightness( i ) );
   }
   pwm.nextEdge();
   edgeAtMicros = pwm.getTime();
@@ -77,6 +86,109 @@ void pwmCycle2ndHalf() {
   edgeAtMicros = pwm.getTime();
 }
 
+#if SERIAL_ON
+void printIndices() {
+  Serial.println();
+  for ( uint8_t i=0; i<16; i++ ) {
+    Serial.print( i, HEX ); Serial.print( "\t" );
+  }
+  Serial.println(); 
+  for ( uint8_t i=0; i<16; i++ ) {
+    Serial.print("========");
+  }
+  Serial.println();
+}
+#endif
+
+
+
+#if SERIAL_ON
+void printLantern( uint8_t idx ) {
+  #if MONITOR_INPUT
+    Serial.print( lantern.getInput( idx ), HEX ); 
+  #endif
+  #if MONITOR_STATE
+    Serial.print( "s" ); 
+    Serial.print( lantern.getState( idx ), HEX ); 
+  #endif
+  #if MONITOR_OUTPUT
+    Serial.print( "o" ); 
+    Serial.print( lantern.getOutput( idx ), HEX ); 
+  #endif
+}
+
+
+void printLine() {
+  bool chosenIndex = 0xF;
+  bool all = 1;
+  Serial.println();
+  for ( uint8_t i = 0; i < 16; i++ ) { 
+    if ( all ) { 
+      uint8_t& idx = i;
+      printLantern( idx );
+    }
+    if ( not all and i == 0 ) {
+      uint8_t idx = chosenIndex;
+      printLantern( idx );
+    }
+    #if MONITOR_BRIGHTNESS
+      Serial.print( "b" ); 
+      Serial.print( lantern.getBrightness( idx ) ); 
+    #endif
+    Serial.print( "\t" );
+  }
+}
+#endif
+
+
+#if MONITOR_PARENT
+void printParent() {
+  for ( uint8_t i=0; i<16; i++ ) { 
+    if ( lantern.getParent( i ) ) {
+      Serial.print( lantern[i].getParent()->getIndex(), HEX ); 
+    }
+    Serial.print( "\t" );
+  }
+  Serial.println();
+}
+#endif
+
+
+#if MONITOR_DELAY
+void printDelay() {
+  for ( uint8_t i=0; i<16; i++ ) { Serial.print(lantern[i].getDelay()); Serial.print(" ds\t"); }
+  Serial.println();
+}
+#endif
+
+
+#if MONITOR_REGISTER_SIGNAL
+void printRegisterSignal() {
+  Serial.print("\nInterval\tSignal\n"); 
+  for ( uint8_t i=0; i<32; i++ ) {
+    //Serial.print(microsMONITOR[MONITORidx & 0x1F], BIN); Serial.print("\t");
+    Serial.print(edgeAtMicrosMONITOR[MONITORidx & 0x1F]); Serial.print("\t");
+    Serial.print(signalMONITOR[MONITORidx & 0x1F], BIN); Serial.print("\n");
+    MONITORidx++;
+  }
+}
+#endif
+
+
+#if MONITOR_TIMINGS
+void printTimings() {
+  Serial.print("Sensor input:\t"); 
+  Serial.print(inputTimer.getMean()); Serial.print("\t"); 
+  Serial.println(inputTimer.getMax());
+  Serial.print("Lantern update:\t"); 
+  Serial.print(updateTimer.getMean()); Serial.print("\t"); 
+  Serial.println(updateTimer.getMax());
+  Serial.print("Brightness:\t"); 
+  Serial.print(brightnessTimer.getMean()); Serial.print("\t"); 
+  Serial.println(brightnessTimer.getMax());
+  Serial.println();
+}
+#endif
 
 void initialisePins() {
   // Set pins I/O.
@@ -94,6 +206,13 @@ void setup() {
   #if SERIAL_ON
     Serial.begin(9600);		
     while(!Serial) {}
+    #if MONITOR_REGISTER_SIGNAL
+      for ( uint8_t i=0; i<16; i++ ) {
+        edgeAtMicrosMONITOR[i] = 0;
+        signalMONITOR[i] = 0;
+        //microsMONITOR[i] = 0;
+      }
+    #endif
   #endif
 }
 
@@ -116,4 +235,30 @@ void loop() {
     lastBurnMillis = currentMillis;
     burnLanterns();
   }
+
+  #if SERIAL_ON
+  if ( currentMillis - lastMonitorMillis >= MONITOR_INTERVAL ) {
+    lastMonitorMillis = currentMillis;
+
+    if ( millis() % (8 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
+      printIndices();
+    }
+    printLine();
+    #if MONITOR_TIMINGS
+    printTimings();
+    #endif
+    #if MONITOR_PARENT
+    printParent();
+    #endif
+    #if MONITOR_DELAY
+    printDelay();
+    #endif
+    #if MONITOR_PWM_LIST
+    pwmSignal.printSignalList(); Serial.print("\n");
+    #endif
+    #if MONITOR_REGISTER_SIGNAL
+    printRegisterSignal();
+    #endif
+  }
+  #endif
 }

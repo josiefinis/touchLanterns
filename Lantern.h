@@ -18,7 +18,7 @@ class Lantern : public StateMachine {
     static const TransitionMatrix transitionMatrix;
     Lantern();
 
-    void pushSensor( bool value );
+    void sense( bool value );
     uint8_t classifySensorInput( void );
     uint8_t classifyParentInput( void );
     uint8_t classifyBrightnessInput( void );
@@ -86,19 +86,21 @@ class Lantern : public StateMachine {
 ========================================
 */
 #define NO_INPUT                    0x00
-#define RISING_EDGE                 0x01    
-#define FALLING_EDGE                0x02
-#define MEDIUM_TOUCH                0x03
-#define LONG_TOUCH                  0x04
-#define LONG_TOUCH_FALLING_EDGE     0x05
-#define AT_ZERO_BRIGHTNESS          0x06
-#define AT_ONE_BRIGHTNESS           0x07
-#define AT_FULL_BRIGHTNESS          0x08 
-#define AT_ZERO_DELAY               0x09 
-#define PARENT_IS_IDLE              0x0A
-#define PARENT_IS_FULL_DOWN         0x0B
-#define PARENT_IS_FULL_UP           0x0C
-#define PARENT_IS_WAIT_OR_FOLLOW    0x0D
+#define TOUCHED                     0x01
+#define NOT_TOUCHED                 0x02    
+#define RISING_EDGE                 0x03    
+#define FALLING_EDGE                0x04
+#define MEDIUM_TOUCH                0x05
+#define LONG_TOUCH                  0x06
+#define LONG_TOUCH_FALLING_EDGE     0x07
+#define AT_ZERO_BRIGHTNESS          0x08
+#define AT_ONE_BRIGHTNESS           0x09
+#define AT_FULL_BRIGHTNESS          0x0A 
+#define AT_ZERO_DELAY               0x0B 
+#define PARENT_IS_IDLE              0x0C
+#define PARENT_IS_FULL_DOWN         0x0D
+#define PARENT_IS_FULL_UP           0x0E
+#define PARENT_IS_WAIT_OR_FOLLOW    0x0F
 #define DONT_CARE                   0xFF
 /*
 ========================================
