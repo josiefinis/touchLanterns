@@ -17,13 +17,13 @@ Tree structure is defined as a list of each nodes parents.
 
 class Tree {
   public:
-    Tree( uint8_t* parentList, uint8_t size );
-    void setParent( uint8_t child, uint8_t parent );
-    uint8_t getParent( uint8_t index );
+    Tree( const uint8_t size, uint8_t* parentList );
     uint8_t getSize();
+    uint8_t getParent( uint8_t idx );
+    void setParent( uint8_t idx, uint8_t parent );
 
   private:
+    const uint8_t size;
     uint8_t* parentList;
-    uint8_t size;
 };
 #endif
