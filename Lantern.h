@@ -28,10 +28,11 @@ class Lantern : public StateMachine {
     bool changeBrightness( void );
     void burnDown( void );
 
+    uint8_t getReferenceBrightness( void );
     uint8_t getBrightness( void );
     void setBrightness( uint8_t value );
     uint8_t getStepSize( void );
-    void setStepSize();
+    void setStepSize( uint8_t value );
     void setDelay();
     Lantern* getParent( void );
     void setParent( Lantern* parent );
@@ -44,6 +45,8 @@ class Lantern : public StateMachine {
     uint16_t brightness;
     Lantern* parent;
     uint8_t delay;
+    void lowerBrightness( void );
+    void raiseBrightness( void );
     bool isUndershoot();
     bool isOvershoot();
 };
@@ -87,21 +90,19 @@ class Lantern : public StateMachine {
 ========================================
 */
 #define NO_INPUT                    0x00
-#define TOUCHED                     0x01
-#define NOT_TOUCHED                 0x02    
-#define RISING_EDGE                 0x03    
-#define FALLING_EDGE                0x04
-#define MEDIUM_TOUCH                0x05
-#define LONG_TOUCH                  0x06
-#define LONG_TOUCH_FALLING_EDGE     0x07
-#define AT_ZERO_BRIGHTNESS          0x08
-#define AT_ONE_BRIGHTNESS           0x09
-#define AT_FULL_BRIGHTNESS          0x0A 
-#define AT_ZERO_DELAY               0x0B 
-#define PARENT_IS_IDLE              0x0C
-#define PARENT_IS_FULL_DOWN         0x0D
-#define PARENT_IS_FULL_UP           0x0E
-#define PARENT_IS_FOLLOW            0x0F
+#define RISING_EDGE                 0x01    
+#define FALLING_EDGE                0x02
+#define MEDIUM_TOUCH                0x03
+#define LONG_TOUCH                  0x04
+#define LONG_TOUCH_FALLING_EDGE     0x05
+#define AT_ZERO_BRIGHTNESS          0x06
+#define AT_ONE_BRIGHTNESS           0x07
+#define AT_FULL_BRIGHTNESS          0x08 
+#define AT_ZERO_DELAY               0x09 
+#define PARENT_IS_FULL_DOWN         0x0A
+#define PARENT_IS_FULL_UP           0x0B
+#define PARENT_IS_FOLLOW            0x0C
+#define MATCHED_PARENT              0x0D
 #define DONT_CARE                   0xFF
 /*
 ========================================

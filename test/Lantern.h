@@ -18,7 +18,7 @@ class Lantern : public StateMachine {
     static const TransitionMatrix transitionMatrix;
     Lantern();
 
-    void pushSensor( bool value );
+    void sense( bool value );
     uint8_t classifySensorInput( void );
     uint8_t classifyParentInput( void );
     uint8_t classifyBrightnessInput( void );
@@ -77,28 +77,31 @@ class Lantern : public StateMachine {
 #define ROOT_PAUSE_DOWN             0x14
 #define ROOT_PAUSE_UP               0x15
 #define WAIT                        0x16
-#define WAIT_FULL_DOWN              0x17
-#define WAIT_FULL_UP                0x18
-#define FOLLOW                      0x19
+#define GO_FULL_DOWN                0x17
+#define GO_FULL_UP                  0x18
+#define GO_FOLLOW                   0x19
+#define FOLLOW                      0x1A
 /*
 ========================================
         Input
 ========================================
 */
 #define NO_INPUT                    0x00
-#define RISING_EDGE                 0x01    
-#define FALLING_EDGE                0x02
-#define MEDIUM_TOUCH                0x03
-#define LONG_TOUCH                  0x04
-#define LONG_TOUCH_FALLING_EDGE     0x05
-#define AT_ZERO_BRIGHTNESS          0x06
-#define AT_ONE_BRIGHTNESS           0x07
-#define AT_FULL_BRIGHTNESS          0x08 
-#define AT_ZERO_DELAY               0x09 
-#define PARENT_IS_IDLE              0x0A
-#define PARENT_IS_FULL_DOWN         0x0B
-#define PARENT_IS_FULL_UP           0x0C
-#define PARENT_IS_WAIT_OR_FOLLOW    0x0D
+#define TOUCHED                     0x01
+#define NOT_TOUCHED                 0x02    
+#define RISING_EDGE                 0x03    
+#define FALLING_EDGE                0x04
+#define MEDIUM_TOUCH                0x05
+#define LONG_TOUCH                  0x06
+#define LONG_TOUCH_FALLING_EDGE     0x07
+#define AT_ZERO_BRIGHTNESS          0x08
+#define AT_ONE_BRIGHTNESS           0x09
+#define AT_FULL_BRIGHTNESS          0x0A 
+#define AT_ZERO_DELAY               0x0B 
+#define PARENT_IS_IDLE              0x0C
+#define PARENT_IS_FULL_DOWN         0x0D
+#define PARENT_IS_FULL_UP           0x0E
+#define PARENT_IS_FOLLOW            0x0F
 #define DONT_CARE                   0xFF
 /*
 ========================================
@@ -119,15 +122,17 @@ class Lantern : public StateMachine {
 #define MAKE_TREE                   0x0B  
 #define LEAVE_TREE                  0x0C  
 #define REDUCE_DELAY                0x0D      
-#define SET_DELAY                   0x40      // Specify delay e.g. SET_DELAY | 8
-#define LOWER_BRIGHTNESS            0x80      // Specify step size e.g. LOWER_BRIGHTNESS | 1
-#define RAISE_BRIGHTNESS            0xC0      // Specify step size e.g. RAISE_BRIGHTNESS | 5
+#define SET_DELAY                   0x40      // Specify log2 delay e.g. SET_DELAY | 3
+#define LOWER_BRIGHTNESS            0x80      // Specify log2 step size e.g. LOWER_BRIGHTNESS | 1
+#define RAISE_BRIGHTNESS            0xC0      // Specify log2 step size e.g. RAISE_BRIGHTNESS | 5
                       
                       
                       
                       
 
 #define FULL_BRIGHTNESS             0xFF
+#define HALF_BRIGHTNESS             0x80
 #define ONE_BRIGHTNESS              0x01
+#define RANDOM_DELAY                0x20        // Specify log2 upperbound e.g. SET_DELAY | RANDOM_DELAY | 3
 
 #endif

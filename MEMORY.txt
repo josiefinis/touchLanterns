@@ -153,3 +153,24 @@ Should break up and simplify Lantern class
   StateMachine
 
 
+several days later
+
+
+    Wrote a new set of classes
+    LanternCollection : Graph
+    Lantern : StateMachine
+    StateMachine
+    TransitionMatrix
+    StateTransition
+
+
+
+    Not sure how happy I am with the result though. The transition matrix, although compact, still takes up nearly 300 bytes ( 4 bytes per defined transition ).
+    Want to try using PROGMEM but it is currently a 1D array of StateTransition objects so think I need (or at least should) store it as a plain integer array.
+    This should be straightforward since the StateTransition class is simple with four 1-byte members that will fit nicely in a uint32_t array.
+
+    So plan is to change type of array in TransitionMatrix class and update methods 
+
+
+
+

@@ -11,15 +11,14 @@
 // TODO Make flicker look better.
 // TODO Make different variations of flicker or other effects.
 // TODO handle INIT_DOWN when low brightness
-// TODO set delay 0 when coming out of WAITING (or make sure it doesn't matter)
 
-#define TRANSITION_MATRIX_ROWS      77
+#define TRANSITION_MATRIX_ROWS      72
 
 const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = { 
 
     {     OUT                     , RISING_EDGE                   , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
   , {     GO_OUT                  , DONT_CARE                     , OUT                       , NO_CHANGE                     }  
-  , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 4          } 
+  , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 4          } // TODO make faster but need floor at 128
   , {     IDLE                    , AT_ZERO_BRIGHTNESS            , GO_OUT                    , SET_REFERENCE_TO_ZERO         } 
   , {     IDLE                    , AT_ZERO_DELAY                 , IDLE                      , TRACK_REFERENCE               } 
   , {     IDLE                    , DONT_CARE                     , IDLE                      , REDUCE_DELAY                  }
@@ -27,7 +26,7 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
 
   , {     INIT_DOWN               , FALLING_EDGE                  , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
   , {     INIT_DOWN               , MEDIUM_TOUCH                  , FLICKER_DOWN              , START_FLICKER                 } 
-  , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 3          } 
+  , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 3          } // TODO make faster but need floor at 128
     
   , {     INIT_UP                 , FALLING_EDGE                  , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
   , {     INIT_UP                 , MEDIUM_TOUCH                  , FLICKER_UP                , START_FLICKER                 } 
@@ -45,23 +44,23 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     FLICKER_UP              , DONT_CARE                     , FLICKER_UP                , FLICKER                       } 
 
   , {     AUTO_DOWN               , RISING_EDGE                   , PAUSE_DOWN                , PULSE                         } 
-  , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 8                 } 
+  , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 3                 } 
   , {     AUTO_DOWN               , DONT_CARE                     , AUTO_DOWN                 , LOWER_BRIGHTNESS | 1          } 
 
   , {     AUTO_UP                 , RISING_EDGE                   , PAUSE_UP                  , PULSE                         } 
-  , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 8                 } 
+  , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 3                 } 
   , {     AUTO_UP                 , DONT_CARE                     , AUTO_UP                   , RAISE_BRIGHTNESS | 1          } 
 
   , {     PAUSE_DOWN              , RISING_EDGE                   , AUTO_UP                   , PULSE                         } 
-  , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 8                 } 
+  , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 3                 } 
   , {     PAUSE_DOWN              , MEDIUM_TOUCH                  , ROOT_FLICKER_DOWN         , START_FLICKER                 } 
-  , {     PAUSE_DOWN              , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
+  , {     PAUSE_DOWN              , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     PAUSE_DOWN              , DONT_CARE                     , PAUSE_DOWN                , REDUCE_DELAY                  } 
 
   , {     PAUSE_UP                , RISING_EDGE                   , AUTO_DOWN                 , PULSE                         } 
-  , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 8                 } 
+  , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 3                 } 
   , {     PAUSE_UP                , MEDIUM_TOUCH                  , ROOT_FLICKER_UP           , START_FLICKER                 } 
-  , {     PAUSE_UP                , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
+  , {     PAUSE_UP                , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     PAUSE_UP                , DONT_CARE                     , PAUSE_UP                  , REDUCE_DELAY                  } 
 
   , {     ROOT_FULL_DOWN          , LONG_TOUCH_FALLING_EDGE       , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
@@ -79,37 +78,31 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     ROOT_FLICKER_UP         , DONT_CARE                     , ROOT_FLICKER_UP           , FLICKER                       } 
 
   , {     ROOT_AUTO_DOWN          , RISING_EDGE                   , ROOT_PAUSE_DOWN           , PULSE                         } 
-  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 8                 } 
+  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 3                 } 
   , {     ROOT_AUTO_DOWN          , DONT_CARE                     , ROOT_AUTO_DOWN            , LOWER_BRIGHTNESS | 1          } 
 
   , {     ROOT_AUTO_UP            , RISING_EDGE                   , ROOT_PAUSE_UP             , PULSE                         } 
-  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 8                 } 
+  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 3                 } 
   , {     ROOT_AUTO_UP            , DONT_CARE                     , ROOT_AUTO_UP              , RAISE_BRIGHTNESS | 1          } 
 
   , {     ROOT_PAUSE_DOWN         , RISING_EDGE                   , ROOT_AUTO_UP              , PULSE                         } 
-  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 8                 } 
-  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
+  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 3                 } 
+  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     ROOT_PAUSE_DOWN         , DONT_CARE                     , ROOT_PAUSE_DOWN           , REDUCE_DELAY                  } 
 
   , {     ROOT_PAUSE_UP           , RISING_EDGE                   , ROOT_AUTO_DOWN            , PULSE                         } 
-  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 8                 } 
-  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   , REDUCE_DELAY                  } 
+  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 3                 } 
+  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     ROOT_PAUSE_UP           , DONT_CARE                     , ROOT_PAUSE_UP             , REDUCE_DELAY                  } 
 
-  , {     WAIT                    , AT_ZERO_DELAY                 , FOLLOW                    , REDUCE_DELAY                  } 
-  , {     WAIT                    , PARENT_IS_FULL_DOWN           , WAIT_FULL_DOWN            , REDUCE_DELAY                  } 
-  , {     WAIT                    , PARENT_IS_FULL_UP             , WAIT_FULL_UP              , REDUCE_DELAY                  } 
-  , {     WAIT                    , DONT_CARE                     , WAIT                      , REDUCE_DELAY                  } 
+  , {     WAIT                    , PARENT_IS_FULL_DOWN           , GO_FULL_DOWN              , SET_DELAY | RANDOM_DELAY | 3  } 
+  , {     WAIT                    , PARENT_IS_FULL_UP             , GO_FULL_UP                , SET_DELAY | RANDOM_DELAY | 3  } 
+  , {     WAIT                    , PARENT_IS_FOLLOW              , GO_FOLLOW                 , SET_DELAY | RANDOM_DELAY | 3  } 
+  , {     WAIT                    , DONT_CARE                     , WAIT                      ,                               } 
 
-  , {     WAIT_FULL_DOWN          , AT_ZERO_DELAY                 , FULL_DOWN                 , REDUCE_DELAY                  } 
-  , {     WAIT_FULL_DOWN          , PARENT_IS_FULL_UP             , WAIT_FULL_UP              , REDUCE_DELAY                  } 
-  , {     WAIT_FULL_DOWN          , PARENT_IS_WAIT_OR_FOLLOW      , WAIT                      , REDUCE_DELAY                  } 
-  , {     WAIT_FULL_DOWN          , DONT_CARE                     , WAIT_FULL_DOWN            , REDUCE_DELAY                  } 
-
-  , {     WAIT_FULL_UP            , AT_ZERO_DELAY                 , FULL_UP                   , REDUCE_DELAY                  } 
-  , {     WAIT_FULL_UP            , PARENT_IS_FULL_DOWN           , WAIT_FULL_DOWN            , REDUCE_DELAY                  } 
-  , {     WAIT_FULL_UP            , PARENT_IS_WAIT_OR_FOLLOW      , WAIT                      , REDUCE_DELAY                  } 
-  , {     WAIT_FULL_UP            , DONT_CARE                     , WAIT_FULL_UP              , REDUCE_DELAY                  } 
+  , {     GO_FULL_DOWN            , AT_ZERO_DELAY                 , FULL_DOWN                 , LEAVE_TREE                    }  
+  , {     GO_FULL_UP              , AT_ZERO_DELAY                 , FULL_UP                   , LEAVE_TREE                    } 
+  , {     GO_FOLLOW               , AT_ZERO_DELAY                 , FOLLOW                    ,                               }
 
   , {     FOLLOW                  , PARENT_IS_IDLE                , GO_IDLE                   , LEAVE_TREE                    }
   , {     FOLLOW                  , DONT_CARE                     , FOLLOW                    , TRACK_PARENT                  }
@@ -127,7 +120,7 @@ Lantern::Lantern()
 {}
 
 
-void Lantern::pushSensor( bool value ) {
+void Lantern::sense( bool value ) {
   sensorRegister <<= 1;
   sensorRegister |= value;
 }
@@ -179,27 +172,20 @@ uint8_t Lantern::classifyParentInput( void ) {
     case FULL_DOWN:
       return PARENT_IS_FULL_DOWN; 
 
-    case WAIT_FULL_DOWN:
-      return PARENT_IS_FULL_DOWN; 
-
     case FULL_UP:
       return PARENT_IS_FULL_UP; 
 
-    case WAIT_FULL_UP:
-      return PARENT_IS_FULL_UP; 
-
-    case WAIT:
-      return PARENT_IS_WAIT_OR_FOLLOW; 
-
     case FOLLOW:
-      return PARENT_IS_WAIT_OR_FOLLOW; 
+      return PARENT_IS_FOLLOW; 
   }
   return DONT_CARE;
 }
 
 
 uint8_t Lantern::prioritiseInput( void ) {
+// Return the highest priority type of input, where priority order is delay, parent, sensor, brightness input.
   if ( delay == 0 ) {                                    
+    delay--;
     return AT_ZERO_DELAY;
   }
   if ( parent ) {
@@ -276,7 +262,6 @@ bool Lantern::updateOutput( void ) {
     case TRACK_REFERENCE:
       setOutput( 0 );
       setStepSize();
-      delay--;
       return 0;
     
     case MAKE_TREE:
@@ -416,7 +401,12 @@ void Lantern::setStepSize( void ) {
 
 
 void Lantern::setDelay( void ) {
-  delay = getOutput() & 0x3F;
+  if ( getOutput() & RANDOM_DELAY ) {
+    delay = Random::pull( getOutput() & 0x3 );
+  }
+  else {
+    delay = 1 << ( getOutput() & 0x3 );
+  }
 }
 
 

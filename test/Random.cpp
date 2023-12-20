@@ -8,6 +8,7 @@
 #define RANDOM_CPP
 
 #include "Random.h"
+#include <chrono>
 
 
 uint8_t Random::stackSize = 0;
@@ -20,6 +21,9 @@ Random::Random() { }
 
 void Random::newPseudoRandom() {
 // Set next pseudorandom number using xorshift algorithm.
+  if ( pseudoRandom == 0 ) { 
+    pseudoRandom = std::chrono::system_clock::now().time_since_epoch().count();
+  }
   pseudoRandom ^= pseudoRandom << 13;
   pseudoRandom ^= pseudoRandom >> 17;
   pseudoRandom ^= pseudoRandom << 5;

@@ -147,8 +147,8 @@ void printParent() {
 
 #if MONITOR_DELAY
 void printDelay() {
-  for ( uint8_t i=0; i<16; i++ ) { Serial.print(lantern[i].getDelay()); Serial.print(" ds\t"); }
   Serial.println();
+  for ( uint8_t i=0; i<16; i++ ) { Serial.print( lantern.getDelay( i ) ); Serial.print( " ds\t" ); }
 }
 #endif
 

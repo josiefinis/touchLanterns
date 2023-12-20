@@ -30,6 +30,7 @@ class LanternCollection : public Graph {
     uint8_t getInput( uint8_t idx );
     uint8_t getState( uint8_t idx );
     uint8_t getOutput( uint8_t idx );
+    uint8_t getDelay( uint8_t idx );
 
   private:
     const uint8_t size;

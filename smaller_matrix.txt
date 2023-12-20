@@ -1,0 +1,65 @@
+
+    {     OUT                     , RISING_EDGE                   , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
+  , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 6          } 
+  , {     IDLE                    , AT_ZERO_BRIGHTNESS            , GO_OUT                    , SET_REFERENCE_TO_ZERO         } 
+
+  , {     INIT_DOWN               , FALLING_EDGE                  , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
+  , {     INIT_DOWN               , MEDIUM_TOUCH                  , FLICKER_DOWN              , START_FLICKER                 } 
+    
+  , {     INIT_UP                 , FALLING_EDGE                  , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
+  , {     INIT_UP                 , MEDIUM_TOUCH                  , FLICKER_UP                , START_FLICKER                 } 
+
+  , {     FLICKER_DOWN            , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
+  , {     FLICKER_DOWN            , LONG_TOUCH                    , ROOT_FULL_DOWN            , MAKE_TREE                     } 
+    
+  , {     FLICKER_UP              , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
+  , {     FLICKER_UP              , LONG_TOUCH                    , ROOT_FULL_UP              , MAKE_TREE                     } 
+
+  , {     AUTO_DOWN               , RISING_EDGE                   , PAUSE_DOWN                , PULSE                         } 
+  , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 3                 } 
+
+  , {     AUTO_UP                 , RISING_EDGE                   , PAUSE_UP                  , PULSE                         } 
+  , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 3                 } 
+
+  , {     PAUSE_DOWN              , RISING_EDGE                   , AUTO_UP                   , PULSE                         } 
+  , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 3                 } 
+  , {     PAUSE_DOWN              , MEDIUM_TOUCH                  , ROOT_FLICKER_DOWN         , START_FLICKER                 } 
+  , {     PAUSE_DOWN              , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
+
+  , {     PAUSE_UP                , RISING_EDGE                   , AUTO_DOWN                 , PULSE                         } 
+  , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 3                 } 
+  , {     PAUSE_UP                , MEDIUM_TOUCH                  , ROOT_FLICKER_UP           , START_FLICKER                 } 
+  , {     PAUSE_UP                , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
+
+  , {     ROOT_FULL_DOWN          , LONG_TOUCH_FALLING_EDGE       , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
+  , {     ROOT_FULL_UP            , LONG_TOUCH_FALLING_EDGE       , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
+
+  , {     ROOT_FLICKER_DOWN       , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
+  , {     ROOT_FLICKER_DOWN       , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_DOWN            , MAKE_TREE                     } 
+    
+  , {     ROOT_FLICKER_UP         , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
+  , {     ROOT_FLICKER_UP         , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_UP              , MAKE_TREE                     } 
+
+  , {     ROOT_AUTO_DOWN          , RISING_EDGE                   , ROOT_PAUSE_DOWN           , PULSE                         } 
+  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 3                 } 
+
+  , {     ROOT_AUTO_UP            , RISING_EDGE                   , ROOT_PAUSE_UP             , PULSE                         } 
+  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 3                 } 
+
+  , {     ROOT_PAUSE_DOWN         , RISING_EDGE                   , ROOT_AUTO_UP              , PULSE                         } 
+  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 3                 } 
+  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
+
+  , {     ROOT_PAUSE_UP           , RISING_EDGE                   , ROOT_AUTO_DOWN            , PULSE                         } 
+  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 3                 } 
+  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
+
+  , {     WAIT                    , PARENT_IS_FULL_DOWN           , GO_FULL_DOWN              , SET_DELAY | RANDOM_DELAY | 3  } 
+  , {     WAIT                    , PARENT_IS_FULL_UP             , GO_FULL_UP                , SET_DELAY | RANDOM_DELAY | 3  } 
+  , {     WAIT                    , PARENT_IS_FOLLOW              , GO_FOLLOW                 , SET_DELAY | RANDOM_DELAY | 3  } 
+
+  , {     GO_FULL_DOWN            , AT_ZERO_DELAY                 , FULL_DOWN                 , LEAVE_TREE                    }  
+  , {     GO_FULL_UP              , AT_ZERO_DELAY                 , FULL_UP                   , LEAVE_TREE                    } 
+  , {     GO_FOLLOW               , AT_ZERO_DELAY                 , FOLLOW                    ,                               }
+
+  , {     FOLLOW                  , xxxxxxxxxxxxxxx               , GO_IDLE                   , LEAVE_TREE                    }

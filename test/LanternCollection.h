@@ -20,10 +20,11 @@ class LanternCollection : public Graph {
   public:
     LanternCollection( const uint8_t size, const uint16_t* adjacencyList );
 
-    void pushSensor( uint8_t idx, bool value );
+    void sense( uint8_t idx, bool value );
     bool update( uint8_t idx );
     bool changeBrightness( uint8_t idx );
     uint8_t getBrightness( uint8_t idx );
+    void burnDown( uint8_t idx);
 
     void print( uint8_t idx );
     TestData exportData( uint8_t idx );

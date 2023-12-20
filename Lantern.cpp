@@ -19,7 +19,7 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
 
     {     OUT                     , RISING_EDGE                   , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
   , {     GO_OUT                  , DONT_CARE                     , OUT                       , NO_CHANGE                     }  
-  , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 4          } // TODO make faster but need floor at 128
+  , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 6          } 
   , {     IDLE                    , AT_ZERO_BRIGHTNESS            , GO_OUT                    , SET_REFERENCE_TO_ZERO         } 
   , {     IDLE                    , AT_ZERO_DELAY                 , IDLE                      , TRACK_REFERENCE               } 
   , {     IDLE                    , DONT_CARE                     , IDLE                      , REDUCE_DELAY                  }
@@ -27,7 +27,7 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
 
   , {     INIT_DOWN               , FALLING_EDGE                  , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
   , {     INIT_DOWN               , MEDIUM_TOUCH                  , FLICKER_DOWN              , START_FLICKER                 } 
-  , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 3          } // TODO make faster but need floor at 128
+  , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 5          } 
     
   , {     INIT_UP                 , FALLING_EDGE                  , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
   , {     INIT_UP                 , MEDIUM_TOUCH                  , FLICKER_UP                , START_FLICKER                 } 
@@ -45,21 +45,21 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     FLICKER_UP              , DONT_CARE                     , FLICKER_UP                , FLICKER                       } 
 
   , {     AUTO_DOWN               , RISING_EDGE                   , PAUSE_DOWN                , PULSE                         } 
-  , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 3                 } 
+  , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 5                 } 
   , {     AUTO_DOWN               , DONT_CARE                     , AUTO_DOWN                 , LOWER_BRIGHTNESS | 1          } 
 
   , {     AUTO_UP                 , RISING_EDGE                   , PAUSE_UP                  , PULSE                         } 
-  , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 3                 } 
+  , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 5                 } 
   , {     AUTO_UP                 , DONT_CARE                     , AUTO_UP                   , RAISE_BRIGHTNESS | 1          } 
 
   , {     PAUSE_DOWN              , RISING_EDGE                   , AUTO_UP                   , PULSE                         } 
-  , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 3                 } 
+  , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 5                 } 
   , {     PAUSE_DOWN              , MEDIUM_TOUCH                  , ROOT_FLICKER_DOWN         , START_FLICKER                 } 
   , {     PAUSE_DOWN              , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     PAUSE_DOWN              , DONT_CARE                     , PAUSE_DOWN                , REDUCE_DELAY                  } 
 
   , {     PAUSE_UP                , RISING_EDGE                   , AUTO_DOWN                 , PULSE                         } 
-  , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 3                 } 
+  , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 5                 } 
   , {     PAUSE_UP                , MEDIUM_TOUCH                  , ROOT_FLICKER_UP           , START_FLICKER                 } 
   , {     PAUSE_UP                , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     PAUSE_UP                , DONT_CARE                     , PAUSE_UP                  , REDUCE_DELAY                  } 
@@ -79,20 +79,20 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     ROOT_FLICKER_UP         , DONT_CARE                     , ROOT_FLICKER_UP           , FLICKER                       } 
 
   , {     ROOT_AUTO_DOWN          , RISING_EDGE                   , ROOT_PAUSE_DOWN           , PULSE                         } 
-  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 3                 } 
+  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 5                 } 
   , {     ROOT_AUTO_DOWN          , DONT_CARE                     , ROOT_AUTO_DOWN            , LOWER_BRIGHTNESS | 1          } 
 
   , {     ROOT_AUTO_UP            , RISING_EDGE                   , ROOT_PAUSE_UP             , PULSE                         } 
-  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 3                 } 
+  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 5                 } 
   , {     ROOT_AUTO_UP            , DONT_CARE                     , ROOT_AUTO_UP              , RAISE_BRIGHTNESS | 1          } 
 
   , {     ROOT_PAUSE_DOWN         , RISING_EDGE                   , ROOT_AUTO_UP              , PULSE                         } 
-  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 3                 } 
+  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 5                 } 
   , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     ROOT_PAUSE_DOWN         , DONT_CARE                     , ROOT_PAUSE_DOWN           , REDUCE_DELAY                  } 
 
   , {     ROOT_PAUSE_UP           , RISING_EDGE                   , ROOT_AUTO_DOWN            , PULSE                         } 
-  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 3                 } 
+  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 5                 } 
   , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
   , {     ROOT_PAUSE_UP           , DONT_CARE                     , ROOT_PAUSE_UP             , REDUCE_DELAY                  } 
 
@@ -105,7 +105,7 @@ const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = {
   , {     GO_FULL_UP              , AT_ZERO_DELAY                 , FULL_UP                   , LEAVE_TREE                    } 
   , {     GO_FOLLOW               , AT_ZERO_DELAY                 , FOLLOW                    ,                               }
 
-  , {     FOLLOW                  , PARENT_IS_IDLE                , GO_IDLE                   , LEAVE_TREE                    }
+  , {     FOLLOW                  , MATCHED_PARENT                , GO_IDLE                   , LEAVE_TREE                    }
   , {     FOLLOW                  , DONT_CARE                     , FOLLOW                    , TRACK_PARENT                  }
 };
 const TransitionMatrix Lantern::transitionMatrix = TransitionMatrix( TRANSITION_MATRIX_ROWS, matrix );
@@ -168,7 +168,10 @@ uint8_t Lantern::classifyBrightnessInput( void ) {
 uint8_t Lantern::classifyParentInput( void ) {
   switch ( parent->getState() ) {
     case IDLE:
-      return PARENT_IS_IDLE; 
+      if ( getBrightness() != referenceBrightness ) {
+        break;
+      }
+      return MATCHED_PARENT; 
 
     case FULL_DOWN:
       return PARENT_IS_FULL_DOWN; 
@@ -177,6 +180,12 @@ uint8_t Lantern::classifyParentInput( void ) {
       return PARENT_IS_FULL_UP; 
 
     case FOLLOW:
+      return PARENT_IS_FOLLOW; 
+
+    case ROOT_AUTO_UP:
+      return PARENT_IS_FOLLOW; 
+
+    case ROOT_AUTO_DOWN:
       return PARENT_IS_FOLLOW; 
   }
   return DONT_CARE;
@@ -211,20 +220,21 @@ bool Lantern::nextState( void ) {
 
 bool Lantern::updateOutput( void ) {
 // 
-  switch ( getOutput() & 0xC0 ) {
+  uint8_t output = getOutput();
+  switch ( output & 0xC0 ) {
     case LOWER_BRIGHTNESS:
-      if ( state == INIT_DOWN ) {
+      if ( getState() == INIT_DOWN ) {
         referenceBrightness = HALF_BRIGHTNESS;
       }
       else {
         referenceBrightness = ONE_BRIGHTNESS;
       }
-      setStepSize();
+      setStepSize( output );
       return 1;
 
     case RAISE_BRIGHTNESS:
       referenceBrightness = FULL_BRIGHTNESS;
-      setStepSize();
+      setStepSize( output );
       return 1;
 
     case SET_DELAY:
@@ -232,7 +242,7 @@ bool Lantern::updateOutput( void ) {
       return 0;
   }
 
-  switch ( getOutput() ) {
+  switch ( output ) {
     case NO_CHANGE:
       return 0;
 
@@ -266,8 +276,7 @@ bool Lantern::updateOutput( void ) {
       return 0;
 
     case TRACK_REFERENCE:
-      setOutput( 0 );
-      setStepSize();
+      setStepSize( 0 );
       return 0;
     
     case MAKE_TREE:
@@ -278,8 +287,9 @@ bool Lantern::updateOutput( void ) {
       return 0;
 
     case TRACK_PARENT:
-      setOutput( 1 );
-      setStepSize();
+      referenceBrightness = parent->getReferenceBrightness();
+      setStepSize( 1 );
+      setOutput( TRACK_REFERENCE );
       return 0;
 
     case LEAVE_TREE:
@@ -296,12 +306,12 @@ bool Lantern::changeBrightness( void ) {
       return 0;
 
     case START_FLICKER:
-      brightness ^= brightness << 2; 
+      brightness ^= brightness << 5; 
       brightness ^= brightness >> 7;
       return 1;
 
     case FLICKER:
-      brightness ^= brightness << 2; 
+      brightness ^= brightness << 5; 
       brightness ^= brightness >> 7;
       return 1;
 
@@ -320,46 +330,45 @@ bool Lantern::changeBrightness( void ) {
 
     case TRACK_REFERENCE:
       if ( getBrightness() > referenceBrightness ) {
-        brightness -= getStepSize();
+        lowerBrightness();
         return 1;
       }
       if ( getBrightness() < referenceBrightness ) {
-        brightness += getStepSize();
-        return 1;
-      }
-
-    case TRACK_PARENT:
-      if ( not parent ) { return 0; };
-      if ( getBrightness() > parent->getBrightness() ) {
-        brightness -= getStepSize();
-        return 1;
-      }
-      if ( getBrightness() < parent->getBrightness() ) {
-        brightness += getStepSize();
+        raiseBrightness();
         return 1;
       }
   }
 
   switch ( getOutput() & 0xC0 ) {
     case LOWER_BRIGHTNESS:
-      if ( isUndershoot() ) {
-        setOutput( NO_CHANGE );
-        setBrightness( referenceBrightness );
-        return 1;
-      }
-      brightness -= getStepSize();
-      return 1;
+      lowerBrightness();
 
     case RAISE_BRIGHTNESS:
-      if ( isOvershoot() ) {
-        setOutput( NO_CHANGE );
-        setBrightness( referenceBrightness );
-        return 1;
-      }
-      brightness += getStepSize();
-      return 1;
+      raiseBrightness();
   }
   return 0;
+}
+
+
+void Lantern::lowerBrightness() {
+  if ( isUndershoot() ) {
+    setOutput( NO_CHANGE );
+    setBrightness( referenceBrightness );
+    return 1;
+  }
+  brightness -= getStepSize();
+  return 1;
+}
+
+
+void Lantern::raiseBrightness() {
+  if ( isOvershoot() ) {
+    setOutput( NO_CHANGE );
+    setBrightness( referenceBrightness );
+    return 1;
+  }
+  brightness += getStepSize();
+  return 1;
 }
 
 
@@ -376,6 +385,11 @@ void Lantern::burnDown() { // TODO change so that lanterns stay near full bright
     newReference = 255;
   }
   referenceBrightness = newReference;
+}
+
+
+uint8_t Lantern::getReferenceBrightness( void ) {
+  return referenceBrightness;
 }
 
 
@@ -400,9 +414,9 @@ uint8_t Lantern::getStepSize( void ) {
 }
 
 
-void Lantern::setStepSize( void ) {
+void Lantern::setStepSize( uint8_t value ) {
   brightness &= ~0xF000;
-  brightness |= ( getOutput() & 0xF ) << 12;
+  brightness |= ( value & 0xF ) << 12;
 }
 
 

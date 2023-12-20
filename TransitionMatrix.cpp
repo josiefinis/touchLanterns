@@ -16,7 +16,7 @@ TransitionMatrix::TransitionMatrix( const uint8_t rows, const StateTransition* m
    
 
 uint8_t TransitionMatrix::find( const uint8_t state, const uint8_t input ) const {
-// Find the state transition from 'state' on 'input' and return its row index in the transition matrix.
+// Find the state transition T( state, input ) and return its row index in the transition matrix.
   StateTransition searchTerm = { state, input };
   int lowerBound = 0;
   int upperBound = rows - 1;

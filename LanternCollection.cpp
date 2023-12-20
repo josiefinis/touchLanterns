@@ -85,5 +85,10 @@ void LanternCollection::makeTree( uint8_t root ) {
   uint8_t LanternCollection::getOutput( uint8_t idx ) {
     return collection[ idx ].getOutput();
   }
+
+
+  uint8_t LanternCollection::getDelay( uint8_t idx ) {
+    return collection[ idx ].getDelay();
+  }
 #endif
 #endif

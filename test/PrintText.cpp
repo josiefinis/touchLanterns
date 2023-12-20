@@ -55,37 +55,37 @@ void printBrief( uint8_t input, uint8_t state, uint8_t output ) {
     case PARENT_IS_IDLE:              std::cout << "I";      break;
     case PARENT_IS_FULL_DOWN:         std::cout << "p";      break;
     case PARENT_IS_FULL_UP:           std::cout << "P";      break;
-    case PARENT_IS_WAIT_OR_FOLLOW:    std::cout << "W";      break;
     case DONT_CARE:                   std::cout << "?";      break;
   }
   switch ( state ) {
-    case OUT:               std::cout << "OU";        break;
-    case GO_OUT:            std::cout << "GO";        break;
-    case IDLE:              std::cout << "ID";        break;
-    case GO_IDLE:           std::cout << "GI";        break;
-    case INIT_DOWN:         std::cout << "in";        break;
-    case INIT_UP:           std::cout << "IN";        break;
-    case FULL_DOWN:         std::cout << "fu";        break;
-    case FULL_UP:           std::cout << "FU";        break;
-    case FLICKER_DOWN:      std::cout << "fk";        break;
-    case FLICKER_UP:        std::cout << "FK";        break;
-    case AUTO_DOWN:         std::cout << "au";        break;
-    case AUTO_UP:           std::cout << "AU";        break;
-    case PAUSE_DOWN:        std::cout << "ps";        break;
-    case PAUSE_UP:          std::cout << "PS";        break;
-    case ROOT_FULL_DOWN:    std::cout << "rf";        break;
-    case ROOT_FULL_UP:      std::cout << "RF";        break;
-    case ROOT_FLICKER_DOWN: std::cout << "rk";        break;
-    case ROOT_FLICKER_UP:   std::cout << "RK";        break;
-    case ROOT_AUTO_DOWN:    std::cout << "ra";        break;
-    case ROOT_AUTO_UP:      std::cout << "RA";        break;
-    case ROOT_PAUSE_DOWN:   std::cout << "rp";        break;
-    case ROOT_PAUSE_UP:     std::cout << "RP";        break;
-    case WAIT:              std::cout << "W ";        break;
-    case WAIT_FULL_DOWN:    std::cout << "wf";        break;
-    case WAIT_FULL_UP:      std::cout << "WF";        break;
-    case FOLLOW:            std::cout << "FW";        break;
-  }
+    case OUT:               std::cout << "OU";        
+    case GO_OUT:            std::cout << "GO";        
+    case IDLE:              std::cout << "ID";        
+    case GO_IDLE:           std::cout << "GI";        
+    case INIT_DOWN:         std::cout << "in";        
+    case INIT_UP:           std::cout << "IN";        
+    case FULL_DOWN:         std::cout << "fu";        
+    case FULL_UP:           std::cout << "FU";        
+    case FLICKER_DOWN:      std::cout << "fk";        
+    case FLICKER_UP:        std::cout << "FK";        
+    case AUTO_DOWN:         std::cout << "au";        
+    case AUTO_UP:           std::cout << "AU";        
+    case PAUSE_DOWN:        std::cout << "ps";        
+    case PAUSE_UP:          std::cout << "PS";        
+    case ROOT_FULL_DOWN:    std::cout << "rf";        
+    case ROOT_FULL_UP:      std::cout << "RF";        
+    case ROOT_FLICKER_DOWN: std::cout << "rk";        
+    case ROOT_FLICKER_UP:   std::cout << "RK";        
+    case ROOT_AUTO_DOWN:    std::cout << "ra";        
+    case ROOT_AUTO_UP:      std::cout << "RA";        
+    case ROOT_PAUSE_DOWN:   std::cout << "rp";        
+    case ROOT_PAUSE_UP:     std::cout << "RP";        
+    case WAIT:              std::cout << "W ";        
+    case GO_FULL_DOWN:      std::cout << "gf";        
+    case GO_FULL_UP:        std::cout << "gF";        
+    case GO_FOLLOW:         std::cout << "gF";        
+    case FOLLOW:            std::cout << "FW";        
+  }                                                   
   switch ( output & 0xC0 ) {
     case LOWER_BRIGHTNESS:          std::cout << "↓ ";      break;
     case RAISE_BRIGHTNESS:          std::cout << "^ ";      break;
@@ -123,13 +123,17 @@ void printInput( uint8_t input ) {
     case AT_ONE_BRIGHTNESS:           std::cout << "@ONE";      return;
     case AT_FULL_BRIGHTNESS:          std::cout << "@FUL";      return;
     case AT_ZERO_DELAY:               std::cout << "@DLY";      return;
+    case PARENT_IS_IDLE:              std::cout << "pIDL";      return;
+    case PARENT_IS_FULL_DOWN:         std::cout << "pful";      return;
+    case PARENT_IS_FULL_UP:           std::cout << "pFUL";      return;
+    case PARENT_IS_FOLLOW:            std::cout << "pFOL";      return;
     case DONT_CARE:                   std::cout << "DTCR";      return;
-  }
-}
-
-
-void printState( uint8_t state ) {
-  switch ( state ) {
+  }                                                                    
+}                                                                      
+                                                                       
+                                                                       
+void printState( uint8_t state ) {                                              
+  switch ( state ) {                                                            
     case OUT:               std::cout << " OUT";        return;
     case GO_OUT:            std::cout << ">OUT";        return;
     case IDLE:              std::cout << "IDLE";        return;
@@ -153,37 +157,40 @@ void printState( uint8_t state ) {
     case ROOT_PAUSE_DOWN:   std::cout << "RPAv";        return;
     case ROOT_PAUSE_UP:     std::cout << "RPA^";        return;
     case WAIT:              std::cout << "WAIT";        return;
-    case WAIT_FULL_DOWN:    std::cout << "WT v";        return;
-    case WAIT_FULL_UP:      std::cout << "WT ^";        return;
+    case GO_FULL_DOWN:      std::cout << "GOFD";        return;
+    case GO_FULL_UP:        std::cout << "GOFU";        return;
+    case GO_FOLLOW:         std::cout << "GOFO";        return;
     case FOLLOW:            std::cout << "FLLW";        return;
   }
 }
 
-
+                                                                                
 void printOutput( uint8_t output ) {
   switch ( output & 0xC0 ) {
     case LOWER_BRIGHTNESS:          std::cout << "LOWER";      return;
     case RAISE_BRIGHTNESS:          std::cout << "RAISE";      return;
-    case SET_DELAY:                 std::cout << "DLY =";      return;       
-  }
-  switch ( output ) {
-    case NO_CHANGE:                 std::cout << "NO_CH";      return;       
-    case START_FLICKER:             std::cout << "S_FLK";      return;   
-    case FLICKER:                   std::cout << "FLIKR";      return;         
-    case PULSE:                     std::cout << "PULSE";      return;           
+    case SET_DELAY:                 std::cout << "DLY =";      return;
+  }                                                                   
+  switch ( output ) {                                                 
+    case NO_CHANGE:                 std::cout << "NO_CH";      return;
+    case START_FLICKER:             std::cout << "S_FLK";      return;
+    case FLICKER:                   std::cout << "FLIKR";      return;
+    case PULSE:                     std::cout << "PULSE";      return;
     case SET_BRIGHTNESS_TO_ZERO:    std::cout << "B=ZRO";      return;
     case SET_BRIGHTNESS_TO_FULL:    std::cout << "B=FUL";      return;
     case SET_BRIGHTNESS_TO_REF:     std::cout << "B=REF";      return;
     case SET_REFERENCE_TO_ZERO:     std::cout << "REF=0";      return;
     case SET_REF_TO_BRIGHTNESS:     std::cout << "REF=B";      return;
-    case TRACK_REFERENCE:           std::cout << "TRACK";      return; 
-    case MAKE_TREE:                 std::cout << "TREE ";      return;       
-    case REDUCE_DELAY:              std::cout << "DLY--";      return;    
-  }
-}
-
-
-void printInstruction( Instruction instruction ) {
+    case TRACK_PARENT:              std::cout << "TR_PA";      return;
+    case TRACK_REFERENCE:           std::cout << "TRACK";      return;
+    case MAKE_TREE:                 std::cout << "TREE ";      return;
+    case LEAVE_TREE:                std::cout << "LEAVE";      return;
+    case REDUCE_DELAY:              std::cout << "DLY--";      return;
+  }                                                                   
+}                                                                     
+                                                                             
+                                                                             
+void printInstruction( Instruction instruction ) {                           
   switch ( instruction.instruction ) {
     case START_TEST:            
       std::cout << "START_TEST"; 
