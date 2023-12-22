@@ -12,20 +12,22 @@
 
 class Light {
     public:
-        uint16_t value;
+        Light();
 
         operator int() const; 
-//        inline bool   operator == ( const Light&   other );
-//        inline bool   operator != ( const Light&   other );
-//        inline bool   operator <  ( const Light&   other );
-//        inline bool   operator >  ( const Light&   other );
-//        inline bool   operator <= ( const Light&   other );
-//        inline bool   operator >= ( const Light&   other );
         
-        
-        inline uint8_t stepSize( void );
-        void set( uint8_t value );
-        void raise( void ); 
-        void lower( void );
+        inline uint8_t  getBrightness( void ) const;
+        inline void     setBrightness( uint8_t reg );
+        inline uint16_t getRateOfChange( void ) const;
+        inline void     toggleUpDown( void );
+        inline void     setRateOfChange( uint8_t value );
+        inline bool     isBrightening( void ) const;
+        inline bool     isDimming( void ) const;
+        void changeBrightness( uint8_t floor, uint8_t ceil );
+        void raiseBrightness( uint8_t ceil ); 
+        void lowerBrightness( uint8_t floor );
+
+    private:
+        uint16_t reg;
 };
 #endif
