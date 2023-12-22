@@ -213,116 +213,197 @@ several days later
 
 
     Input names:
-        sensor              3   { RISING_EDGE, FALLING_EDGE, LONG_TOUCH, MEDIUM_TOUCH }
-        light               3   { LIGHT_AT_ZERO, LIGHT_AT_ONE, LIGHT_AT_FULL, LIGHT_LT_PARENTS, LIGHT_GT_PARENTS, LIGHT_EQ_PARENTS }
-        parent              3   { NO_PARENT, PARENT_IS_AUTO, PARENT_NOT_AUTO, PARENT_IS_FULL }
-        timer               1   { OVER, NOT_OVER }
-        step                1   { DOWN_STEP, UP_STEP }
-                           11
+        sensor                  { RISING_EDGE, FALLING_EDGE, LONG_TOUCH, MEDIUM_TOUCH, ( IS_TOUCHED ), ( NOT_TOUCHED ) }  
+        light                   { 0, 1, FULL, REF, RISING, FALLING }
+        parent                  { [ STATE_NAME_1 ] ...
+        timer                   { OVER }
+
 
     Output names:
-        light               3   { RAISE_LIGHT, LOWER_LIGHT, FLICKER, PULSE }
-        step                3   { SET_STEP_TINY, SET_STEP_SMALL, SET_STEP_LARGE, SET_STEP_HUGE }
-        timer               3   { CLEAR_TIMER, SET_TIMER_SHORT, SET_TIMER_LONG, SET_TIMER_RANDOM }   
-        ref                 2   { SET_REF_TO_ZERO, SET_REF_TO_LIGHT, SET_LIGHT_TO_REF }
-        tree                    { MAKE_TREE, LEAVE_TREE }
-                            9
-
-    States:                 3   { IDLE , INIT , FULL , FLICKER , AUTO , PAUSE }
-
-    Total bits per table row:  3 + 9 + 3 + 9 = 25 
-    so uint32_t array.
-    number of rows 43 so 172 bytes.
+        light                   { ( SET ), RAISE, LOWER, FLICKER, PULSE, TRACK_REF, SET_STEP }
+        step                    { SET }
+        timer                   { ( RESET ), SET, START, STOP }   
+        ref                     { SET }
+        tree                    { MAKE, LEAVE }
 
 
-
-______________________________________________________________________________________________________________________________________________________      
-
-    STATE TABLES:
-______________________________________________________________________________________________________________________________________________________      
-
-      __IDLE__          entry action                                                { SET_STEP 0 }
-                        exit action                                                 { CLEAR_TIMER }
-
-                        { TIMER_OVER, LIGHT_LT_REF, LIGHT_NOT_OUT }                 { RAISE_LIGHT, SET_TIMER  }
-                        { TIMER_OVER, LIGHT_GT_REF }                                { LOWER_LIGHT, SET_TIMER  }
-                        { LIGHT_OUT }                                               { CLEAR_TIMER, SET_REF_TO_ZERO }
-
-        INIT            { RISING_EDGE, NO_PARENT }                                  {  }     
-        AUTO            { PARENT_IS_AUTO }                                          { SET_TIMER_RANDOM 3 }
-        FULL            { PARENT_IS_FULL }                                          { SET_TIMER_RANDOM 3 }
-______________________________________________________________________________________________________________________________________________________      
-
-______________________________________________________________________________________________________________________________________________________      
-
-      __INIT__          entry action                                                { SET_STEP 5 }
-                        exit action                                                 {  }
-
-                        { step DOWN }                                               { LOWER_LIGHT }
-                        { step UP }                                                 { RAISE_LIGHT }
-
-        FULL            { FALLING_EDGE, NO_PARENT }                                 {  }
-        FLICKER         { MEDIUM_TOUCH, NO_PARENT }                                 {  }
-______________________________________________________________________________________________________________________________________________________      
-
-______________________________________________________________________________________________________________________________________________________      
-
-      __FULL__          entry action                                                { SET_STEP 8 }
-                        exit action                                                 { SET_STEP 0}
-
-                        { NO_PARENT, DOWN_STEP }                                    { LOWER_LIGHT }
-                        { NO_PARENT, UP_STEP }                                      { RAISE_LIGHT }
-                        { TIMER_OVER, DOWN_STEP }                                   { LOWER_LIGHT }
-                        { TIMER_OVER, UP_STEP }                                     { RAISE_LIGHT }
-        IDLE            { LIGHT_AT_ZERO }                                           { LEAVE_TREE }
-        IDLE            { LIGHT_AT_FULL }                                           { LEAVE_TREE }
-
-______________________________________________________________________________________________________________________________________________________      
-
-______________________________________________________________________________________________________________________________________________________      
-
-      __FLICKER__       entry action                                                { FLICKER, SET_REF_TO_LIGHT }
-                        exit action                                                 { SET_LIGHT_TO_REF }
-
-                        { NO_PARENT }                                               { FLICKER }
-        AUTO            { FALLING_EDGE, NO_PARENT }                                 {  }
-        FULL            { MEDIUM_TOUCH, NO_PARENT }                                 { MAKE_TREE }
-______________________________________________________________________________________________________________________________________________________      
-
-______________________________________________________________________________________________________________________________________________________      
-
-      __AUTO__          entry action                                                { SET_STEP 1 }
-                        exit action                                                 {  }
-
-                        { NO_PARENT, DOWN_STEP }                                    { LOWER_LIGHT }
-                        { NO_PARENT, UP_STEP }                                      { RAISE_LIGHT }
-                        { LIGHT_GT_PARENTS, TIMER OVER }                            { LOWER_LIGHT }
-                        { LIGHT_LT_PARENTS, TIMER OVER }                            { RAISE_LIGHT }
-
-        PAUSE           { PARENT_NOT_AUTO, LIGHT_EQ_PARENTS }                       {  }
-        PAUSE           { LIGHT_ONE }                                               {  }
-        PAUSE           { LIGHT_FULL }                                              {  }
-        PAUSE           { RISING_EDGE, NO_PARENT }                                  {  }
-______________________________________________________________________________________________________________________________________________________      
-
-______________________________________________________________________________________________________________________________________________________      
-
-      __PAUSE__         entry action                                                { PULSE, SET_TIMER 5 }
-                        exit action                                                 { PULSE, CLEAR_TIMER }
-
-        AUTO            { PARENT_IS_AUTO }                                          {  }
-        AUTO            { MEDIUM_EDGE, NO_PARENT }                                  { MAKE_TREE }
-        IDLE            { TIMER_OVER }                                              { LEAVE_TREE }
-        AUTO            { RISING_EDGE, NO_PARENT }                                  {  }
-______________________________________________________________________________________________________________________________________________________      
-
-______________________________________________________________________________________________________________________________________________________      
+    States:
+        ( OUT )                         
+        IDLE            
+        INIT            
+        FULL
+        FLICKER
+        AUTO
+        PAUSE
+        WAIT            
+        FOLLOW          
 
 
-    const dataType variableName[] PROGMEM = {  };
+    State Tables:
+        
+
+      
+
+      __IDLE__          entry action                { step SET 0, timer START, ref SET to light }
+                        exit action                 { timer STOP }
+
+                        { timer OVER }              { light TRACK_REF }
+                        { light 0 }                 { timer STOP, ref SET to 0 }
+
+        INIT            { sensor RISING_EDGE }      {  }     
 
 
-    displayInt = pgm_read_word_near(charSet + k);
+
+      __INIT__          entry action                { step SET 5 }
+                        exit action                 {  }
+
+                        { step DOWN }               { light LOWER }
+                        { step UP }                 { light RAISE }
+
+        FULL            { sensor FALLING_EDGE }     {  }
+        FLICKER         { sensor MEDIUM_TOUCH }     {  }
+
+
+
+      __FULL__          entry action                { step SET 8 }
+                        exit action                 { step SET 0}
+
+        IDLE            { light 0 }                 {  }
+        IDLE            { light FULL }              {  }
+
+      __FLICKER__       entry action                { light FLICKER, ref SET light }
+                        exit action                 { light SET ref }
+
+                        { always }                  { light FLICKER }
+        AUTO            { sensor FALLING_EDGE }     { timer SET 5 }
+        FULL            { sensor MEDIUM_TOUCH }     { tree MAKE }
+
+      __AUTO__          entry action                { rate SET 1 }
+                        exit action                 {  }
+
+        PAUSE           { light 1 }
+        PAUS            { light FULL }
+                        { sensor RISING_EDGE }
+
+      __PAUSE__         entry action                { light PULSE, timer START }
+                        exit action                 { light PULSE }
+
+                        { always }                  {  }
+        IDLE
+        AUTO
+
+      __WAIT__          entry action                {  }
+                        exit action                 {  }
+
+                        {  }                        {  }
+
+        FOLLOW
+        FULL
+
+      __FOLLOW__        entry action                {  }
+                        exit action                 {  }
+
+                        {  }                        {  }
+
+        IDLE
+
+
+
+
+
+
+
+        
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

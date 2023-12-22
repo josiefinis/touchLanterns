@@ -13,102 +13,52 @@
 // TODO Make different variations of flicker or other effects.
 // TODO handle INIT_DOWN when low brightness
 
-#define TRANSITION_MATRIX_ROWS      72
 
-const StateTransition matrix[ TRANSITION_MATRIX_ROWS ] = { 
+#define TRANSITION_TABLE_ROWS      41
 
-    {     OUT                     , RISING_EDGE                   , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
-  , {     GO_OUT                  , DONT_CARE                     , OUT                       , NO_CHANGE                     }  
-  , {     IDLE                    , RISING_EDGE                   , INIT_DOWN                 , LOWER_BRIGHTNESS | 6          } 
-  , {     IDLE                    , AT_ZERO_BRIGHTNESS            , GO_OUT                    , SET_REFERENCE_TO_ZERO         } 
-  , {     IDLE                    , AT_ZERO_DELAY                 , IDLE                      , TRACK_REFERENCE               } 
-  , {     IDLE                    , DONT_CARE                     , IDLE                      , REDUCE_DELAY                  }
-  , {     GO_IDLE                 , DONT_CARE                     , IDLE                      , SET_REF_TO_BRIGHTNESS         } 
-
-  , {     INIT_DOWN               , FALLING_EDGE                  , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
-  , {     INIT_DOWN               , MEDIUM_TOUCH                  , FLICKER_DOWN              , START_FLICKER                 } 
-  , {     INIT_DOWN               , DONT_CARE                     , INIT_DOWN                 , LOWER_BRIGHTNESS | 5          } 
-    
-  , {     INIT_UP                 , FALLING_EDGE                  , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
-  , {     INIT_UP                 , MEDIUM_TOUCH                  , FLICKER_UP                , START_FLICKER                 } 
-  , {     INIT_UP                 , DONT_CARE                     , INIT_UP                   , RAISE_BRIGHTNESS | 5          } 
-
-  , {     FULL_DOWN               , DONT_CARE                     , GO_OUT                    , SET_BRIGHTNESS_TO_ZERO        } 
-  , {     FULL_UP                 , DONT_CARE                     , GO_IDLE                   , SET_BRIGHTNESS_TO_FULL        } 
-
-  , {     FLICKER_DOWN            , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
-  , {     FLICKER_DOWN            , LONG_TOUCH                    , ROOT_FULL_DOWN            , MAKE_TREE                     } 
-  , {     FLICKER_DOWN            , DONT_CARE                     , FLICKER_DOWN              , FLICKER                       } 
-    
-  , {     FLICKER_UP              , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
-  , {     FLICKER_UP              , LONG_TOUCH                    , ROOT_FULL_UP              , MAKE_TREE                     } 
-  , {     FLICKER_UP              , DONT_CARE                     , FLICKER_UP                , FLICKER                       } 
-
-  , {     AUTO_DOWN               , RISING_EDGE                   , PAUSE_DOWN                , PULSE                         } 
-  , {     AUTO_DOWN               , AT_ONE_BRIGHTNESS             , PAUSE_DOWN                , SET_DELAY | 5                 } 
-  , {     AUTO_DOWN               , DONT_CARE                     , AUTO_DOWN                 , LOWER_BRIGHTNESS | 1          } 
-
-  , {     AUTO_UP                 , RISING_EDGE                   , PAUSE_UP                  , PULSE                         } 
-  , {     AUTO_UP                 , AT_FULL_BRIGHTNESS            , PAUSE_UP                  , SET_DELAY | 5                 } 
-  , {     AUTO_UP                 , DONT_CARE                     , AUTO_UP                   , RAISE_BRIGHTNESS | 1          } 
-
-  , {     PAUSE_DOWN              , RISING_EDGE                   , AUTO_UP                   , PULSE                         } 
-  , {     PAUSE_DOWN              , FALLING_EDGE                  , PAUSE_DOWN                , SET_DELAY | 5                 } 
-  , {     PAUSE_DOWN              , MEDIUM_TOUCH                  , ROOT_FLICKER_DOWN         , START_FLICKER                 } 
-  , {     PAUSE_DOWN              , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
-  , {     PAUSE_DOWN              , DONT_CARE                     , PAUSE_DOWN                , REDUCE_DELAY                  } 
-
-  , {     PAUSE_UP                , RISING_EDGE                   , AUTO_DOWN                 , PULSE                         } 
-  , {     PAUSE_UP                , FALLING_EDGE                  , PAUSE_UP                  , SET_DELAY | 5                 } 
-  , {     PAUSE_UP                , MEDIUM_TOUCH                  , ROOT_FLICKER_UP           , START_FLICKER                 } 
-  , {     PAUSE_UP                , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
-  , {     PAUSE_UP                , DONT_CARE                     , PAUSE_UP                  , REDUCE_DELAY                  } 
-
-  , {     ROOT_FULL_DOWN          , LONG_TOUCH_FALLING_EDGE       , FULL_DOWN                 , LOWER_BRIGHTNESS | 8          } 
-  , {     ROOT_FULL_DOWN          , DONT_CARE                     , ROOT_FULL_DOWN            , LOWER_BRIGHTNESS | 8          } 
-    
-  , {     ROOT_FULL_UP            , LONG_TOUCH_FALLING_EDGE       , FULL_UP                   , RAISE_BRIGHTNESS | 8          } 
-  , {     ROOT_FULL_UP            , DONT_CARE                     , ROOT_FULL_UP              , RAISE_BRIGHTNESS | 8          } 
-
-  , {     ROOT_FLICKER_DOWN       , FALLING_EDGE                  , AUTO_DOWN                 , SET_BRIGHTNESS_TO_REF         } 
-  , {     ROOT_FLICKER_DOWN       , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_DOWN            , MAKE_TREE                     } 
-  , {     ROOT_FLICKER_DOWN       , DONT_CARE                     , ROOT_FLICKER_DOWN         , FLICKER                       } 
-    
-  , {     ROOT_FLICKER_UP         , FALLING_EDGE                  , AUTO_UP                   , SET_BRIGHTNESS_TO_REF         } 
-  , {     ROOT_FLICKER_UP         , LONG_TOUCH_FALLING_EDGE       , ROOT_AUTO_UP              , MAKE_TREE                     } 
-  , {     ROOT_FLICKER_UP         , DONT_CARE                     , ROOT_FLICKER_UP           , FLICKER                       } 
-
-  , {     ROOT_AUTO_DOWN          , RISING_EDGE                   , ROOT_PAUSE_DOWN           , PULSE                         } 
-  , {     ROOT_AUTO_DOWN          , AT_ONE_BRIGHTNESS             , ROOT_PAUSE_DOWN           , SET_DELAY | 5                 } 
-  , {     ROOT_AUTO_DOWN          , DONT_CARE                     , ROOT_AUTO_DOWN            , LOWER_BRIGHTNESS | 1          } 
-
-  , {     ROOT_AUTO_UP            , RISING_EDGE                   , ROOT_PAUSE_UP             , PULSE                         } 
-  , {     ROOT_AUTO_UP            , AT_FULL_BRIGHTNESS            , ROOT_PAUSE_UP             , SET_DELAY | 5                 } 
-  , {     ROOT_AUTO_UP            , DONT_CARE                     , ROOT_AUTO_UP              , RAISE_BRIGHTNESS | 1          } 
-
-  , {     ROOT_PAUSE_DOWN         , RISING_EDGE                   , ROOT_AUTO_UP              , PULSE                         } 
-  , {     ROOT_PAUSE_DOWN         , FALLING_EDGE                  , ROOT_PAUSE_DOWN           , SET_DELAY | 5                 } 
-  , {     ROOT_PAUSE_DOWN         , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
-  , {     ROOT_PAUSE_DOWN         , DONT_CARE                     , ROOT_PAUSE_DOWN           , REDUCE_DELAY                  } 
-
-  , {     ROOT_PAUSE_UP           , RISING_EDGE                   , ROOT_AUTO_DOWN            , PULSE                         } 
-  , {     ROOT_PAUSE_UP           , FALLING_EDGE                  , ROOT_PAUSE_UP             , SET_DELAY | 5                 } 
-  , {     ROOT_PAUSE_UP           , AT_ZERO_DELAY                 , GO_IDLE                   , PULSE                         } 
-  , {     ROOT_PAUSE_UP           , DONT_CARE                     , ROOT_PAUSE_UP             , REDUCE_DELAY                  } 
-
-  , {     WAIT                    , PARENT_IS_FULL_DOWN           , GO_FULL_DOWN              , SET_DELAY | RANDOM_DELAY | 3  } 
-  , {     WAIT                    , PARENT_IS_FULL_UP             , GO_FULL_UP                , SET_DELAY | RANDOM_DELAY | 3  } 
-  , {     WAIT                    , PARENT_IS_FOLLOW              , GO_FOLLOW                 , SET_DELAY | RANDOM_DELAY | 3  } 
-  , {     WAIT                    , DONT_CARE                     , WAIT                      ,                               } 
-
-  , {     GO_FULL_DOWN            , AT_ZERO_DELAY                 , FULL_DOWN                 , LEAVE_TREE                    }  
-  , {     GO_FULL_UP              , AT_ZERO_DELAY                 , FULL_UP                   , LEAVE_TREE                    } 
-  , {     GO_FOLLOW               , AT_ZERO_DELAY                 , FOLLOW                    ,                               }
-
-  , {     FOLLOW                  , MATCHED_PARENT                , GO_IDLE                   , LEAVE_TREE                    }
-  , {     FOLLOW                  , DONT_CARE                     , FOLLOW                    , TRACK_PARENT                  }
-};
-const TransitionMatrix Lantern::transitionMatrix = TransitionMatrix( TRANSITION_MATRIX_ROWS, matrix );
+const uint32_t transitionTable[ TRANSITION_TABLE_ROWS ] PROGMEM = {  
+    AUTO            |  ENTRY                                    |  STEP_SET_TO_ONE                      |  0
+  , AUTO            |  LIGHT_EQ_FULL                            |  0                                    |  PAUSE
+  , AUTO            |  LIGHT_EQ_ONE                             |  0                                    |  PAUSE
+  , AUTO            |  NO_PARENT                                |  LIGHT_RAISE                          |  0
+  , AUTO            |  PARENT_NOT_AUTO | LIGHT_EQ_PARENTS       |  0                                    |  PAUSE
+  , AUTO            |  SENSOR_RISING_EDGE | NO_PARENT           |  0                                    |  PAUSE
+  , AUTO            |  STEP_IS_DOWN | NO_PARENT                 |  LIGHT_LOWER                          |  0
+  , AUTO            |  TIMER_OVER | LIGHT_GT_PARENTS            |  LIGHT_LOWER                          |  0
+  , AUTO            |  TIMER_OVER | LIGHT_LT_PARENTS            |  LIGHT_RAISE                          |  0
+  , FLICKER         |  ALWAYS                                   |  FLICKER                              |  0
+  , FLICKER         |  ENTRY                                    |  FLICKER | REF_SET_TO_LIGHT           |  0
+  , FLICKER         |  EXIT                                     |  LIGHT_SET_TO_REF                     |  0
+  , FLICKER         |  SENSOR_FALLING_EDGE                      |                                       |  AUTO
+  , FLICKER         |  SENSOR_LONG_TOUCH | NO_TREE              |  MAKE_TREE                            |  FULL
+  , FULL            |  ENTRY                                    |  STEP_SET_TO_HUGE                     |  0
+  , FULL            |  EXIT                                     |  STEP_SET_TO_TINY                     |  0
+  , FULL            |  LIGHT_EQ_FULL                            |  LEAVE_TREE                           |  IDLE 
+  , FULL            |  LIGHT_EQ_ZERO                            |  LEAVE_TREE                           |  IDLE 
+  , FULL            |  NO_PARENT                                |  LIGHT_RAISE                          |  0
+  , FULL            |  STEP_IS_DOWN | NO_PARENT                 |  LIGHT_LOWER                          |  0
+  , FULL            |  TIMER_OVER | LIGHT_LT_PARENTS            |  LIGHT_RAISE                          |  0
+  , FULL            |  TIMER_OVER | LIGHT_GT_PARENTS            |  LIGHT_LOWER                          |  0
+  , IDLE            |  ENTRY                                    |  STEP_SET_TO_TINY                     |  0     
+  , IDLE            |  EXIT                                     |  TIMER_CLEAR                          |  0  
+  , IDLE            |  LIGHT_EQ_ZERO                            |  TIMER_CLEAR | REF_SET_TO_ZERO        |  0
+  , IDLE            |  PARENT_IS_AUTO                           |  TIMER_SET_TO_RANDOM                  |  AUTO
+  , IDLE            |  PARENT_IS_FULL                           |  TIMER_SET_TO_RANDOM                  |  FULL
+  , IDLE            |  SENSOR_RISING_EDGE | NO_PARENT           |  0                                    |  INIT
+  , IDLE            |  TIMER_OVER | LIGHT_GT_REF                |  TIMER_SET_LONG, LIGHT_LOWER          |  0
+  , IDLE            |  TIMER_OVER | LIGHT_LT_REF                |  TIMER_SET_LONG, LIGHT_RAISE          |  0
+  , INIT            |  ALWAYS                                   |  LIGHT_RAISE                          |  0
+  , INIT            |  ENTRY                                    |  STEP_SET_TO_LARGE                    |  0
+  , INIT            |  SENSOR_FALLING_EDGE                      |  0                                    |  FULL
+  , INIT            |  SENSOR_MEDIUM_TOUCH                      |  0                                    |  FLICKER
+  , INIT            |  STEP_IS_DOWN                             |  LIGHT_LOWER                          |  0
+  , PAUSE           |  ENTRY                                    |  PULSE | TIMER_SET_TO_SHORT           |  0
+  , PAUSE           |  EXIT                                     |  PULSE | CLEAR_TIMER | FLIP_UP_DOWN   |  0
+  , PAUSE           |  PARENT_IS_AUTO                           |  0                                    |  AUTO
+  , PAUSE           |  SENSOR_MEDIUM_EDGE | NO_TREE             |  MAKE_TREE                            |  FLICKER
+  , PAUSE           |  SENSOR_RISING_EDGE | NO_PARENT           |  0                                    |  AUTO
+  , PAUSE           |  TIMER_OVER                               |  LEAVE_TREE                           |  IDLE
+}
 
 
 Lantern::Lantern() 
@@ -127,87 +77,110 @@ void Lantern::sense( bool value ) {
 }
 
 
-#define EDGE    0x3
-uint8_t Lantern::classifySensorInput( void ) {
+uint8_t Lantern::sensorInput( void ) {
   switch ( sensorRegister ) {
     case 0xFF:
       return LONG_TOUCH;
 
-    case 0xFE:
-      return LONG_TOUCH_FALLING_EDGE;
-
     case 0x0F:
       return MEDIUM_TOUCH;
   }
-  switch ( sensorRegister & EDGE ) {
+  switch ( sensorRegister & 0x3 ) {
     case 0x1:
       return RISING_EDGE;
     
     case 0x2:
       return FALLING_EDGE;
   }
-  return DONT_CARE;
+  return 0;
 }
 
 
-uint8_t Lantern::classifyBrightnessInput( void ) {
-  switch ( getBrightness() ) {
+uint8_t Lantern::lightInput( void ) {
+  uint16_t lightInput = 0;
+  uint8_t light = getLight();
+  switch ( light ) {
     case 0:
-      return AT_ZERO_BRIGHTNESS;
+      lightInput = LIGHT_EQ_ZERO;
+      break;
 
-    case ONE_BRIGHTNESS:
-      return AT_ONE_BRIGHTNESS;
+    case 1:
+      lightInput = LIGHT_EQ_ONE;
+      break;
 
     case FULL_BRIGHTNESS:
-      return AT_FULL_BRIGHTNESS;
+      lightInput = LIGHT_EQ_FULL;
+      break;
   }
-  return DONT_CARE;
+  
+  if ( light == reference ) {
+    lightInput |= LIGHT_EQ_REF;
+  }
+  else if ( light < reference ) {
+    lightInput |= LIGHT_LT_REF;
+  }
+  else {
+    lightInput |= LIGHT_GT_REF;
+  }
+
+  uint8_t parentLight = parent->getLight();
+  if ( light == parentLight ) {
+    lightInput |= LIGHT_EQ_PARENTS;
+  }
+  else if ( light < parentLight ) {
+    lightInput |= LIGHT_LT_PARENTS;
+  }
+  else {
+    lightInput |= LIGHT_GT_PARENTS;
+  }
+  return lightInput;
 }
 
 
 uint8_t Lantern::classifyParentInput( void ) {
-  switch ( parent->getState() ) {
-    case IDLE:
-      if ( getBrightness() != referenceBrightness ) {
-        break;
-      }
-      return MATCHED_PARENT; 
-
-    case FULL_DOWN:
-      return PARENT_IS_FULL_DOWN; 
-
-    case FULL_UP:
-      return PARENT_IS_FULL_UP; 
-
-    case FOLLOW:
-      return PARENT_IS_FOLLOW; 
-
-    case ROOT_AUTO_UP:
-      return PARENT_IS_FOLLOW; 
-
-    case ROOT_AUTO_DOWN:
-      return PARENT_IS_FOLLOW; 
+  if ( not tree ) {
+    return NO_TREE;
   }
-  return DONT_CARE;
+  if ( not parent ) {
+    return NO_PARENT;
+  }
+  uint16_t parentInput = 0;
+  switch ( parent->getState() ) {
+    case FULL:
+      return PARENT_IS_FULL; 
+
+    case AUTO:
+      return PARENT_IS_AUTO;
+  }
+  return 0;
 }
 
 
-uint8_t Lantern::prioritiseInput( void ) {
+uint16_t Lantern::combineInput( void ) {
 // Return the highest priority type of input, where priority order is delay, parent, sensor, brightness input.
+  uint16_t input = 0;
   if ( delay == 0 ) {                                    
     delay--;
-    return AT_ZERO_DELAY;
+    input |= TIMER_OVER; 
   }
-  if ( parent ) {
-    return classifyParentInput();
-  }
-  if ( classifySensorInput() == DONT_CARE ) {
-    return classifyBrightnessInput();
-  }
-  return classifySensorInput();
+  input |= classifySensorInput();
+  input |= classifyLightInput();
+  input |= classifyParentInput();
+  return input;
 }
 
 
+if ( isInput( input ) ) {
+  output = getOutput();
+  // Carry out output actions.
+}
+if ( isStateTransition() ) {
+  output = getExitOutput();
+  // Carry out output actions.
+  changeState();
+  output = getEntryOutput()
+  // Carry out output actions.
+}
 bool Lantern::nextState( void ) {
 // Change to new state and/or output based on current state and input.
   uint8_t input = prioritiseInput();
@@ -454,3 +427,46 @@ bool Lantern::isOvershoot ( void ) {
   return 16 * ( referenceBrightness - getBrightness() ) < getStepSize();
 }
 #endif
+    AUTO            |  ENTRY                                    |  STEP_SET_TO_ONE                      |  0
+  , AUTO            |  LIGHT_EQ_FULL                            |  0                                    |  PAUSE
+  , AUTO            |  LIGHT_EQ_ONE                             |  0                                    |  PAUSE
+  , AUTO            |  NO_PARENT                                |  LIGHT_RAISE                          |  0
+  , AUTO            |  PARENT_NOT_AUTO | LIGHT_EQ_PARENTS       |  0                                    |  PAUSE
+  , AUTO            |  SENSOR_RISING_EDGE | NO_PARENT           |  0                                    |  PAUSE
+  , AUTO            |  STEP_IS_DOWN | NO_PARENT                 |  LIGHT_LOWER                          |  0
+  , AUTO            |  TIMER_OVER | LIGHT_GT_PARENTS            |  LIGHT_LOWER                          |  0
+  , AUTO            |  TIMER_OVER | LIGHT_LT_PARENTS            |  LIGHT_RAISE                          |  0
+
+joid Lantern::autoState( void ) {
+  if ( parent ) {
+    if ( not isDelayOver() )           { return 0; }
+    if ( light > parent->getLight() )  { lowerBrightness(); }
+    if ( light < parent->getLight() )  { raiseBrightness(); }
+  } 
+    
+
+  if ( getLight() == 1 )                                { changeState( PAUSE ); return 0; }
+  if ( getLight() == LIGHT_FULL )                       { changeState( PAUSE ); return 0; }
+  if ( not parent {
+    if ( classifySensor() == SENSOR_RISING_EDGE )     { changeState( PAUSE ); return 0; }
+  }
+  if ( getLight() == parent->getLight() 
+       and parent->getState() != AUTO )                 { changeState( PAUSE ); return 0; }
+}
+
+
+void Lantern::enterState( void ) {
+  switch ( state ) {
+    case AUTO:
+      setStepsize( 1 );
+      return 0;
+  }
+}
+
+void Lantern::changeStateTo( uint8_t nextState ) {
+  exitState( state );
+  state = nextState;
+  enterState( state );
+}
+
+}

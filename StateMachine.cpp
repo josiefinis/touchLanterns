@@ -10,11 +10,66 @@
 #include "StateMachine.h"
 
 
-StateMachine::StateMachine( const TransitionMatrix& matrix )
-  : transitionMatrix( matrix )
+StateMachine::StateMachine( const uint16_t& inputTable, const uint16_t& outputTable )
+  : inputTable( inputTable )
+  : outputTable( outputTable )
   , state( 0 )
   , output( 0 )
   {}
+
+
+bool isInput( uint16_t input ) {
+  index = transitionTable.find( state, input );       
+  if ( index != NONE ) {
+    return 1;
+  }
+  index = transitionTable.find( state, ALWAYS );       
+  if ( index != NONE ) {
+    return 1;
+  }
+  return 0;
+}
+
+
+uint16_t getOutput( void ) {
+  return transitionTable.getOutput( index );
+}
+
+
+bool isStateTransition( void ) {
+  return transitionTable.getNextState( index );
+}
+
+
+uint16_t getExitOutput( void ) {
+  uint8_t index = transitionTable.find( state, ENTRY );
+  if ( index != NONE ) {
+    return transitionTable.getOutput( index + 1 ) | 1;
+  }
+  return 0;
+}
+
+
+void changeState( void ) {
+  state = transitionTable.getNextState( index );
+}
+
+
+uint16_t getEntryOutput( void ) {
+  uint8_t index = transitionTable.find( state, EXIT );
+  if ( index != NONE ) {
+    return transitionTable.getOutput( index ) | 1;
+  }
+  return 0;
+}
+
+
+
+
+
+
+
+
 
 
 bool StateMachine::next( uint8_t input ) {
@@ -44,17 +99,5 @@ uint8_t StateMachine::getState( void ) {
 uint8_t StateMachine::getOutput( void ) {
 // Get the current output.
   return output;
-}
-
-
-void StateMachine::setState( uint8_t value ) {
-// Set the current state.
-  state = value;
-}
-
-
-void StateMachine::setOutput( uint8_t value ) {
-// Set the current output.
-  output = value;
 }
 #endif

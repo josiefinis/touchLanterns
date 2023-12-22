@@ -9,13 +9,23 @@
 
 #include "Arduino.h"
 #include "StateMachine.h"
-#include "TransitionMatrix.h"
+#include "TransitionTable.h"
 #include "Random.h"
+
+struct Light {
+  uint16_t value;
+  bool operator =  ( const Light& object ) const;
+  bool operator ++ ( const Light& object ) const;
+  bool operator -- ( const Light& object ) const;
+  bool operator == ( const Light& object ) const;
+  bool operator <  ( const Light& object ) const;
+  bool operator >  ( const Light& object ) const;
+};
 
 
 class Lantern : public StateMachine {
   public:
-    static const TransitionMatrix transitionMatrix;
+    static const TransitionTable transitionTable;
     Lantern();
 
     void sense( bool value );
@@ -50,83 +60,75 @@ class Lantern : public StateMachine {
     bool isUndershoot();
     bool isOvershoot();
 };
-
-
 /*
 ========================================
         State
 ========================================
 */
-#define OUT                         0x00
-#define GO_OUT                      0x01
-#define IDLE                        0x02
-#define GO_IDLE                     0x03
-#define INIT_DOWN                   0x04
-#define INIT_UP                     0x05
-#define FULL_DOWN                   0x06
-#define FULL_UP                     0x07
-#define FLICKER_DOWN                0x08
-#define FLICKER_UP                  0x09
-#define AUTO_DOWN                   0x0A
-#define AUTO_UP                     0x0B
-#define PAUSE_DOWN                  0x0C
-#define PAUSE_UP                    0x0D
-#define ROOT_FULL_DOWN              0x0E
-#define ROOT_FULL_UP                0x0F
-#define ROOT_FLICKER_DOWN           0x10
-#define ROOT_FLICKER_UP             0x11
-#define ROOT_AUTO_DOWN              0x12
-#define ROOT_AUTO_UP                0x13
-#define ROOT_PAUSE_DOWN             0x14
-#define ROOT_PAUSE_UP               0x15
-#define WAIT                        0x16
-#define GO_FULL_DOWN                0x17
-#define GO_FULL_UP                  0x18
-#define GO_FOLLOW                   0x19
-#define FOLLOW                      0x1A
+#define AUTO                        0x01
+#define FLICKER                     0x02
+#define FULL                        0x03
+#define IDLE                        0x04
+#define INIT                        0x05
+#define PAUSE                       0x06
 /*
 ========================================
         Input
 ========================================
 */
-#define NO_INPUT                    0x00
-#define RISING_EDGE                 0x01    
-#define FALLING_EDGE                0x02
-#define MEDIUM_TOUCH                0x03
-#define LONG_TOUCH                  0x04
-#define LONG_TOUCH_FALLING_EDGE     0x05
-#define AT_ZERO_BRIGHTNESS          0x06
-#define AT_ONE_BRIGHTNESS           0x07
-#define AT_FULL_BRIGHTNESS          0x08 
-#define AT_ZERO_DELAY               0x09 
-#define PARENT_IS_FULL_DOWN         0x0A
-#define PARENT_IS_FULL_UP           0x0B
-#define PARENT_IS_FOLLOW            0x0C
-#define MATCHED_PARENT              0x0D
-#define DONT_CARE                   0xFF
+#define ALWAYS                      0x000
+#define ENTRY                       0x001
+#define EXIT                        0x002
+// RESERVED                         0x003
+
+#define LIGHT_EQ_FULL               0x004
+#define LIGHT_EQ_ONE                0x005
+#define LIGHT_EQ_PARENTS            0x006
+#define LIGHT_EQ_ZERO               0x007
+#define LIGHT_GT_PARENTS            0x008
+#define LIGHT_GT_REF                0x009
+#define LIGHT_LT_PARENTS            0x00a
+#define LIGHT_LT_REF                0x00b
+
+#define NO_PARENT                   0x010
+#define PARENT_IS_AUTO              0x020
+#define PARENT_IS_FULL              0x030
+#define PARENT_NOT_AUTO             0x040
+
+#define SENSOR_FALLING_EDGE         0x100
+#define SENSOR_LONG_TOUCH           0x200
+#define SENSOR_MEDIUM_TOUCH         0x300
+#define SENSOR_RISING_EDGE          0x400    
+
+#define STEP_IS_DOWN                0x080
+
+#define TIMER_OVER                  0x800 
 /*
 ========================================
         Output
 ========================================
 */
-#define NO_CHANGE                   0x00
-#define START_FLICKER               0x01 
-#define FLICKER                     0x02
-#define PULSE                       0x03
-#define SET_BRIGHTNESS_TO_ZERO      0x04
-#define SET_BRIGHTNESS_TO_FULL      0x05
-#define SET_BRIGHTNESS_TO_REF       0x06
-#define SET_REFERENCE_TO_ZERO       0x07 
-#define SET_REF_TO_BRIGHTNESS       0x08 
-#define TRACK_REFERENCE             0x09
-#define TRACK_PARENT                0x0A
-#define MAKE_TREE                   0x0B  
-#define LEAVE_TREE                  0x0C  
-#define REDUCE_DELAY                0x0D      
-#define SET_DELAY                   0x40      // Specify log2 delay e.g. SET_DELAY | 3
-#define LOWER_BRIGHTNESS            0x80      // Specify log2 step size e.g. LOWER_BRIGHTNESS | 1
-#define RAISE_BRIGHTNESS            0xC0      // Specify log2 step size e.g. RAISE_BRIGHTNESS | 5
-                      
+#define LIGHT_FLICKER               0x0010 
+#define LIGHT_PULSE                 0x0020 
+#define LIGHT_LOWER                 0x0030 
+#define LIGHT_RAISE                 0x0040 
+
+#define LIGHT_SET_TO_REF            0x0050 
+#define REF_SET_TO_ZERO             0x0080 
+#define REF_SET_TO_LIGHT            0x0100 
+                                         
+#define STEP_SET_TO_TINY            0x0200 
+#define STEP_SET_TO_SMALL           0x0400 
+#define STEP_SET_TO_LARGE           0x0600 
+#define STEP_SET_TO_HUGE            0x0800 
+                                         
+#define TIMER_CLEAR                 0x1000
+#define TIMER_SET_TO_SHORT          0x2000
+#define TIMER_SET_TO_LONG           0x3000
+#define TIMER_SET_TO_RANDOM         0x4000
+                                         
+#define MAKE_TREE                   0x8000  
+#define LEAVE_TREE                  0x9000  
                       
                       
                       
