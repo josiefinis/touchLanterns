@@ -22,7 +22,7 @@ Random::Random() { }
 void Random::newPseudoRandom() {
 // Set next pseudorandom number using xorshift algorithm.
   if ( pseudoRandom == 0 ) { 
-    pseudoRandom = std::chrono::system_clock::now().time_since_epoch().count();
+    pseudoRandom = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count();
   }
   pseudoRandom ^= pseudoRandom << 13;
   pseudoRandom ^= pseudoRandom >> 17;

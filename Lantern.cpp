@@ -437,21 +437,20 @@ bool Lantern::isOvershoot ( void ) {
   , AUTO            |  TIMER_OVER | LIGHT_GT_PARENTS            |  LIGHT_LOWER                          |  0
   , AUTO            |  TIMER_OVER | LIGHT_LT_PARENTS            |  LIGHT_RAISE                          |  0
 
-joid Lantern::autoState( void ) {
+void Lantern::autoState( void ) {
   if ( parent ) {
-    if ( not isDelayOver() )           { return 0; }
+    if ( not delay.isOver() )          { return 0; }
     if ( light > parent->getLight() )  { lowerBrightness(); }
     if ( light < parent->getLight() )  { raiseBrightness(); }
   } 
     
-
-  if ( getLight() == 1 )                                { changeState( PAUSE ); return 0; }
-  if ( getLight() == LIGHT_FULL )                       { changeState( PAUSE ); return 0; }
+  if ( light == 1 )                                 { changeStateTo( PAUSE ); return 0; }
+  if ( light == LIGHT_FULL )                        { changeStateTo( PAUSE ); return 0; }
   if ( not parent {
-    if ( classifySensor() == SENSOR_RISING_EDGE )     { changeState( PAUSE ); return 0; }
+    if ( sensorInput == SENSOR_RISING_EDGE )        { changeStateTo( PAUSE ); return 0; }
   }
-  if ( getLight() == parent->getLight() 
-       and parent->getState() != AUTO )                 { changeState( PAUSE ); return 0; }
+  if ( light == parent->getLight() 
+       and parent->getState() != AUTO )             { changeStateTo( PAUSE ); return 0; }
 }
 
 

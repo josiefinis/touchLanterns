@@ -8,106 +8,53 @@
 #define LANTERN_H
 
 #include <cstdint>
-#include "StateMachine.h"
-#include "TransitionMatrix.h"
 #include "Random.h"
+#include "Light.h"
+#include "SensorInput.h"
+#include "State.h"
+#include "DelayTimer.h"
 
+class State;
 
-class Lantern : public StateMachine {
-  public:
-    static const TransitionMatrix transitionMatrix;
-    Lantern();
+class Lantern 
+{
+    public:
+        static Idle     IDLE;
+        static Wake     WAKE;
+        static Full     FULL;
+        static Flicker  FLKR;
+        static Auto     AUTO;
+        static Pause    PAUS;
 
-    void sense( bool value );
-    uint8_t classifySensorInput( void );
-    uint8_t classifyParentInput( void );
-    uint8_t classifyBrightnessInput( void );
-    uint8_t prioritiseInput( void );
-    bool nextState( void );
-    bool updateOutput( void );
-    bool changeBrightness( void );
-    void burnDown( void );
+        Lantern();
 
-    uint8_t getBrightness( void );
-    void setBrightness( uint8_t value );
-    uint8_t getStepSize( void );
-    void setStepSize();
-    void setDelay();
-    Lantern* getParent( void );
-    void setParent( Lantern* parent );
+        uint8_t update( uint8_t sensorValue );
+        void changeStateTo( uint8_t next );
+        void burnDown( void );
+        Lantern* getParent( void );
+        void setParent( Lantern* parent );
+        uint8_t getBrightness( void );
 
-    int getDelay();
+    private:
+        State* state;
+        SensorInput input;
+        Light light;
+        Lantern* parent;
+        uint8_t reference;
+        DelayTimer delay;
+      
+        friend class State;
+        friend class Idle;
+        friend class Wake;
+        friend class Full;
+        friend class Flicker;
+        friend class Auto;
+        friend class Pause;
 
-  private:
-    uint8_t sensorRegister;
-    uint8_t referenceBrightness;
-    uint16_t brightness;
-    Lantern* parent;
-    uint8_t delay;
-    bool isUndershoot();
-    bool isOvershoot();
+        friend class Bridge;
 };
 
-
-/*
-========================================
-        State
-========================================
-*/
-#define OUT                         0x00
-#define GO_OUT                      0x01
-#define IDLE                        0x02
-#define GO_IDLE                     0x03
-#define INIT_DOWN                   0x04
-#define INIT_UP                     0x05
-#define FULL_DOWN                   0x06
-#define FULL_UP                     0x07
-#define FLICKER_DOWN                0x08
-#define FLICKER_UP                  0x09
-#define AUTO_DOWN                   0x0A
-#define AUTO_UP                     0x0B
-#define PAUSE_DOWN                  0x0C
-#define PAUSE_UP                    0x0D
-#define ROOT_FULL_DOWN              0x0E
-#define ROOT_FULL_UP                0x0F
-#define ROOT_FLICKER_DOWN           0x10
-#define ROOT_FLICKER_UP             0x11
-#define ROOT_AUTO_DOWN              0x12
-#define ROOT_AUTO_UP                0x13
-#define ROOT_PAUSE_DOWN             0x14
-#define ROOT_PAUSE_UP               0x15
-#define WAIT                        0x16
-#define GO_FULL_DOWN                0x17
-#define GO_FULL_UP                  0x18
-#define GO_FOLLOW                   0x19
-#define FOLLOW                      0x1A
-/*
-========================================
-        Input
-========================================
-*/
-#define NO_INPUT                    0x00
-#define TOUCHED                     0x01
-#define NOT_TOUCHED                 0x02    
-#define RISING_EDGE                 0x03    
-#define FALLING_EDGE                0x04
-#define MEDIUM_TOUCH                0x05
-#define LONG_TOUCH                  0x06
-#define LONG_TOUCH_FALLING_EDGE     0x07
-#define AT_ZERO_BRIGHTNESS          0x08
-#define AT_ONE_BRIGHTNESS           0x09
-#define AT_FULL_BRIGHTNESS          0x0A 
-#define AT_ZERO_DELAY               0x0B 
-#define PARENT_IS_IDLE              0x0C
-#define PARENT_IS_FULL_DOWN         0x0D
-#define PARENT_IS_FULL_UP           0x0E
-#define PARENT_IS_FOLLOW            0x0F
-#define DONT_CARE                   0xFF
-/*
-========================================
-        Output
-========================================
-*/
+#define NONE                        0xFF
 #define NO_CHANGE                   0x00
 #define START_FLICKER               0x01 
 #define FLICKER                     0x02

@@ -7,17 +7,42 @@
 #include "SensorInput.h"
 
 
-SensorInput::SensorInput() { reg = 0; }
+SensorInput::SensorInput() { reg = NOT_TOUCHED; }
 
-bool SensorInput::operator == ( const uint16_t& other ) const
-{
-    return ( reg & other >> 8 ) == ( other & other >> 8 );
-}
 
-bool SensorInput::operator != ( const uint16_t& other ) const { return !( *this == other ); }
+SensorInput::operator int() const { return ( int ) reg; }
+
 
 void SensorInput::push( bool value ) 
 {
-    reg <<= 1;
-    reg |= value;
+    switch ( value )
+    {
+        case 0:
+            if ( reg > NOT_TOUCHED ) 
+            { 
+                reg = FALLING_EDGE; 
+            }
+            else 
+            { 
+                reg = NOT_TOUCHED; 
+            }
+            return;
+
+        case 1:
+            if ( reg >= LONG_TOUCH ) 
+            { 
+                reg = LONG_TOUCH; 
+                return;
+            }
+            if ( reg >= RISING_EDGE )
+            {
+                reg++;
+                return;
+            }
+            else 
+            {
+                reg = RISING_EDGE;
+                return;
+            }
+    }
 }

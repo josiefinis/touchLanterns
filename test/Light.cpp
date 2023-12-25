@@ -18,61 +18,95 @@ Light::Light()
 Light::operator int() const { return getBrightness(); }
 
 
-inline uint8_t Light::getBrightness( void ) const { 
 // Return the brightness value from its location in the register.
+inline uint8_t Light::getBrightness( void ) const 
+{ 
     return reg >> 8; 
 }
 
 
-inline uint16_t Light::getRateOfChange( void ) const { 
 // Return the rate of change of brightness from its location in the register.
+inline uint16_t Light::getRate( void ) const 
+{ 
     return 1 << 4 + ( reg & 0x7 );
 }
 
 
-inline void Light::toggleUpDown( void ) { 
 // Toggle between raising brightness and lowering brightness.
+inline void Light::toggleSign( void ) 
+{ 
     reg ^= 0x8;
 }
 
 
-inline bool Light::isDimming( void ) const { 
+inline void Light::setSign( bool value ) 
+{ 
+    reg &= ~0x8;
+    reg |= value << 3;
+}
+
+
+inline bool Light::getSign( void ) 
+{ 
+    return reg >> 3 & 1;
+}
+
+
+inline void Light::setNegativeRate( void ) 
+{ 
+    reg |= 0x8;
+}
+
+
+inline void Light::setPositiveRate( void ) 
+{ 
+    reg &= ~0x8;
+}
+
+
 // Return true if brightness is decreasing.
+inline bool Light::isDimming( void ) const 
+{ 
     return reg & 0x8; 
 }
 
 
-inline bool Light::isBrightening( void ) const { 
 // Return true if brightness is increasing.
+inline bool Light::isBrightening( void ) const 
+{ 
     return not ( reg & 0x8 ); 
 }
 
 
-inline void Light::setBrightness( uint8_t value ) { 
 // Set brightness bits in the register.
+inline void Light::setBrightness( uint8_t value ) 
+{ 
     this->reg &= ~0xfff0;
     this->reg |= value << 8; 
 }
 
 
-inline void Light::setRateOfChange( uint8_t value ) { 
 // Set rate of change bits in the register.
+inline void Light::setRate( uint8_t value ) 
+{ 
     this->reg &= ~0x7;
     this->reg |=  0x7 & value;
 }
 
 
-void Light::changeBrightness( uint8_t floor=0, uint8_t ceil=0xFF ) {
 // Raise or lower brightness depending on the value of the up/down toggle bit in the register.
+void Light::changeBrightness( uint8_t floor=0, uint8_t ceil=0xFF ) 
+{
     if ( isBrightening() ) { raiseBrightness( ceil ); }
     else { lowerBrightness( floor ); }
 }
 
 
-void Light::raiseBrightness( uint8_t ceil=0xFF ) {
 // Raise brightness, using rate of change stored in register.
+void Light::raiseBrightness( uint8_t ceil=0xFF ) 
+{
     if ( ceil < getBrightness() ) { return; }
-    int step = getRateOfChange();
+    int step = getRate();
     if ( step > ( ceil << 8 ) - ( reg & 0xfff0 ) ) { 
         reg &= ~( 0xff << 8 ); 
         reg |= ceil << 8; 
@@ -81,14 +115,28 @@ void Light::raiseBrightness( uint8_t ceil=0xFF ) {
 }
 
 
-void Light::lowerBrightness( uint8_t floor=0 ) {
 // Lower brightness, using rate of change stored in register.
+void Light::lowerBrightness( uint8_t floor=0 ) 
+{
     if ( floor > getBrightness() ) { return; }
-    int step = getRateOfChange();
+    int step = getRate();
     if ( step > ( reg & 0xfff0 ) - ( floor << 8 ) ) { 
         reg &= ~( 0xff << 8 ); 
         reg |= floor << 8; 
     }
     else { reg -= step; }
+}
+
+
+void Light::flicker( void )
+{
+    reg ^= reg << 5; 
+    reg ^= 0xfff0 & reg >> 7;
+}
+
+
+void Light::pulse( void )
+{
+    //TODO
 }
 #endif

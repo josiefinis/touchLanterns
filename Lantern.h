@@ -12,16 +12,6 @@
 #include "TransitionTable.h"
 #include "Random.h"
 
-struct Light {
-  uint16_t value;
-  bool operator =  ( const Light& object ) const;
-  bool operator ++ ( const Light& object ) const;
-  bool operator -- ( const Light& object ) const;
-  bool operator == ( const Light& object ) const;
-  bool operator <  ( const Light& object ) const;
-  bool operator >  ( const Light& object ) const;
-};
-
 
 class Lantern : public StateMachine {
   public:

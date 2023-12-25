@@ -60,14 +60,22 @@ void test_assignment_from( void )
 void test_lowerBrightness( void )
 {
     Light q; q.setBrightness(50);
-    std::cout << "rate: " << ( int ) q.getRateOfChange() << std::endl;
+    std::cout << "rate: " << ( int ) q.getRate() << std::endl;
     for ( int i=0; i<256; i++ ) {
         q.lowerBrightness( 45 );
         std::cout << ( int ) q << " ";
     }
     std::cout << std::endl;
+    std::cout << "rate: " << ( int ) q.getRate() << std::endl;
     for ( int i=0; i<256; i++ ) {
         q.lowerBrightness( 80 );
+        std::cout << ( int ) q << " ";
+    }
+    q.setRate(7);
+    std::cout << std::endl;
+    std::cout << "rate: " << ( int ) q.getRate() << std::endl;
+    for ( int i=0; i<256; i++ ) {
+        q.lowerBrightness();
         std::cout << ( int ) q << " ";
     }
     std::cout << std::endl;
@@ -77,40 +85,47 @@ void test_lowerBrightness( void )
 void test_raiseBrightness( void )
 {
     Light l; l.setBrightness(50);
-    l.setRateOfChange(5);
-    std::cout << "rate: " << ( int ) l.getRateOfChange() << std::endl;
+    l.setRate(7);
+    std::cout << "rate: " << ( int ) l.getRate() << std::endl;
     for ( int i=0; i<256; i++ ) {
         l.raiseBrightness( 55 );
         std::cout << ( int ) l << " ";
     }
     std::cout << std::endl;
+    std::cout << "rate: " << ( int ) l.getRate() << std::endl;
     for ( int i=0; i<256; i++ ) {
         l.raiseBrightness( 30 );
+        std::cout << ( int ) l << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "rate: " << ( int ) l.getRate() << std::endl;
+    for ( int i=0; i<256; i++ ) {
+        l.raiseBrightness();
         std::cout << ( int ) l << " ";
     }
     std::cout << std::endl;
 }
 
 
-void test_toggleUpDown( void )
+void test_toggleSign( void )
 {
     Light l; 
     std::cout << "isDimming: " << ( int ) l.isDimming() << std::endl;
     std::cout << "isBrightnening: " << ( int ) l.isBrightening() << std::endl;
-    l.toggleUpDown();
+    l.toggleSign();
     std::cout << "isDimming: " << ( int ) l.isDimming() << std::endl;
     std::cout << "isBrightnening: " << ( int ) l.isBrightening() << std::endl;
 
-    l.setRateOfChange(3);
-    std::cout << "rate: " << ( int ) l.getRateOfChange() << std::endl;
-    l.toggleUpDown();
-    std::cout << "rate: " << ( int ) l.getRateOfChange() << std::endl;
-    l.toggleUpDown();
+    l.setRate(3);
+    std::cout << "rate: " << ( int ) l.getRate() << std::endl;
+    l.toggleSign();
+    std::cout << "rate: " << ( int ) l.getRate() << std::endl;
+    l.toggleSign();
     for ( int i=0; i<400; i++ ) {
         l.changeBrightness();
         if ( i % 50 == 49 ) { 
-            l.toggleUpDown(); 
-            std::cout << "rate: " << ( int ) l.getRateOfChange() << std::endl;
+            l.toggleSign(); 
+            std::cout << "rate: " << ( int ) l.getRate() << std::endl;
         }
         std::cout << ( int ) l << " ";
     }
@@ -122,9 +137,9 @@ int main( void ) {
 //  test_Light();
 //  test_cast();
 //  test_comparisons();
-//  test_raiseBrightness();
+    test_raiseBrightness();
     test_lowerBrightness();
-//  test_toggleUpDown();
+//  test_toggleSign();
 //  test_arithmetic();
 //  test_assignment_from();
 
