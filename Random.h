@@ -12,6 +12,7 @@
 class Random {
   public:
     Random();
+    static uint8_t uRandN(uint8_t n);
     static uint8_t urandom(uint8_t n);
     static void seed(uint8_t bits);
     static void push(uint8_t bits);

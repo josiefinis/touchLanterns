@@ -68,4 +68,15 @@ uint8_t Random::pull(uint8_t n) {
 uint8_t Random::urandom(uint8_t n) {
   return n * pull( 8 ) / 256;
 }
+
+
+uint8_t Random::uRandN( uint8_t expectedValue ) 
+{ 
+    uint16_t delay = 0;
+    for ( int i=0; i<10; i++ )
+    {
+        delay += urandom( expectedValue );
+    }
+    return delay / expectedValue;
+}
 #endif
