@@ -47,20 +47,20 @@ DelayTimer DelayTimer::operator--(int)
 
 
 // Set delay in 512 ms increments up to ~64 s.
-void inline DelayTimer::set( uint8_t delay )
+void DelayTimer::set( uint8_t delay )
 { 
     remaining = delay;
 }
 
 
 // Clear delay so it always is over.
-void inline DelayTimer::clear( void )
+void DelayTimer::clear( void )
 { 
     remaining = 0; 
 }
 
 // Return true when the delay is over.
-bool inline DelayTimer::isOver( void )
+bool DelayTimer::isOver( void )
 { 
     return remaining == 0;
 }
