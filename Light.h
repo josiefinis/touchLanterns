@@ -9,19 +9,33 @@
 
 #include "Arduino.h"
 
+#define LIGHT_FULL 0xFF
 
 class Light {
-  public:
-    const uint16_t value;
+    public:
+        Light();
 
-    inline Light& operator =  ( const Light& other );
-    inline Light& operator ++ ( const Light& other );
-    inline Light& operator -- ( const Light& other );
-    inline bool operator == (const X& lhs, const X& rhs) { /* do actual comparison */ }
-    inline bool operator != (const X& lhs, const X& rhs) { return !(lhs == rhs); }
-    inline bool operator <  (const X& lhs, const X& rhs);
-    inline bool operator >  (const X& lhs, const X& rhs);
-    inline bool operator <= (const X& lhs, const X& rhs);
-    inline bool operator >= (const X& lhs, const X& rhs);
+        operator int() const; 
+        
+        inline uint8_t  getBrightness( void ) const;
+        inline void     setBrightness( uint8_t reg );
+        inline uint16_t getRate( void ) const;
+        inline void     toggleSign( void );
+        inline void     setSign( bool );
+        inline bool     getSign( void );
+        inline void     setNegativeRate( void );
+        inline void     setPositiveRate( void );
+        inline void     setRate( uint8_t value );
+        inline bool     isBrightening( void ) const;
+        inline bool     isDimming( void ) const;
+        void changeBrightness( uint8_t floor=0, uint8_t ceil=0xff );
+        void raiseBrightness( uint8_t ceil=0xff ); 
+        void lowerBrightness( uint8_t floor=0 );
+        void flicker( void );
+        void pulse( void );
+
+    private:
+        uint16_t reg;
+        uint8_t reference;
 };
 #endif
