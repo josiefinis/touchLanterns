@@ -92,13 +92,13 @@ uint8_t Idle::getNext( Lantern& lantern )
 
     if ( *( lantern.parent->state ) == FULL_ID and not lantern.parent->delay )
     {
-        lantern.delay = Random::uRandN( 3 );
+        lantern.delay = Random::uRandN( 16 );
         lantern.light.setSign( lantern.parent->light.getSign() );
         return FULL_ID;
     }
     if ( *( lantern.parent->state ) == AUTO_ID and not lantern.parent->delay )
     {
-        lantern.delay = Random::uRandN( 3 );
+        lantern.delay = Random::uRandN( 16 );
         lantern.light.setSign( lantern.parent->light.getSign() );
         return AUTO_ID;
     }
@@ -118,7 +118,12 @@ uint8_t Idle::getNext( Lantern& lantern )
 Wake::Wake() : State( WAKE_ID ) { }
 
 // Set a large rate in order to give immediate and obviousvisual feedback.
-void Wake::enter( Lantern& lantern ) { lantern.light.setRate( 5 ); }
+void Wake::enter( Lantern& lantern ) 
+{ 
+    if ( lantern.getBrightness() < 32 ) { lantern.light.setPositiveRate(); }
+    else { lantern.light.setNegativeRate(); }
+    lantern.light.setRate( 5 ); 
+}
 
 void Wake::exit( Lantern& lantern )  { }
 
@@ -164,6 +169,7 @@ uint8_t Full::act( Lantern& lantern )
     { 
         return 0;
     }
+    lantern.light.changeBrightness(); 
     lantern.light.changeBrightness(); 
     return 0;
 }

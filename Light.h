@@ -18,7 +18,7 @@ class Light {
         operator int() const; 
         
         uint8_t  getBrightness( void ) const;
-        void     setBrightness( uint8_t reg );
+        void     setBrightness( uint8_t value );
         uint16_t getRate( void ) const;
         void     toggleSign( void );
         void     setSign( bool );

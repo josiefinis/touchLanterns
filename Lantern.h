@@ -8,40 +8,19 @@
 #define LANTERN_H
 
 #include "Arduino.h"
+
+#include "State.fwd.h"
+#include "SerialMonitor.fwd.h"
 #include "Random.h"
 #include "Light.h"
 #include "SensorInput.h"
-#include "DelayTimer.h"
-#include "State.h"
-#include "Idle.h"
-#include "Wake.h"
-#include "Full.h"
-#include "Flicker.h"
-#include "Auto.h"
-#include "Pause.h"
 
-class Idle;
-class Wake;
-class Full;
-class Flicker;
-class Auto;
-class Pause;
-class State;
 
-class Lantern 
+class Lantern
 {
     public:
-        static Idle     IDLE;
-        static Wake     WAKE;
-        static Full     FULL;
-        static Flicker  FLKR;
-        static Auto     AUTO;
-        static Pause    PAUS;
-
         Lantern();
 
-        uint8_t update( uint8_t sensorValue );
-        void changeStateTo( uint8_t next );
         void burnDown( void );
         Lantern* getParent( void );
         void setParent( Lantern* parent );
@@ -53,17 +32,16 @@ class Lantern
         Light light;
         Lantern* parent;
         uint8_t reference;
-        DelayTimer delay;
-      
+        uint8_t delay;
         friend class State;
+        friend class LanternCollection;
         friend class Idle;
         friend class Wake;
         friend class Full;
         friend class Flicker;
         friend class Auto;
         friend class Pause;
-
-        //friend class Bridge;
+        friend class Bridge;
 };
 
 #define NONE                        0xFF

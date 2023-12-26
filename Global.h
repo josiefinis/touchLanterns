@@ -2,7 +2,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#define MONITOR_INTERVAL                    500 // ms
+#define MONITOR_INTERVAL                    320 // ms
 #define MONITOR_EVENTS                      0
 #define MONITOR_TIMINGS                     0
 #define MONITOR_RAW_INPUT                   0

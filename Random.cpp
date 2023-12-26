@@ -21,7 +21,7 @@ Random::Random() { }
 void Random::newPseudoRandom() {
 // Set next pseudorandom number using xorshift algorithm.
   if ( pseudoRandom == 0 ) { 
-    pseudoRandom = digitalRead(A0); 
+    pseudoRandom = micros(); 
   }
   pseudoRandom ^= pseudoRandom << 13;
   pseudoRandom ^= pseudoRandom >> 17;
@@ -77,6 +77,6 @@ uint8_t Random::uRandN( uint8_t expectedValue )
     {
         delay += urandom( expectedValue );
     }
-    return delay / expectedValue;
+    return delay / 10;
 }
 #endif

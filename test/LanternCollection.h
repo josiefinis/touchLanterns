@@ -10,25 +10,33 @@
 #include <cstdint>
 #include "Graph.h"
 #include "Lantern.h"
+#include "State.h"
 
 #define COLLECTION_SIZE     16
+#define NONE                0xff
 
-
-struct TestData;
 
 class LanternCollection : public Graph {
   public:
-    LanternCollection( const uint8_t size, const uint16_t* adjacencyList );
+        static Idle     IDLE;
+        static Wake     WAKE;
+        static Full     FULL;
+        static Flicker  FLKR;
+        static Auto     AUTO;
+        static Pause    PAUS;
+
+        LanternCollection( const uint8_t size, const uint16_t* adjacencyList );
 
         Lantern& operator[](uint8_t idx);
-  const Lantern& operator[](uint8_t idx) const;
+        const Lantern& operator[](uint8_t idx) const;
 
-        bool update( uint8_t idx, uint8_t );
+        bool updateCollection( uint8_t idx, uint8_t sensorValue=NONE );
+        uint8_t updateLantern( Lantern& lantern, uint8_t sensorValue=NONE );
+        void changeState( Lantern& lantern, uint8_t next );
+
         uint8_t getBrightness( uint8_t idx );
         void burnDown( uint8_t idx);
 
-        void print( uint8_t idx );
-        TestData exportData( uint8_t idx );
 
   private:
     const uint8_t size;

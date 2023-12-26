@@ -1,9 +1,12 @@
+#include "Arduino.h"
 #include "Global.h"
 
 #include "Sensor.h"
-#include "LanternCollection.h"
 #include "PWMSignal.h"
 #include "Register.h"
+#include "Lantern.h"
+#include "LanternCollection.h"
+#include "SerialMonitor.h"
 
 
 // Create class instances.
@@ -19,6 +22,9 @@ const uint16_t neighbourList[16] =
 };
 
 LanternCollection lantern = LanternCollection( 16, neighbourList );
+#if SERIAL_ON
+    SerialMonitor mon;
+#endif
 
 
 uint8_t idx;
@@ -62,9 +68,9 @@ void pwmCycle1stHalf()
     for ( uint8_t i=0; i<16; i++ ) {
         if ( i == idx )
         {
-            lantern.update( idx, pollSensor() );
+            lantern.updateCollection( idx, pollSensor() );
         }
-        lantern.update( idx );
+        lantern.updateCollection( idx );
         pwm.changeDuty( i, lantern.getBrightness( i ) );
     }
     pwm.nextEdge();
@@ -80,109 +86,6 @@ void pwmCycle2ndHalf() {
   edgeAtMicros = pwm.getTime();
 }
 
-#if SERIAL_ON
-void printIndices() {
-  Serial.println();
-  for ( uint8_t i=0; i<16; i++ ) {
-    Serial.print( i, HEX ); Serial.print( "\t" );
-  }
-  Serial.println(); 
-  for ( uint8_t i=0; i<16; i++ ) {
-    Serial.print("========");
-  }
-  Serial.println();
-}
-#endif
-
-
-
-#if SERIAL_ON
-void printLantern( uint8_t idx ) {
-  #if MONITOR_INPUT
-    Serial.print( lantern.getInput( idx ), HEX ); 
-  #endif
-  #if MONITOR_STATE
-    Serial.print( "s" ); 
-    Serial.print( lantern.getState( idx ), HEX ); 
-  #endif
-  #if MONITOR_OUTPUT
-    Serial.print( "o" ); 
-    Serial.print( lantern.getOutput( idx ), HEX ); 
-  #endif
-}
-
-
-void printLine() {
-  bool chosenIndex = 0xF;
-  bool all = 1;
-  Serial.println();
-  for ( uint8_t i = 0; i < 16; i++ ) { 
-    if ( all ) { 
-      uint8_t& idx = i;
-      printLantern( idx );
-    }
-    if ( not all and i == 0 ) {
-      uint8_t idx = chosenIndex;
-      printLantern( idx );
-    }
-    #if MONITOR_BRIGHTNESS
-      Serial.print( "b" ); 
-      Serial.print( lantern.getBrightness( idx ) ); 
-    #endif
-    Serial.print( "\t" );
-  }
-}
-#endif
-
-
-#if MONITOR_PARENT
-void printParent() {
-  for ( uint8_t i=0; i<16; i++ ) { 
-    if ( lantern.getParent( i ) ) {
-      Serial.print( lantern[i].getParent()->getIndex(), HEX ); 
-    }
-    Serial.print( "\t" );
-  }
-  Serial.println();
-}
-#endif
-
-
-#if MONITOR_DELAY
-void printDelay() {
-  Serial.println();
-  for ( uint8_t i=0; i<16; i++ ) { Serial.print( lantern.getDelay( i ) ); Serial.print( " ds\t" ); }
-}
-#endif
-
-
-#if MONITOR_REGISTER_SIGNAL
-void printRegisterSignal() {
-  Serial.print("\nInterval\tSignal\n"); 
-  for ( uint8_t i=0; i<32; i++ ) {
-    //Serial.print(microsMONITOR[MONITORidx & 0x1F], BIN); Serial.print("\t");
-    Serial.print(edgeAtMicrosMONITOR[MONITORidx & 0x1F]); Serial.print("\t");
-    Serial.print(signalMONITOR[MONITORidx & 0x1F], BIN); Serial.print("\n");
-    MONITORidx++;
-  }
-}
-#endif
-
-
-#if MONITOR_TIMINGS
-void printTimings() {
-  Serial.print("Sensor input:\t"); 
-  Serial.print(inputTimer.getMean()); Serial.print("\t"); 
-  Serial.println(inputTimer.getMax());
-  Serial.print("Lantern update:\t"); 
-  Serial.print(updateTimer.getMean()); Serial.print("\t"); 
-  Serial.println(updateTimer.getMax());
-  Serial.print("Brightness:\t"); 
-  Serial.print(brightnessTimer.getMean()); Serial.print("\t"); 
-  Serial.println(brightnessTimer.getMax());
-  Serial.println();
-}
-#endif
 
 void initialisePins() {
   // Set pins I/O.
@@ -235,9 +138,9 @@ void loop() {
     lastMonitorMillis = currentMillis;
 
     if ( millis() % (8 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
-      printIndices();
+      mon.printIndices();
     }
-    printLine();
+    mon.printLine( lantern );
     #if MONITOR_TIMINGS
     printTimings();
     #endif

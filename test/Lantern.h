@@ -11,25 +11,14 @@
 #include "Random.h"
 #include "Light.h"
 #include "SensorInput.h"
-#include "State.h"
-#include "DelayTimer.h"
 
 class State;
 
 class Lantern 
 {
     public:
-        static Idle     IDLE;
-        static Wake     WAKE;
-        static Full     FULL;
-        static Flicker  FLKR;
-        static Auto     AUTO;
-        static Pause    PAUS;
-
         Lantern();
 
-        uint8_t update( uint8_t sensorValue );
-        void changeStateTo( uint8_t next );
         void burnDown( void );
         Lantern* getParent( void );
         void setParent( Lantern* parent );
@@ -41,9 +30,9 @@ class Lantern
         Light light;
         Lantern* parent;
         uint8_t reference;
-        DelayTimer delay;
-      
+        uint8_t delay;
         friend class State;
+        friend class LanternCollection;
         friend class Idle;
         friend class Wake;
         friend class Full;

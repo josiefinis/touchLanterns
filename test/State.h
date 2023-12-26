@@ -33,11 +33,6 @@ class State
         State ( const uint8_t id );
 
         operator int() const;
-//        bool operator == ( const State& )   const;
-//        bool operator == ( const uint8_t& ) const;
-//        bool operator != ( const State& )   const;
-//        bool operator != ( const uint8_t& ) const;
-
         virtual void enter( Lantern& );
         virtual void exit( Lantern& );
         virtual uint8_t act( Lantern& );

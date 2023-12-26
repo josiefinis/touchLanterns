@@ -127,7 +127,7 @@ void Light::lowerBrightness( uint8_t floor=0 )
 void Light::flicker( void )
 {
     reg ^= reg << 5; 
-    reg ^= 0xfff0 & reg >> 7;
+    reg ^= 0xfff0 & reg >> 2;
 }
 
 
