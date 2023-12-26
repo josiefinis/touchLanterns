@@ -55,18 +55,21 @@ void burnLanterns() {
 }
 
 
-void pwmCycle1stHalf() {
-  pwm.periodStart();
-  shiftRegister.writeToStorageRegister( pwm.getSignal() ); // TODO change to shorter name
-  lantern.sense( idx, pollSensor() );
-  lantern.update( idx );
-  for ( uint8_t i=0; i<16; i++ ) {
-    lantern.changeBrightness( i );
-    pwm.changeDuty( i, lantern.getBrightness( i ) );
-  }
-  pwm.nextEdge();
-  edgeAtMicros = pwm.getTime();
-  idx = sensor.nextMuxChannel();
+void pwmCycle1stHalf() 
+{
+    pwm.periodStart();
+    shiftRegister.writeToStorageRegister( pwm.getSignal() ); // TODO change to shorter name
+    for ( uint8_t i=0; i<16; i++ ) {
+        if ( i == idx )
+        {
+            lantern.update( idx, pollSensor() );
+        }
+        lantern.update( idx );
+        pwm.changeDuty( i, lantern.getBrightness( i ) );
+    }
+    pwm.nextEdge();
+    edgeAtMicros = pwm.getTime();
+    idx = sensor.nextMuxChannel();
 }
 
 
