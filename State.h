@@ -7,8 +7,8 @@
 #define STATE_H
 
 #include "Arduino.h"
-#include "Light.h"
-#include "DelayTimer.h"
+#include "Lantern.h"
+#include "Random.h"
 
 
 
@@ -19,7 +19,9 @@
 #define AUTO_ID     4
 #define PAUS_ID     5
 
-class Lantern;
+#define SHORT_DELAY     24
+#define LONG_DELAY      255
+
 
 class State
 {
@@ -34,5 +36,77 @@ class State
 
     private:
         const uint8_t id;
+};
+
+
+
+class Idle : public State
+{
+    public:
+        Idle();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
+};
+
+
+
+class Wake : public State
+{
+    public:
+        Wake();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
+};
+
+
+
+class Full : public State
+{
+    public:
+        Full();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
+};
+
+
+
+class Flicker : public State
+{
+    public:
+        Flicker();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
+};
+
+
+
+class Auto : public State
+{
+    public:
+        Auto();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );;
+};
+
+
+
+class Pause : public State
+{
+    public:
+        Pause();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
 };
 #endif
