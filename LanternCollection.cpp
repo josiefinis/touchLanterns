@@ -3,10 +3,6 @@
                     LANTERN COLLECTION
 ======================================================================================================================================================
 */ 
-
-#ifndef LANTERN_COLLECTION_CPP
-#define LANTERN_COLLECTION_CPP
-
 #include "LanternCollection.h"
 #include "Global.h"
 
@@ -17,28 +13,29 @@ LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjace
 {}
 
 
-void LanternCollection::sense( uint8_t idx, bool value ) {
-  collection[ idx ].sense( value );
+      Lantern& LanternCollection::operator[](uint8_t idx)       { return collection[idx]; }
+const Lantern& LanternCollection::operator[](uint8_t idx) const { return collection[idx]; }
+
+
+bool LanternCollection::update( uint8_t idx, uint8_t sensorValue=NONE ) {
+    switch ( collection[ idx ].update( sensorValue ) )
+    {
+        case NO_CHANGE:
+            return 0;
+
+        case MAKE_TREE:
+            makeTree( idx );
+            return 1;
+
+        default:
+            return 1;
+    }
 }
 
 
-bool LanternCollection::update( uint8_t idx ) {
-  collection[ idx ].nextState();
-  collection[ idx ].updateOutput();
-  if ( collection[ idx ].getOutput() == MAKE_TREE ) {
-    makeTree( idx );
-  }
-  return 1;
-}
-
-
-bool LanternCollection::changeBrightness( uint8_t idx ) {
-  return collection[ idx ].changeBrightness();
-}
-
-
-uint8_t LanternCollection::getBrightness( uint8_t idx ) {
-  return collection[ idx ].getBrightness();
+uint8_t LanternCollection::getBrightness( uint8_t idx ) 
+{
+    return collection[ idx ].getBrightness();
 }
 
 
@@ -47,48 +44,16 @@ void LanternCollection::burnDown( uint8_t idx ) {
 }
 
 
-void LanternCollection::makeTree( uint8_t root ) {
-  uint8_t parentList[ 16 ];
-  Tree tree = Tree( 16, parentList );
-  makeSpanningTree( &tree, root );            
-  //printTree( tree );
-  for ( uint8_t i=0; i<16; i++ ) {
-    if ( i == root ) { continue; }
-    Lantern* parent = &collection[ tree.getParent( i ) ];
-    Lantern* child = &collection[ i ];
-    child->setParent( parent );
-    child->setState( WAIT );
-  }
-}
-
-
-#if SERIAL_ON
-  void LanternCollection::printTree( const Tree& tree ) {
-    Serial.println();
+void LanternCollection::makeTree( uint8_t root )
+{
+    uint8_t parentList[ 16 ];
+    Tree tree = Tree( 16, parentList );
+    makeSpanningTree( &tree, root );            
+    //printTree( tree );
     for ( uint8_t i=0; i<16; i++ ) {
-      Serial.print( tree.getParent( i ), HEX ); Serial.print( "\t" );
-    } 
-    Serial.println();
-  }
-  
-  
-  uint8_t LanternCollection::getInput( uint8_t idx ) {
-    return collection[ idx ].prioritiseInput();
-  }
-  
-  
-  uint8_t LanternCollection::getState( uint8_t idx ) {
-    return collection[ idx ].getState();
-  }
-  
-  
-  uint8_t LanternCollection::getOutput( uint8_t idx ) {
-    return collection[ idx ].getOutput();
-  }
-
-
-  uint8_t LanternCollection::getDelay( uint8_t idx ) {
-    return collection[ idx ].getDelay();
-  }
-#endif
-#endif
+        if ( i == root ) { continue; }
+        Lantern* parent = &collection[ tree.getParent( i ) ];
+        Lantern* child = &collection[ i ];
+        child->setParent( parent );
+    }
+}
