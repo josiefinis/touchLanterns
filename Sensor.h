@@ -3,6 +3,8 @@
                                 SENSOR
 ======================================================================================================================================================
 */
+#ifndef SENSOR_H
+#define SENSOR_H
 
 #include "Arduino.h"
 #include <CapacitiveSensor.h>
@@ -55,3 +57,4 @@ channel   S3210        output
 Multiple detections on a single cycle result in a combined output e.g.
 detection on channels 6 and 4 will yield output 0000 0000 1100 0000.
 */
+#endif
