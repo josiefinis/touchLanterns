@@ -15,7 +15,8 @@ Lantern::Lantern()
     : state( nullptr )
     , parent( nullptr ) 
     , reference( 0 )
-{}
+    , light( Light( reference ) )
+{ }
 
 
 void Lantern::burnDown( void )

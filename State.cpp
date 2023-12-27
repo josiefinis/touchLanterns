@@ -52,11 +52,10 @@ Idle::Idle() : State( IDLE_ID ) { }
 // Set slowest rate of change on entry ( step size = 2^rate ).
 void Idle::enter( Lantern& lantern ) 
 { 
-    lantern.light.setRate( 0 );
+    lantern.light.setBehaviour( TINY_STEP );
     lantern.reference = lantern.light;
 }
 
-// Clear the delay trigger so it won't cause an action in error.  // TODO delete comment 
 void Idle::exit( Lantern& lantern )  { }
 
 // Trend slowly toward reference brightness, which itself meanders slowly downwards, 
@@ -72,13 +71,15 @@ uint8_t Idle::act( Lantern& lantern )
     if ( lantern.delay == 0 and lantern.light < lantern.reference )
     {
         lantern.delay = 0xFF;   
-        lantern.light.raiseBrightness();
+        lantern.light.setToBrighten();
+        lantern.light.changeBrightness( lantern.reference, lantern.reference );
         return 0;
     }
     if ( lantern.delay == 0 and lantern.light > lantern.reference )
     {
         lantern.delay = 0xFF;   
-        lantern.light.lowerBrightness();
+        lantern.light.setToDim();
+        lantern.light.changeBrightness( lantern.reference, lantern.reference );
         return 0;
     }
     return 0;
@@ -120,9 +121,9 @@ Wake::Wake() : State( WAKE_ID ) { }
 // Set a large rate in order to give immediate and obviousvisual feedback.
 void Wake::enter( Lantern& lantern ) 
 { 
-    if ( lantern.getBrightness() < 32 ) { lantern.light.setPositiveRate(); }
-    else { lantern.light.setNegativeRate(); }
-    lantern.light.setRate( 5 ); 
+    if ( lantern.getBrightness() < 32 ) { lantern.light.setToBrighten(); }
+    else { lantern.light.setToDim(); }
+    lantern.light.setBehaviour( LARGE_STEP ); 
 }
 
 void Wake::exit( Lantern& lantern )  { }
@@ -158,9 +159,9 @@ uint8_t Wake::getNext( Lantern& lantern )
 Full::Full() : State( FULL_ID ) { }
 
 // Set rate to highest possible for simple on/off effect.
-void Full::enter( Lantern& lantern ){ lantern.light.setRate( 7 ); }
+void Full::enter( Lantern& lantern ){ lantern.light.setBehaviour( HUGE_STEP ); }
 
-void Full::exit( Lantern& lantern ) { lantern.light.setRate( 0 ); }
+void Full::exit( Lantern& lantern ) { }
 
 // Change brightness according to up/down bit, or if following a parent, towards it. 
 uint8_t Full::act( Lantern& lantern )
@@ -169,7 +170,6 @@ uint8_t Full::act( Lantern& lantern )
     { 
         return 0;
     }
-    lantern.light.changeBrightness(); 
     lantern.light.changeBrightness(); 
     return 0;
 }
@@ -204,14 +204,14 @@ Flicker::Flicker() : State( FLKR_ID ) { }
 
 void Flicker::enter( Lantern& lantern )
 {
-    lantern.light.flicker();
+    lantern.light.setBehaviour( FLICKER );
     lantern.reference = lantern.light;
 }
 
 void Flicker::exit( Lantern& lantern ) 
 { 
+    lantern.light.setBehaviour( STABLE );
     lantern.light.setBrightness( lantern.reference ); 
-    lantern.light.setRate( 0 );
 }
 
 uint8_t Flicker::act( Lantern& lantern )
@@ -220,7 +220,7 @@ uint8_t Flicker::act( Lantern& lantern )
     {
         return MAKE_TREE;
     }
-    lantern.light.flicker(); 
+    lantern.light.changeBrightness(); 
     return 0;
 }
 
@@ -251,7 +251,7 @@ uint8_t Flicker::getNext( Lantern& lantern )
 */
 Auto::Auto() : State( AUTO_ID ) { }
 
-void Auto::enter( Lantern& lantern ) { lantern.light.setRate( 1 ); }
+void Auto::enter( Lantern& lantern ) { lantern.light.setBehaviour( SMALL_STEP ); }
 
 void Auto::exit( Lantern& lantern ) { } 
 
@@ -265,12 +265,14 @@ uint8_t Auto::act( Lantern& lantern )
     if ( lantern.delay ) { return 0; }
     if ( lantern.light > lantern.parent->light ) 
     { 
-        lantern.light.lowerBrightness( lantern.parent->light ); 
+        lantern.light.setToDim();
+        lantern.light.changeBrightness( lantern.parent->light, lantern.parent->light ); 
         return 0;
     }
     if ( lantern.light < lantern.parent->light )  
     { 
-        lantern.light.raiseBrightness( lantern.parent->light ); 
+        lantern.light.setToBrighten();
+        lantern.light.changeBrightness( lantern.parent->light, lantern.parent->light ); 
         return 0;
     }
     return 0;
@@ -299,24 +301,61 @@ Pause::Pause() : State( PAUS_ID ) { }
 
 void Pause::enter( Lantern& lantern )
 {
-    lantern.light.pulse();                      // TODO implement pulse somehow
+    lantern.light.setBehaviour( PULSE );
     lantern.delay = SHORT_DELAY;
 }
+
+
 void Pause::exit( Lantern& lantern )
 {
-    lantern.light.pulse();
-    lantern.delay = 0;
     lantern.light.toggleSign();
+    lantern.delay = 0;
 }
-uint8_t Pause::act( Lantern& lantern )
-{
-    return MAKE_TREE;
+
+
+uint8_t Pause::act( Lantern& lantern ) 
+{ 
+    lantern.light.changeBrightness();
 }
+
+
 uint8_t Pause::getNext( Lantern& lantern )
 {
-    if ( lantern.input == RISING_EDGE and not lantern.parent ) { return AUTO_ID; }
+    if ( lantern.input == RISING_EDGE and not lantern.parent ) { return PULS_ID; }
     if ( lantern.parent and *( lantern.parent->state ) == AUTO_ID ) { return AUTO_ID; }
     if ( lantern.input == MEDIUM_TOUCH ) { return FLKR_ID; }
     if ( lantern.delay == 0 ) { return IDLE_ID; }
+    return *this;
+}
+
+
+
+/*
+======================================================================================================================================================
+    PULSE           ENTRY                                       
+                    EXIT                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Pulse::Pulse() : State( PULS_ID ) { }
+
+void Pulse::enter( Lantern& lantern )
+{
+    lantern.light.setBehaviour( PULSE );
+    lantern.reference = lantern.light;
+}
+
+
+void Pulse::exit( Lantern& lantern ) { }
+
+
+uint8_t Pulse::act( Lantern& lantern ) 
+{ 
+    lantern.light.changeBrightness();
+}
+
+
+uint8_t Pulse::getNext( Lantern& lantern )
+{
+    if ( lantern.light.getBehaviour() == STABLE ) { return AUTO_ID; }
     return *this;
 }

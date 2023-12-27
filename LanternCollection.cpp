@@ -13,6 +13,7 @@ Full    LanternCollection::FULL;
 Flicker LanternCollection::FLKR;
 Auto    LanternCollection::AUTO;
 Pause   LanternCollection::PAUS;
+Pulse   LanternCollection::PULS;
 
 
 LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjacencyList ) 
@@ -98,6 +99,11 @@ void LanternCollection::changeState( Lantern& lantern, uint8_t next )
 
         case PAUS_ID:
             lantern.state = &PAUS;
+            lantern.state->enter( lantern );
+            break;
+
+        case PULS_ID:
+            lantern.state = &PULS;
             lantern.state->enter( lantern );
             break;
     }

@@ -14,6 +14,7 @@
 
 #define COLLECTION_SIZE     16
 #define NONE                0xff
+#define NO_CHANGE           0x00
 
 
 class LanternCollection : public Graph {
@@ -24,6 +25,7 @@ class LanternCollection : public Graph {
         static Flicker  FLKR;
         static Auto     AUTO;
         static Pause    PAUS;
+        static Pulse    PULS;
 
         LanternCollection( const uint8_t size, const uint16_t* adjacencyList );
 

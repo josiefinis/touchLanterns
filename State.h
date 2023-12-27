@@ -18,9 +18,11 @@
 #define FLKR_ID     3
 #define AUTO_ID     4
 #define PAUS_ID     5
+#define PULS_ID     6
 
 #define SHORT_DELAY     24
 #define LONG_DELAY      255
+#define MAKE_TREE       0xA  
 
 
 class State
@@ -104,6 +106,17 @@ class Pause : public State
 {
     public:
         Pause();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
+};
+
+
+class Pulse : public State
+{
+    public:
+        Pulse();
         void enter( Lantern& );
         void exit( Lantern& );
         uint8_t act( Lantern& );

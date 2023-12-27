@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "Lantern.h"
 #include "LanternCollection.h"
+#include "Light.h"
 
 class Bridge
 {
@@ -20,6 +21,14 @@ class Bridge
             const Lantern* collection = lanternCollection.collection;
             int step = &collection[1] - collection;
             return ( parent - collection ) / step;
+        }
+        uint8_t getBehaviour( const Lantern& lantern )
+        {
+            return lantern.light.getBehaviour();
+        }
+        uint16_t getLightRegister( const Lantern& lantern )
+        {
+            return lantern.light.reg;
         }
         uint8_t getDelay( const Lantern& lantern )
         {

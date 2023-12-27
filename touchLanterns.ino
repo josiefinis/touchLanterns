@@ -137,7 +137,7 @@ void loop() {
   if ( currentMillis - lastMonitorMillis >= MONITOR_INTERVAL ) {
     lastMonitorMillis = currentMillis;
 
-    if ( millis() % (8 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
+    if ( millis() % (16 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
       mon.printIndices();
     }
     mon.printLine( lantern );
