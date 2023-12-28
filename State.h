@@ -19,6 +19,7 @@
 #define AUTO_ID     4
 #define PAUS_ID     5
 #define PULS_ID     6
+#define RIPL_ID     7
 
 #define SHORT_DELAY     24
 #define LONG_DELAY      255
@@ -117,6 +118,17 @@ class Pulse : public State
 {
     public:
         Pulse();
+        void enter( Lantern& );
+        void exit( Lantern& );
+        uint8_t act( Lantern& );
+        uint8_t getNext( Lantern& );
+};
+
+
+class Ripple : public State
+{
+    public:
+        Ripple();
         void enter( Lantern& );
         void exit( Lantern& );
         uint8_t act( Lantern& );

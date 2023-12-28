@@ -121,6 +121,10 @@ void Light::changeBrightness( uint8_t floor=0, uint8_t ceil=0xFF )
         case PULSE:
             pulse();
             return;
+
+        case RIPPLE:
+            ripple();
+            return;
     }
 }
 
@@ -140,10 +144,11 @@ void Light::step( uint16_t stepsize, uint8_t floor=0, uint8_t ceil=0xFF )
 
 void Light::flicker( void )
 {
-    uint16_t temp = reg & 0x0fff;
-    temp ^= temp << 7; 
-    temp ^= temp >> 2;
-    reg = temp & 0x0fff;
+    uint16_t temp = reg;
+    temp ^= temp << 5; 
+    temp ^= temp >> 7;
+    reg &= ~0x0ff0;
+    reg |= temp & 0x0ff0;
 }
 
 
@@ -164,4 +169,18 @@ void Light::pulse( void )
             setBrightness( LIGHT_FULL ); 
             return;
     }
+}
+
+
+void Light::ripple( void )
+{
+    if ( getBrightness() > reference + 64 and isBrightening() )
+    {
+        toggleSign();
+    } 
+    if ( getBrightness() < reference - 64 and isDimming() ) 
+    {
+        toggleSign();
+    }
+    step( 32 );
 }

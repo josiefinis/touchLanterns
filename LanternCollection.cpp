@@ -14,6 +14,7 @@ Flicker LanternCollection::FLKR;
 Auto    LanternCollection::AUTO;
 Pause   LanternCollection::PAUS;
 Pulse   LanternCollection::PULS;
+Ripple  LanternCollection::RIPL;
 
 
 LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjacencyList ) 
@@ -56,11 +57,15 @@ uint8_t LanternCollection::updateLantern( Lantern& lantern, uint8_t sensorValue=
     {
         return lantern.state->act( lantern );
     }
-    if ( lantern.delay ) { --lantern.delay; } 
+    if ( lantern.delay ) 
+    { 
+        --lantern.delay; 
+    } 
     lantern.input.push( sensorValue );
     uint8_t retValue = lantern.state->act( lantern );
     uint8_t next = lantern.state->getNext( lantern ); //TODO remove arg
-    if ( next != *( lantern.state ) ) { 
+    if ( next != *( lantern.state ) ) 
+    { 
         lantern.state->exit( lantern );
         changeState( lantern, next );
     }
@@ -104,6 +109,11 @@ void LanternCollection::changeState( Lantern& lantern, uint8_t next )
 
         case PULS_ID:
             lantern.state = &PULS;
+            lantern.state->enter( lantern );
+            break;
+
+        case RIPL_ID:
+            lantern.state = &RIPL;
             lantern.state->enter( lantern );
             break;
     }

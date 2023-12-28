@@ -42,6 +42,7 @@ class Lantern
         friend class Auto;
         friend class Pause;
         friend class Pulse;
+        friend class Ripple;
         friend class Bridge;
 };
 #endif

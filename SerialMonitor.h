@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include "LanternCollection.h"
 #include "Lantern.h"
+#include "PWMSignal.h"
 
 #define IDLE_ID     0
 #define WAKE_ID     1
@@ -29,6 +30,7 @@ class SerialMonitor
         void printIndices( void );
         void printSpace( void );
         void printLine( LanternCollection& collection );
+        void quickPrintLine( LanternCollection& collection );
         void printLight( LanternCollection& collection );
         void printRawInput( SensorInput& input );
         void printDelay( uint8_t value ); 
@@ -37,4 +39,6 @@ class SerialMonitor
         void printParent( uint8_t idx );
         void printBrightness( Lantern& lantern );
         void printBehaviour( Lantern& lantern );
+        void printSign( Lantern& lantern );
+        void printPWM( PWMSignal& pwm );
 };

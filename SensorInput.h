@@ -5,8 +5,8 @@
 
 Finite state machine that categorises input from sensor.
 
-             1---------------1                                                                           1------┐
-            │                ↓                                                                          ↓       │
+             1---------------------------------1                                                         1------┐
+            │                                  ↓                                                        ↓       │
     FALLING_EDGE --0-> NOT_TOUCHED --1-> RISING_EDGE --1-> ... --1-> MEDIUM_TOUCH --1-> ... --1-> LONG_TOUCH --1
            ↑                │                 │                            │                            │
            0----------------0<----------------0<---------------------------0<--------------------------0
@@ -33,6 +33,6 @@ class SensorInput
         void push( bool value );
 
     private:
-        uint8_t reg;
+        uint8_t state;
 };
 #endif

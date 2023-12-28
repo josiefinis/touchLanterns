@@ -6,8 +6,29 @@
 */ 
 #include "SerialMonitor.h"
 #include "Bridge.cpp"
+#include "Global.h"
 
 Bridge bridge;
+
+void SerialMonitor::printIndices() 
+{
+    Serial.println();
+    for ( uint8_t i=0; i<16; i++ ) {
+        Serial.print( i, HEX ); Serial.print( "\t" );
+    }
+    Serial.println(); 
+    //for ( uint8_t i=0; i<16; i++ ) {
+    //    Serial.print( F( "========" ) );
+    //}
+    Serial.println();
+}
+
+
+void SerialMonitor::printSpace( void )
+{
+    Serial.print( " " );
+}
+
 
 void SerialMonitor::printLine( LanternCollection& collection )
 {
@@ -23,27 +44,80 @@ void SerialMonitor::printLine( LanternCollection& collection )
 
         if ( parent != NONE and delay  )
         {
-            printParent( parent );
-            printState( state );
-            printSpace();
-            printDelay( delay );
+            #if MONITOR_PARENT
+                printParent( parent );
+            #endif
+            #if MONITOR_STATE
+                printState( state );
+                Serial.print( " " );
+            #endif
+            #if MONITOR_DELAY
+                printDelay( delay );
+            #endif
         }
         else {
-            printInput( input );
-            printState( state );
-            printSpace();
-            printBrightness( lantern );
-            printBehaviour( lantern );
+            #if MONITOR_INPUT
+                printInput( input );
+            #endif
+            #if MONITOR_STATE
+                printState( state );
+                Serial.print( " " );
+            #endif
+            #if MONITOR_BRIGHTNESS
+                printBrightness( lantern );
+            #endif
+            #if MONITOR_LIGHT_BEHAVIOUR
+                printBehaviour( lantern );
+                printSign( lantern );
+            #endif
         }
         Serial.print( "\t" );
     }
-    //printLight( collection );
 }
 
 
-void SerialMonitor::printSpace( void )
+void SerialMonitor::quickPrintLine( LanternCollection& collection )
 {
-    Serial.print( " " );
+    Serial.println();
+    // Faster but less easily readable version.
+    for ( uint8_t i=0; i<16; ++i )
+    {
+        Lantern& lantern = collection[ i ];
+        uint8_t parent = bridge.getParent( collection, lantern );
+        uint8_t delay = bridge.getDelay( lantern );
+        uint8_t state = bridge.getState( lantern );
+        const SensorInput& input = bridge.getInput( lantern );
+
+//        if ( parent != NONE and delay  )
+//        {
+//            #if MONITOR_PARENT
+//                printParent( parent );
+//            #endif
+//            #if MONITOR_STATE
+//                if ( state ) { Serial.print( state, HEX ); }
+//            #endif
+//            #if MONITOR_DELAY
+//                printDelay( delay );
+//            #endif
+//        }
+//        else {
+            #if MONITOR_INPUT
+                if ( input != 1 ) { Serial.print( input, HEX ); }
+            #endif
+            #if MONITOR_STATE 
+                if ( state ) { Serial.print( state, HEX ); }
+                Serial.print( " " );
+            #endif
+            #if MONITOR_BRIGHTNESS
+                printBrightness( lantern );
+            #endif
+            #if MONITOR_LIGHT_BEHAVIOUR
+                Serial.print( bridge.getBehaviour( lantern ), HEX )
+                Serial.print( bridge.getSign( lantern ), HEX )
+            #endif
+//        }
+        Serial.print( "\t" );
+    }
 }
 
 
@@ -119,6 +193,17 @@ void SerialMonitor::printBehaviour( Lantern& lantern )
 }
 
 
+void SerialMonitor::printSign( Lantern& lantern )
+{
+    if ( not bridge.getBehaviour( lantern ) ) { return; }
+    switch ( bridge.getSign( lantern ) )
+    {
+        case 0:  Serial.print( F( "↑" ) );       return;
+        case 1:  Serial.print( F( "↓" ) );       return;
+    }
+}
+
+
 void SerialMonitor::printBrightness( Lantern& lantern ) 
 {                                              
     if ( lantern.getBrightness() )
@@ -127,15 +212,8 @@ void SerialMonitor::printBrightness( Lantern& lantern )
     }
 }
 
-                                                                                
-void SerialMonitor::printIndices() {
-    Serial.println();
-    for ( uint8_t i=0; i<16; i++ ) {
-        Serial.print( i, HEX ); Serial.print( "\t" );
-    }
-    Serial.println(); 
-    for ( uint8_t i=0; i<16; i++ ) {
-        Serial.print( F( "========" ) );
-    }
-    Serial.println();
+
+void SerialMonitor::printPWM( PWMSignal& pwm )
+{
+    pwm.edgeQueue.print();
 }

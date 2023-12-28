@@ -26,6 +26,7 @@ class LanternCollection : public Graph {
         static Auto     AUTO;
         static Pause    PAUS;
         static Pulse    PULS;
+        static Ripple   RIPL;
 
         LanternCollection( const uint8_t size, const uint16_t* adjacencyList );
 

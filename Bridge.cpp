@@ -26,6 +26,10 @@ class Bridge
         {
             return lantern.light.getBehaviour();
         }
+        uint8_t getSign( const Lantern& lantern )
+        {
+            return lantern.light.getSign();
+        }
         uint16_t getLightRegister( const Lantern& lantern )
         {
             return lantern.light.reg;

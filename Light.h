@@ -16,6 +16,7 @@
 #define HUGE_STEP   4
 #define FLICKER     5
 #define PULSE       6
+#define RIPPLE      7
 
 #define LIGHT_FULL  0xff
 
@@ -40,6 +41,7 @@ class Light {
         void step( uint16_t stepsize, uint8_t floor=0, uint8_t ceil=0xff );
         void flicker( void );
         void pulse( void );
+        void ripple( void );
 
     private:
         uint16_t reg;

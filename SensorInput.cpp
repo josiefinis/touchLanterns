@@ -6,10 +6,10 @@
 #include "SensorInput.h"
 
 
-SensorInput::SensorInput() { reg = NOT_TOUCHED; }
+SensorInput::SensorInput() { state = NOT_TOUCHED; }
 
 
-SensorInput::operator int() const { return ( int ) reg; }
+SensorInput::operator int() const { return ( int ) state; }
 
 
 void SensorInput::push( bool value ) 
@@ -17,30 +17,30 @@ void SensorInput::push( bool value )
     switch ( value )
     {
         case 0:
-            if ( reg > NOT_TOUCHED ) 
+            if ( state > NOT_TOUCHED ) 
             { 
-                reg = FALLING_EDGE; 
+                state = FALLING_EDGE; 
             }
             else 
             { 
-                reg = NOT_TOUCHED; 
+                state = NOT_TOUCHED; 
             }
             return;
 
         case 1:
-            if ( reg >= LONG_TOUCH ) 
+            if ( state >= LONG_TOUCH ) 
             { 
-                reg = LONG_TOUCH; 
+                state = LONG_TOUCH; 
                 return;
             }
-            if ( reg >= RISING_EDGE )
+            if ( state >= RISING_EDGE )
             {
-                reg++;
+                state++;
                 return;
             }
-            else 
+            if ( state < RISING_EDGE ) 
             {
-                reg = RISING_EDGE;
+                state = RISING_EDGE;
                 return;
             }
     }

@@ -97,11 +97,10 @@ uint8_t Idle::getNext( Lantern& lantern )
         lantern.light.setSign( lantern.parent->light.getSign() );
         return FULL_ID;
     }
-    if ( *( lantern.parent->state ) == AUTO_ID and not lantern.parent->delay )
+    if ( *( lantern.parent->state ) == RIPL_ID )
     {
-        lantern.delay = Random::uRandN( 16 );
         lantern.light.setSign( lantern.parent->light.getSign() );
-        return AUTO_ID;
+        return RIPL_ID;
     }
     return *this;
 }
@@ -121,7 +120,7 @@ Wake::Wake() : State( WAKE_ID ) { }
 // Set a large rate in order to give immediate and obviousvisual feedback.
 void Wake::enter( Lantern& lantern ) 
 { 
-    if ( lantern.getBrightness() < 32 ) { lantern.light.setToBrighten(); }
+    if ( lantern.getBrightness() < 64 ) { lantern.light.setToBrighten(); }
     else { lantern.light.setToDim(); }
     lantern.light.setBehaviour( LARGE_STEP ); 
 }
@@ -301,6 +300,7 @@ Pause::Pause() : State( PAUS_ID ) { }
 
 void Pause::enter( Lantern& lantern )
 {
+    lantern.reference = lantern.light;
     lantern.light.setBehaviour( PULSE );
     lantern.delay = SHORT_DELAY;
 }
@@ -316,6 +316,7 @@ void Pause::exit( Lantern& lantern )
 uint8_t Pause::act( Lantern& lantern ) 
 { 
     lantern.light.changeBrightness();
+    if ( lantern.input == MEDIUM_TOUCH ) { return MAKE_TREE; }
 }
 
 
@@ -323,7 +324,7 @@ uint8_t Pause::getNext( Lantern& lantern )
 {
     if ( lantern.input == RISING_EDGE and not lantern.parent ) { return PULS_ID; }
     if ( lantern.parent and *( lantern.parent->state ) == AUTO_ID ) { return AUTO_ID; }
-    if ( lantern.input == MEDIUM_TOUCH ) { return FLKR_ID; }
+    if ( lantern.input == MEDIUM_TOUCH ) { return RIPL_ID; }
     if ( lantern.delay == 0 ) { return IDLE_ID; }
     return *this;
 }
@@ -357,5 +358,35 @@ uint8_t Pulse::act( Lantern& lantern )
 uint8_t Pulse::getNext( Lantern& lantern )
 {
     if ( lantern.light.getBehaviour() == STABLE ) { return AUTO_ID; }
+    return *this;
+}
+/*
+======================================================================================================================================================
+    RIPPLE           ENTRY                                       
+                    EXIT                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Ripple::Ripple() : State( RIPL_ID ) { }
+
+void Ripple::enter( Lantern& lantern ) 
+{ 
+    lantern.reference = 128;
+    lantern.light.setBehaviour( RIPPLE ); 
+    lantern.delay = 8;
+}
+
+
+void Ripple::exit( Lantern& lantern ) { }
+
+
+uint8_t Ripple::act( Lantern& lantern ) 
+{ 
+    lantern.light.changeBrightness();
+}
+
+
+uint8_t Ripple::getNext( Lantern& lantern )
+{
+    if ( lantern.delay == 0 ) { return AUTO_ID; }
     return *this;
 }
