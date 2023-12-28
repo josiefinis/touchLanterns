@@ -10,15 +10,18 @@
 //#include "Arduino.h"
 #include <cstdint>
 
+#define NONE 0xff
+#define MAX_SIZE 0x10
+
 
 class PriorityQueue {
   public:
     PriorityQueue();
 
     uint8_t dequeue( void );
-    uint16_t peekTime( void );
-    void insert( uint8_t index, uint16_t time );
-    void remove( uint8_t index );
+    uint16_t peekPriority( void );
+    void insert( uint8_t value, uint16_t priority );
+    void remove( uint8_t value );
     void clear( void );
     void refill( void );
     bool isEmpty( void );
@@ -26,12 +29,12 @@ class PriorityQueue {
 
   private:
     struct QueueMember {
-      uint8_t index;
-      uint16_t time;
+      uint8_t value;
+      uint16_t priority;
     };
-    QueueMember queueArray[ 16 ];
+    QueueMember queueArray[ MAX_SIZE ];
     uint8_t next;
     uint8_t size;
-    void changeTime( uint8_t index, uint16_t time );
+    uint8_t changePriority( uint8_t value, uint16_t priority );
 };
 #endif

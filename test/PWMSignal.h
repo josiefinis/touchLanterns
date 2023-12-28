@@ -10,7 +10,7 @@
 #define PWM_PERIOD      9856U // µs
 
 
-#include "Arduino.h"
+#include <cstdint>
 #include "PriorityQueue.h"
 
 
@@ -21,7 +21,7 @@ class PWMSignal {
 
     void changeDuty( uint8_t index, uint8_t brightness );
     void  nextEdge( void );
-    void periodStart( void );
+    void startPeriod( void );
     uint16_t getSignal( void );
     uint16_t getTime( void );
 
@@ -34,5 +34,6 @@ class PWMSignal {
     uint16_t pulseWidthQuadratic( uint16_t brightness );
     uint16_t pulseWidthCubic( uint16_t brightness );
     uint16_t pulseWidthQuartic( uint32_t brightness );
+    friend class Bridge;
 };
 #endif
