@@ -94,7 +94,7 @@ void examine_queue()
 
 void test_pwmCycle() 
 {
-    for ( int b=0; b<4; ++b ) 
+    for ( int b=0; b<256; ++b ) 
     {
         pwm.startPeriod();
         std::cout << std::endl << b << "\t";

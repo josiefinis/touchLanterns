@@ -4,7 +4,6 @@
 ======================================================================================================================================================
 */
 
-#include "Global.h"
 #include "PWMSignal.h"
 #include "Arduino.h"
 
@@ -23,12 +22,12 @@ void PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
   if ( brightness == 0xFF ) {
     signalAtTimeZero |= 1 << index;
     edgeQueue.remove( index );
-    return 0;
+    return;
   }
   if ( brightness == 0 ) {
     signalAtTimeZero &= ~( 1 << index );
     edgeQueue.remove( index );
-    return 0;
+    return;
   }
 
   uint16_t pulseWidth = pulseWidthQuadratic( brightness );
@@ -47,11 +46,11 @@ void PWMSignal::nextEdge( void ) {
   if ( edgeQueue.isEmpty() ) {
     time = 0xFFFF;
     signal = 0;
-    return 0;
+    return;
   }
-  time = edgeQueue.peekTime();
-  while ( edgeQueue.peekTime() == time ) {
-    signal |= 1 << edgeQueue.dequeue();
+  time = edgeQueue.peekPriority();
+  while ( edgeQueue.peekPriority() == time ) {
+    signal ^= 1 << edgeQueue.dequeue();
     if ( edgeQueue.isEmpty() ) {
       break;
     }
@@ -59,7 +58,7 @@ void PWMSignal::nextEdge( void ) {
 }
 
 
-void PWMSignal::periodStart( void ) {
+void PWMSignal::startPeriod( void ) {
   time = 0;
   signal = signalAtTimeZero;
   edgeQueue.refill();

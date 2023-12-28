@@ -31,7 +31,7 @@ uint16_t PriorityQueue::peekPriority( void ) {
 
 
 void PriorityQueue::insert( uint8_t value, uint16_t priority ) {
-  std::cout << std::endl << "insert";
+  //std::cout << std::endl << "insert";
   changePriority( value, priority );
 }
 
@@ -45,7 +45,7 @@ void PriorityQueue::print( void ) {
 
 
 void PriorityQueue::remove( uint8_t value ) {
-  std::cout << std::endl << "remove";
+  //std::cout << std::endl << "remove";
   uint8_t i = changePriority( value, 0xFFFF );
   queueArray[ i ].value = NONE;
   size--;
@@ -74,11 +74,11 @@ bool PriorityQueue::isEmpty( void ) {
 
 uint8_t PriorityQueue::changePriority( uint8_t value, uint16_t priority ) {
 // Change the priority of signal edge and move it to new place in the queue.
-  std::cout << std::endl << "changePriority";
+  //std::cout << std::endl << "changePriority";
   uint8_t i = 0;
-  std::cout << std::endl << "\ti = " << ( int ) i << "\tv = " << ( int ) value << "\tp = " << priority << "\tq[i] = " << ( int ) queueArray[ i ].value;
+  //std::cout << std::endl << "\ti = " << ( int ) i << "\tv = " << ( int ) value << "\tp = " << priority << "\tq[i] = " << ( int ) queueArray[ i ].value;
   while ( value != queueArray[ i ].value ) {                // Find 'value' in queue. If not found add a space at the end of the queue.
-  std::cout << std::endl << "\ti = " << ( int ) i << "\tv = " << ( int ) value << "\tp = " << priority << "\tq[i] = " << ( int ) queueArray[ i ].value;
+  //std::cout << std::endl << "\ti = " << ( int ) i << "\tv = " << ( int ) value << "\tp = " << priority << "\tq[i] = " << ( int ) queueArray[ i ].value;
     if ( ++i >= size ) {
       i = size++;
       break;
@@ -94,7 +94,7 @@ uint8_t PriorityQueue::changePriority( uint8_t value, uint16_t priority ) {
   }
   queueArray[ i ].value = value;
   queueArray[ i ].priority = priority;
-  std::cout << std::endl << "\ti = " << ( int ) i << "\tv = " << ( int ) value << "\tp = " << priority << "\tq[i] = " << ( int ) queueArray[ i ].value;
-  std::cout << std::endl << "/changePriority";
+  //std::cout << std::endl << "\ti = " << ( int ) i << "\tv = " << ( int ) value << "\tp = " << priority << "\tq[i] = " << ( int ) queueArray[ i ].value;
+  //std::cout << std::endl << "/changePriority";
   return i;
 }

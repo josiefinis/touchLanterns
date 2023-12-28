@@ -63,16 +63,26 @@ void burnLanterns() {
 
 void pwmCycle1stHalf() 
 {
-    pwm.periodStart();
+    // Write signal to register at start of period.
+    pwm.startPeriod();
     shiftRegister.writeToStorageRegister( pwm.getSignal() ); // TODO change to shorter name
-    for ( uint8_t i=0; i<16; i++ ) {
+
+    // Poll sensor for one lantern ( on current mux channel ). This takes 2 ms - 3 ms.
+    bool input = pollSensor();
+
+    for ( uint8_t i=0; i<16; i++ ) 
+    {
         if ( i == idx )
         {
-            lantern.updateCollection( idx, pollSensor() );
+            lantern.updateCollection( idx, input );
         }
-        lantern.updateCollection( idx );
-        pwm.changeDuty( i, lantern.getBrightness( i ) );
+        else
+        {
+            lantern.updateCollection( i );
+            pwm.changeDuty( i, lantern.getBrightness( i ) );
+        }
     }
+        lantern.updateCollection( idx );
     pwm.nextEdge();
     edgeAtMicros = pwm.getTime();
     idx = sensor.nextMuxChannel();
@@ -137,24 +147,24 @@ void loop() {
   if ( currentMillis - lastMonitorMillis >= MONITOR_INTERVAL ) {
     lastMonitorMillis = currentMillis;
 
-    if ( millis() % (16 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
-      mon.printIndices();
-    }
-    mon.printLine( lantern );
+    #if MONITOR_STATE
+        #if MONITOR_QUICK_PRINT
+            if ( millis() % (32 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
+              mon.printIndices();
+            }
+            mon.quickPrintLine( lantern );
+        #else 
+            if ( millis() % (16 * MONITOR_INTERVAL) < MONITOR_INTERVAL ) {
+              mon.printIndices();
+            }
+            mon.printLine( lantern );
+        #endif
+    #endif
     #if MONITOR_TIMINGS
     printTimings();
     #endif
-    #if MONITOR_PARENT
-    printParent();
-    #endif
-    #if MONITOR_DELAY
-    printDelay();
-    #endif
-    #if MONITOR_PWM_LIST
-    pwmSignal.printSignalList(); Serial.print("\n");
-    #endif
-    #if MONITOR_REGISTER_SIGNAL
-    printRegisterSignal();
+    #if MONITOR_PWM
+    mon.printPWM( pwm );
     #endif
   }
   #endif
