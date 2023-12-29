@@ -1,25 +1,32 @@
-// SIPO Shift Register. 
+/*
+======================================================================================================================================================
+                                REGISTER
+======================================================================================================================================================
+
+Writes to hardware SIPO shift register.
+*/
+
 #ifndef REGISTER_H
 #define REGISTER_H
 #include "Arduino.h"
-#endif
 
 
 class Register {
-  private:
-    void writeToShiftRegister(uint16_t word);
-    void writeBit(bool bit);
-    void clearShiftRegister();
-    void enableOutput();
-    void disableOutput();
-    void shiftRegisterClockPulse();
-    void storageRegisterClockPulse();
-
   public:
     Register();
 
-    void writeEvery2ndBit(uint32_t bits);
+    void reset( void );
+    void writeToStorageRegister( uint16_t word );
     void storeShiftRegister();
-    void writeToStorageRegister(uint16_t word);
-    void reset();
+
+  private:
+    void writeToShiftRegister( uint16_t word );
+    void writeBit( bool bit );
+    void clearShiftRegister( void );
+    void enableOutput( void );
+    void disableOutput( void );
+    void shiftRegisterClockPulse( void );
+    void storageRegisterClockPulse( void );
+
 };
+#endif

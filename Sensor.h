@@ -1,25 +1,32 @@
+/*
+======================================================================================================================================================
+                                SENSOR
+======================================================================================================================================================
+*/
+#ifndef SENSOR_H
+#define SENSOR_H
+
 #include "Arduino.h"
 #include <CapacitiveSensor.h>
 
 class Sensor {
+  public:
+    Sensor();
+    uint8_t getMuxChannel( void );
+    uint8_t nextMuxChannel( void );
+    bool output( void );
 
   private:
     static CapacitiveSensor sensor;
-    uint16_t baseline[16];
+    uint16_t baseline[ 16 ];
     uint8_t i;
     uint8_t muxChannel;
 
-    long newInput();
-    uint8_t normalise(long input);
-    bool isHigh(uint8_t input);
-    void initialiseBaseline();
-    void recalibrateBaseline(long input);
-
-  public:
-    Sensor::Sensor();
-    uint8_t getMuxChannel();
-    uint8_t nextMuxChannel();
-    bool output();
+    long newInput( void );
+    uint8_t normalise( long input );
+    bool isHigh( uint8_t input );
+    void initialiseBaseline( void );
+    void recalibrateBaseline( long input );
 };
 
 /* 
@@ -50,3 +57,4 @@ channel   S3210        output
 Multiple detections on a single cycle result in a combined output e.g.
 detection on channels 6 and 4 will yield output 0000 0000 1100 0000.
 */
+#endif

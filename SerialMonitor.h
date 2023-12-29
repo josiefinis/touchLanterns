@@ -1,46 +1,44 @@
-#ifndef SERIAL_MONITOR_H
-#define SERIAL_MONITOR_H
 
+/* 
+======================================================================================================================================================
+                    MONITOR
+======================================================================================================================================================
+*/ 
 #include "Arduino.h"
-#include "Global.h"
+#include "LanternCollection.h"
 #include "Lantern.h"
 #include "PWMSignal.h"
 
+#define IDLE_ID     0
+#define WAKE_ID     1
+#define FULL_ID     2
+#define FLKR_ID     3
+#define AUTO_ID     4
+#define PAUS_ID     5
 
-#define BUFFER_SIZE 32
+#define STABLE      0
+#define TINY_STEP   1
+#define SMALL_STEP  2
+#define LARGE_STEP  3
+#define HUGE_STEP   4
+#define FLICKER     5
+#define PULSE       6
 
-
-class SerialMonitor {
-// Collect data and print via Arduino serial port. For troubleshooting.
-  public:
-    SerialMonitor();
-    void incrementIndex();
-    bool isBufferFull();
-    void print();
-    void storePWM( uint16_t signal, uint16_t time );
-    void storeState( uint8_t index, uint8_t state );
-    void storeInput( uint8_t index, uint16_t input );
-    void printBuffer();
-    void printIndices();
-    void printState( Lantern* lantern );
-    void printLanternInput( Lantern* lantern );
-    void printBrightness( Lantern* lantern );
-    void printPWM();
-    void printTimings();
-    void printDelay( Lantern* lantern );
-    void printSignalList( PWMSignal* pwmSignal );
-      
-  private:
-    #if MONITOR_EVENTS
-      uint8_t eventIdx = 0;
-      uint8_t index[32];
-      uint8_t state[32];
-      uint16_t input[32];
-    #endif
-    #if MONITOR_PWM_SIGNAL
-      uint8_t pwmIdx = 0;
-      uint16_t pwmTime[32];
-      uint16_t pwmSignal[32];
-    #endif
+class SerialMonitor
+{
+    public:
+        void printIndices( void );
+        void printSpace( void );
+        void printLine( LanternCollection& collection );
+        void quickPrintLine( LanternCollection& collection );
+        void printLight( LanternCollection& collection );
+        void printRawInput( SensorInput& input );
+        void printDelay( uint8_t value ); 
+        void printInput( const SensorInput& input ); 
+        void printState( uint8_t stateID );
+        void printParent( uint8_t idx );
+        void printBrightness( Lantern& lantern );
+        void printBehaviour( Lantern& lantern );
+        void printSign( Lantern& lantern );
+        void printPWM( PWMSignal& pwm );
 };
-#endif

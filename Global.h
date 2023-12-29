@@ -2,21 +2,21 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#define MONITOR_INTERVAL                    1000 // ms
-#define MONITOR_ON                          0
+#define MONITOR_INTERVAL                    160 // ms
+#define MONITOR_QUICK_PRINT                 0
 #define MONITOR_TIMINGS                     0
 #define MONITOR_RAW_INPUT                   0
 #define MONITOR_NORMALISED_INPUT            0
-#define MONITOR_LANTERN_INPUT               0
+#define MONITOR_INPUT                       0
 #define MONITOR_STATE                       0
 #define MONITOR_BRIGHTNESS                  0
-#define MONITOR_BRIGHTNESS_PER_CYCLE        0
-#define MONITOR_MAKE_TREE                   0
+#define MONITOR_LIGHT_BEHAVIOUR             0
 #define MONITOR_PARENT                      0
+#define MONITOR_MAKE_TREE                   0
 #define MONITOR_PWM_LIST                    0
-#define MONITOR_REGISTER_SIGNAL             0
+#define MONITOR_PWM                         0
 #define MONITOR_DELAY                       0
-#define SERIAL_ON MONITOR_BRIGHTNESS_PER_CYCLE | MONITOR_TIMINGS | MONITOR_RAW_INPUT | MONITOR_NORMALISED_INPUT | MONITOR_BUTTON_OUTPUT | MONITOR_BUTTON_PRESS | MONITOR_ON | MONITOR_STATE | MONITOR_BRIGHTNESS | MONITOR_PWM_LIST| MONITOR_REGISTER_SIGNAL | MONITOR_LIFE | MONITOR_MAKE_TREE
+#define SERIAL_ON MONITOR_INPUT | MONITOR_PWM | MONITOR_TIMINGS | MONITOR_RAW_INPUT | MONITOR_NORMALISED_INPUT | MONITOR_STATE | MONITOR_PWM_LIST | MONITOR_BRIGHTNESS | MONITOR_LIGHT_BEHAVIOUR
 
 
 #define PIN_SENSOR_SEND 2

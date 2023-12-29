@@ -1,3 +1,8 @@
+/*
+======================================================================================================================================================
+                                REGISTER
+======================================================================================================================================================
+*/
 #include "Register.h"
 #include "Global.h"
 #include "Arduino.h"
@@ -10,7 +15,7 @@ Register::Register()
 }
 
 
-void Register::reset() {
+void Register::reset( void ) {
 // Clear everything.
   disableOutput();
   clearShiftRegister();
@@ -19,34 +24,26 @@ void Register::reset() {
 }
 
 
-void Register::writeToStorageRegister(uint16_t word) {
+void Register::writeToStorageRegister( uint16_t word ) {
 // Feed a word into the shift register and copy to the storage register.
   writeToShiftRegister(word);
   storeShiftRegister();
 }
 
 
-void Register::writeToShiftRegister(uint16_t word) {
+void Register::writeToShiftRegister( uint16_t word ) {
 // Feed word into shift register, least significant bit first.
   for ( uint8_t i = 0; i < HARDWARE_REGISTER_SIZE; i++ ) {
     bool bit = word & 1;
-    writeBit(bit);
+    writeBit( bit );
     word >>= 1;
   }
 }
 
 
-void Register::writeEvery2ndBit(uint32_t bits) {
-  do {
-    writeBit(bits & 1);
-  }
-  while ( bits >>= 2 );
-}
-
-
-void Register::writeBit(bool bit) {
+void Register::writeBit( bool bit ) {
 // Write a single bit to the shift register, shifting previously written bits down one place.
-  if (bit) { 
+  if ( bit ) { 
     PORTB |= PIN_REGISTER_SER; 
   }
   else { 
@@ -56,24 +53,34 @@ void Register::writeBit(bool bit) {
 }
 
 
-void Register::storeShiftRegister() { storageRegisterClockPulse(); }
-void Register::enableOutput() { PORTB &= ~PIN_REGISTER_NOT_OE; }
-void Register::disableOutput() { PORTB |= PIN_REGISTER_NOT_OE; }
+void Register::storeShiftRegister( void ) { 
+  storageRegisterClockPulse(); 
+}
 
 
-void Register::clearShiftRegister() { 
+void Register::enableOutput( void ) { 
+  PORTB &= ~PIN_REGISTER_NOT_OE; 
+}
+
+
+void Register::disableOutput( void ) { 
+  PORTB |= PIN_REGISTER_NOT_OE;
+}
+
+
+void Register::clearShiftRegister( void ) { 
   PORTB &= ~PIN_REGISTER_NOT_SRCLR;
   PORTB |= PIN_REGISTER_NOT_SRCLR;
 }
 
 
-void Register::shiftRegisterClockPulse() {
+void Register::shiftRegisterClockPulse( void ) {
   PORTB |= PIN_REGISTER_SRCLK;
   PORTB &= ~PIN_REGISTER_SRCLK;
 }
 
 
-void Register::storageRegisterClockPulse() {
+void Register::storageRegisterClockPulse( void ) {
   PORTB |= PIN_REGISTER_RCLK;
   PORTB &= ~PIN_REGISTER_RCLK;
 }

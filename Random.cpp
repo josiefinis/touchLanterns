@@ -1,3 +1,12 @@
+/*
+======================================================================================================================================================
+                            RANDOM
+======================================================================================================================================================
+*/
+
+#ifndef RANDOM_CPP
+#define RANDOM_CPP
+
 #include "Random.h"
 
 
@@ -12,7 +21,7 @@ Random::Random() { }
 void Random::newPseudoRandom() {
 // Set next pseudorandom number using xorshift algorithm.
   if ( pseudoRandom == 0 ) { 
-    pseudoRandom = digitalRead(A0); 
+    pseudoRandom = micros(); 
   }
   pseudoRandom ^= pseudoRandom << 13;
   pseudoRandom ^= pseudoRandom >> 17;
@@ -44,7 +53,7 @@ void Random::push(uint8_t bits) {
 }
 
 
-uint8_t Random::pull(uint16_t n) {
+uint8_t Random::pull(uint8_t n) {
 // Pull n bits from stack.
   if ( stackSize < n ) {
     fillStack();
@@ -56,6 +65,18 @@ uint8_t Random::pull(uint16_t n) {
 }
 
 
-uint8_t Random::urandom(uint16_t n) {
-  return pull(n >> 1) % n;
+uint8_t Random::urandom(uint8_t n) {
+  return n * pull( 8 ) / 256;
 }
+
+
+uint8_t Random::uRandN( uint8_t expectedValue ) 
+{ 
+    uint16_t delay = 0;
+    for ( int i=0; i<10; i++ )
+    {
+        delay += urandom( expectedValue );
+    }
+    return delay / 10;
+}
+#endif
