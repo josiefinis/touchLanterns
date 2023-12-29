@@ -265,6 +265,7 @@ uint8_t Auto::getNext( Lantern& lantern )
     if ( lantern.light == 1 ) { return PAUS_ID; }
     if ( lantern.light == LIGHT_FULL ) { return PAUS_ID; }
     if ( lantern.input == RISING_EDGE and not lantern.parent ) { return PAUS_ID; }
+    if ( not lantern.parent ) { return *this; }
     if ( lantern.light == lantern.parent->light and *( lantern.parent->state ) != AUTO_ID ) { return PAUS_ID; }
     return *this;
 }
@@ -296,6 +297,7 @@ uint8_t Pause::act( Lantern& lantern )
 { 
     lantern.light.changeBrightness();
     if ( lantern.input == MEDIUM_TOUCH )    { return MAKE_TREE; }
+    if ( lantern.delay == 0 )               { lantern.parent = nullptr; }
     return 1;
 }
 

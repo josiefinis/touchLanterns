@@ -141,6 +141,8 @@ void printState( uint8_t state ) {
     case FLKR_ID:                   std::cout << "K ";        return;
     case AUTO_ID:                   std::cout << "A ";        return;
     case PAUS_ID:                   std::cout << "P ";        return;
+    case PULS_ID:                   std::cout << "! ";        return;
+    case RIPL_ID:                   std::cout << "R ";        return;
   }
 }
 
@@ -170,6 +172,9 @@ void printInstruction( Instruction instruction ) {
       std::cout << "ASSERT_STATE_EQ  ";
       printState( instruction.value );
       break;
+
+    default:
+      std::cout << std::hex << ( int ) instruction.instruction;
   }
   std::cout << " at time " << instruction.time;
 }

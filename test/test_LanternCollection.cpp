@@ -90,6 +90,20 @@ void runTestSequence( Instruction sequence[], uint8_t verbose=0 )
         int       value = sequence[ insIdx ].value;
 
 
+        if ( instruction == END_TEST and t == time ) 
+        {
+            if ( verbose ) { std::cout << std::endl; }
+            if ( not errorCount ) 
+            {
+                std::cout << ". OK." << std::endl;
+                return;
+            }
+            else 
+            {
+                std::cout << " Failed. " << errorCount << " errors." << std::endl;
+                return;
+            }
+        }
         if ( instruction == SET_SENSOR_VALUE and time == t and idx == t%16 ) 
         { 
             input = value << idx; 
@@ -141,23 +155,6 @@ void runTestSequence( Instruction sequence[], uint8_t verbose=0 )
         if ( verbose ) 
         {
             std::cout << "\t";
-        }
-        if ( instruction == END_TEST ) 
-        {
-            if ( verbose ) 
-            { 
-                std::cout << std::endl;
-            }
-            if ( not errorCount ) 
-            {
-                std::cout << ". OK." << std::endl;
-                return;
-            }
-            else 
-            {
-                std::cout << " Failed. " << errorCount << " errors." << std::endl;
-                return;
-            }
         }
     }
     std::cout << std::endl << std::endl << " ERROR. Timed out on instruction:  "; 
@@ -344,7 +341,6 @@ void test_LONG( uint8_t verbose=0 ) {
         , Instruction( 0x84   , ASSERT_INPUT_EQ, FALLING_EDGE, 4 )
 
         , Instruction( 0x94   , ASSERT_STATE_EQ, IDLE_ID, 4 )
-        , Instruction( 0x2f0   , ASSERT_STATE_EQ, IDLE_ID, 4 )
         , Instruction( 0x2f1   , END_TEST )
     };
     runTestSequence( sequence, verbose );
@@ -370,10 +366,56 @@ void test_FULL( uint8_t verbose=0 ) {
     runTestSequence( sequence, verbose );
 }
 
+
+void test_rootAUTO( uint8_t verbose=0 ) {
+    std::cout << "Test root AUTO";
+    Instruction sequence[] = {
+          Instruction( 0x00    , START_TEST )
+        , Instruction( 0x00    , ASSERT_STATE_EQ, IDLE_ID, 4 )
+
+        , Instruction( 0x04    , SET_SENSOR_VALUE, 1, 4 )
+        , Instruction( 0x04    , ASSERT_INPUT_EQ, RISING_EDGE, 4 )
+        , Instruction( 0x04    , ASSERT_STATE_EQ, WAKE_ID, 4 )
+
+        , Instruction( 0x34    , ASSERT_INPUT_EQ, MEDIUM_TOUCH, 4 )
+        , Instruction( 0x34    , ASSERT_STATE_EQ, FLKR_ID, 4 )
+
+        , Instruction( 0x44    , SET_SENSOR_VALUE, 0, 4 )
+        , Instruction( 0x44    , ASSERT_INPUT_EQ, FALLING_EDGE, 4 )
+        , Instruction( 0x44    , ASSERT_STATE_EQ, AUTO_ID, 4 )
+
+        , Instruction( 0x74    , SET_SENSOR_VALUE, 1, 4 )
+        , Instruction( 0x74    , ASSERT_INPUT_EQ, RISING_EDGE, 4 )
+        , Instruction( 0x74    , ASSERT_STATE_EQ, PAUS_ID, 4 )
+
+        , Instruction( 0xa4    , ASSERT_INPUT_EQ, MEDIUM_TOUCH, 4 )
+        , Instruction( 0xa4    , ASSERT_STATE_EQ, RIPL_ID, 4 )
+
+        , Instruction( 0xb4    , SET_SENSOR_VALUE, 0, 4 )
+        , Instruction( 0xb4    , ASSERT_INPUT_EQ, FALLING_EDGE, 4 )
+        , Instruction( 0xb4    , ASSERT_STATE_EQ, RIPL_ID, 4 )
+
+        , Instruction( 0x144   , ASSERT_STATE_EQ, AUTO_ID, 4 )
+
+        , Instruction( 0x154   , SET_SENSOR_VALUE, 1, 4 )
+        , Instruction( 0x154   , ASSERT_INPUT_EQ, RISING_EDGE, 4 )
+        , Instruction( 0x154   , ASSERT_STATE_EQ, PAUS_ID, 4 )
+
+        , Instruction( 0x164   , SET_SENSOR_VALUE, 0, 4 )
+        , Instruction( 0x164   , ASSERT_INPUT_EQ, FALLING_EDGE, 4 )
+        , Instruction( 0x164   , ASSERT_STATE_EQ, PAUS_ID, 4 )
+
+        , Instruction( 0x3f1   , END_TEST )
+    };
+    runTestSequence( sequence, verbose );
+}
+
+
 int main( void ) {
-   // test_FULL( 1 );
-    test_LONG( 1 );
-  //test_AUTO( 2 );
+    //test_FULL( 1 );
+    //test_LONG( 1 );
+    test_rootAUTO( 1 );
+    //test_AUTO( 1 );
 
   return 0;
 }
