@@ -15,11 +15,6 @@ State::State( const uint8_t id )
 
 State::operator int() const { return id; }
 
-//bool State::operator == ( const State& other )   const { return id == other.id; }
-//bool State::operator == ( const uint8_t& other ) const { return id == other; }
-//bool State::operator != ( const State& other )   const { return !( *this == other.id ); }
-//bool State::operator != ( const uint8_t& other ) const { return !( *this == other ); }
-
 void    State::enter( Lantern& lantern ) {}
 void    State::exit( Lantern& lantern ) {}
 uint8_t State::act( Lantern& lantern ) { return 0; }
@@ -28,21 +23,28 @@ uint8_t State::getNext( Lantern& lantern ) { return 0; }
 
 /*
 
+            Sensor input, i in { RISING_EDGE (↑), FALLING_EDGE (↓), MEDIUM_TOUCH (M), LONG_TOUCH (L) }
+            Brightness, b in   [ 0, 255 (full) ]
+            Delay, d in [ 0, 255 ]
 
 
-            IDLE ----> WAKE ----->
+
+                           i==M-----------------------------------┐                                                      i==M----------------------------------┐
+                           │                                      ↓                                                      │                                     ↓ 
+    ┏━━━━━━┓           ┏━━━━━━┓            ┏━━━━━━┓           ┏━━━━━━┓           ┏━━━━━━┓                            ┏━━━━━━┓           ┏━━━━━━┓           ┏━━━━━━┓
+    ┃ IDLE ┃---i==↑--->┃ WAKE ┃----i==↓--->┃ FULL ┃<---i==L---┃ FLKR ┃---i==↓--->┃ AUTO ┃---i==↑ | b==1 | b==full--->┃ PAUS ┃---i==↑--->┃ PULS ┃           ┃ RIPL ┃ 
+    ┗━━━━━━┛           ┗━━━━━━┛            ┗━━━━━━┛           ┗━━━━━━┛           ┗━━━━━━┛                            ┗━━━━━━┛           ┗━━━━━━┛           ┗━━━━━━┛
+       ↑                                      │                                     ↑                                   │                  │                  │
+       └------------b==0 | b==full------------┘                                     └----------------------------------)│(-----------------┘<---------------d==0
+       ↑                                                                                                                │
+       └--------------------------------------------------------------------------------------------------------------d==0
+      
 
 
-======================================================================================================================================================
-    IDLE            ENTRY                                       STEP_SET_TO_TINY
-                    EXIT                                        TIMER_CLEAR
+
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-                    LIGHT_EQ_ZERO                               TIMER_CLEAR | REF_SET_TO_ZERO
-                    TIMER_OVER | LIGHT_GT_REF                   TIMER_SET_LONG, LIGHT_LOWER
-                    TIMER_OVER | LIGHT_LT_REF                   TIMER_SET_LONG, LIGHT_RAISE
-    AUTO            PARENT_IS_AUTO                              TIMER_SET_TO_RANDOM
-    FULL            PARENT_IS_FULL                              TIMER_SET_TO_RANDOM
-    WAKE            RISING_EDGE | NO_PARENT
+                    IDLE           
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -104,14 +106,11 @@ uint8_t Idle::getNext( Lantern& lantern )
     }
     return *this;
 }
+
+
 /*
-======================================================================================================================================================
-    WAKE            ENTER                                       STEP_SET_TO_LARGE
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-                    ALWAYS                                      LIGHT_RAISE
-                    STEP_IS_DOWN                                LIGHT_LOWER
-    FULL            FALLING_EDGE
-    FLKR            MEDIUM_TOUCH
+                    WAKE
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 // WAKE state is the first state entered on touch, before branching depending on if touch is held or released.
@@ -142,16 +141,11 @@ uint8_t Wake::getNext( Lantern& lantern )
     if ( lantern.input == MEDIUM_TOUCH ) { return FLKR_ID; }
     return *this;
 }
+
+
 /*
-======================================================================================================================================================
-    FULL            ENTRY                                       set rate to huge
-                    EXIT                                        set rate to tiny
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-                    no parent                                   change brightness
-                    delay over AND light < parent's             raise brightness
-                    delay over AND light > parent's             lower brightness
-    IDLE            light == FULL                               leave tree
-    IDLE            light ==_ZERO                               leave tree
+                    FULL
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 // FULL state, turn brightess fully up or off.
@@ -188,14 +182,10 @@ uint8_t Full::getNext( Lantern& lantern )
     return *this;
 }
 
+
 /*
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-    FLKR                ENTER                                    flicker light, set ref to light
-                        EXIT                                     set light to ref                     
-------------------------------------------------------------------------------------------------------------------------------------------------------
-                        always                                   flicker                              
-    FULL                input == long touch                      make tree                            
-    AUTO                input == falling edge                     
+                    FLKR
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 // FLKR state is a branching state 
@@ -234,18 +224,11 @@ uint8_t Flicker::getNext( Lantern& lantern )
     }
     return *this;
 }
+
+
 /*
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-    AUTO                ENTER                                      set light's rate of change to 1                        
-
-------------------------------------------------------------------------------------------------------------------------------------------------------
-                        No parent                                  change brightness
-                        delay over AND light > parent's            lower brightness
-                        delay over AND light > parent's            raise brightness
-    PAUS                at full brightness                                    
-    PAUS                at 1 brightness                                       
-    PAUS                light == parent's AND parent != AUTO                  
-    PAUS                input == rising edge AND no parent                    
+                    AUTO
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 Auto::Auto() : State( AUTO_ID ) { }
@@ -285,15 +268,11 @@ uint8_t Auto::getNext( Lantern& lantern )
     if ( lantern.light == lantern.parent->light and *( lantern.parent->state ) != AUTO_ID ) { return PAUS_ID; }
     return *this;
 }
+
+
 /*
-======================================================================================================================================================
-    PAUSE           ENTRY                                       PULSE | TIMER_SET_TO_SHORT           
-                    EXIT                                        PULSE | CLEAR_TIMER | FLIP_UP_DOWN   
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-    AUTO            PARENT_IS_AUTO
-    FLKR            MEDIUM_TOUCH | NO_TREE                MAKE_TREE
-    AUTO            RISING_EDGE | NO_PARENT
-    IDLE            TIMER_OVER                                  LEAVE_TREE
+                    PAUSE
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 Pause::Pause() : State( PAUS_ID ) { }
@@ -316,25 +295,23 @@ void Pause::exit( Lantern& lantern )
 uint8_t Pause::act( Lantern& lantern ) 
 { 
     lantern.light.changeBrightness();
-    if ( lantern.input == MEDIUM_TOUCH ) { return MAKE_TREE; }
+    if ( lantern.input == MEDIUM_TOUCH )    { return MAKE_TREE; }
 }
 
 
 uint8_t Pause::getNext( Lantern& lantern )
 {
-    if ( lantern.input == RISING_EDGE and not lantern.parent ) { return PULS_ID; }
+    if ( lantern.input == RISING_EDGE and not lantern.parent )      { return PULS_ID; }
     if ( lantern.parent and *( lantern.parent->state ) == AUTO_ID ) { return AUTO_ID; }
-    if ( lantern.input == MEDIUM_TOUCH ) { return RIPL_ID; }
-    if ( lantern.delay == 0 ) { return IDLE_ID; }
+    if ( lantern.input == MEDIUM_TOUCH )                            { return RIPL_ID; }
+    if ( lantern.delay == 0 )                                       { return IDLE_ID; }
     return *this;
 }
 
 
-
 /*
-======================================================================================================================================================
-    PULSE           ENTRY                                       
-                    EXIT                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                        PULSE
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 Pulse::Pulse() : State( PULS_ID ) { }
@@ -360,10 +337,11 @@ uint8_t Pulse::getNext( Lantern& lantern )
     if ( lantern.light.getBehaviour() == STABLE ) { return AUTO_ID; }
     return *this;
 }
+
+
 /*
-======================================================================================================================================================
-    RIPPLE           ENTRY                                       
-                    EXIT                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                    RIPPLE
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 Ripple::Ripple() : State( RIPL_ID ) { }
