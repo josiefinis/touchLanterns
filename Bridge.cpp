@@ -30,6 +30,11 @@ class Bridge
             int step = &collection[1] - collection;
             return ( parent - collection ) / step;
         }
+        uint8_t getReference( const Lantern& lantern ) const
+        {
+            return lantern.reference;
+        }
+
         uint8_t getBehaviour( const Lantern& lantern )
         {
             return lantern.light.getBehaviour();

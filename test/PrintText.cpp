@@ -10,6 +10,7 @@
 #define ASSERT_INPUT_EQ     2
 #define ASSERT_STATE_EQ     3
 #define ASSERT_OUPUT_EQ     4
+#define BURN_DOWN           5
 
 #define PRINT_INPUT         1
 #define PRINT_STATE         2
