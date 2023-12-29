@@ -1,0 +1,12 @@
+# Testing Branch
+
+## TODO
+
+* Investigate why lanterns get "frozen out".
+    - Lanterns don't respond to touch.
+    - Seems to be after root AUTO event.
+    - The root lantern does respond to touch, and triggers all others to follow.
+    - Likely that lanterns are failing to leave tree and yet are in IDLE state.
+    - Not seen it happen after root FULL event.
+
+* 
