@@ -7,7 +7,9 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 
 class Random {
   public:

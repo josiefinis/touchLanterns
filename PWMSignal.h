@@ -9,8 +9,9 @@
 
 #define PWM_PERIOD      9856U // µs
 
+#include "Global.h"
+#include "Environment.h"
 
-#include "Arduino.h"
 #include "PriorityQueue.h"
 
 

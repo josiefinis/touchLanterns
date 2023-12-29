@@ -4,7 +4,6 @@
 ======================================================================================================================================================
 */ 
 #include "Lantern.h"
-#include "Light.h"
 
 // TODO Make flicker look better.
 // TODO Make different variations of flicker or other effects.

@@ -7,7 +7,9 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 
 #define STABLE      0
 #define TINY_STEP   1
@@ -31,7 +33,7 @@ class Light {
         uint16_t getBehaviour( void ) const;
         void     toggleSign( void );
         void     setSign( bool );
-        bool     getSign( void );
+        bool     getSign( void ) const;
         void     setToDim( void );
         void     setToBrighten( void );
         void     setBehaviour( uint8_t value );

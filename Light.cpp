@@ -58,7 +58,7 @@ void Light::setSign( bool value )
 }
 
 
-bool Light::getSign( void ) 
+bool Light::getSign( void ) const
 { 
     return reg >> 0xf & 1;
 }
@@ -91,7 +91,7 @@ bool Light::isBrightening( void ) const
 
 
 // Raise or lower brightness depending on the value of the up/down toggle bit in the register.
-void Light::changeBrightness( uint8_t floor=0, uint8_t ceil=0xFF ) 
+void Light::changeBrightness( uint8_t floor, uint8_t ceil ) 
 {
     switch ( getBehaviour() )
     {
@@ -130,7 +130,7 @@ void Light::changeBrightness( uint8_t floor=0, uint8_t ceil=0xFF )
 
 
 // Change brightness by step size.
-void Light::step( uint16_t stepsize, uint8_t floor=0, uint8_t ceil=0xFF ) 
+void Light::step( uint16_t stepsize, uint8_t floor, uint8_t ceil ) 
 {
     int16_t temp = reg & 0x0fff;
     if ( isDimming() ) { temp -= stepsize; }

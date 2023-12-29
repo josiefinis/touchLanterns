@@ -11,9 +11,11 @@ Tree structure is defined as a list of each nodes parents.
 #ifndef TREE_H
 #define TREE_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
 
-#define NONE    0xFF
+
+#define NONE    0xff
 
 class Tree {
   public:

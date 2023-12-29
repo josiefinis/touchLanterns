@@ -4,15 +4,14 @@
 #include "Sensor.h"
 #include "PWMSignal.h"
 #include "Register.h"
-#include "Lantern.h"
 #include "LanternCollection.h"
 #include "SerialMonitor.h"
 
 
 // Create class instances.
-Register shiftRegister;         // Writes to SIPO register chip.
-PWMSignal pwm;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
 Sensor sensor = Sensor();       // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
+PWMSignal pwm;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
+Register shiftRegister;         // Writes to SIPO register chip.
 const uint16_t neighbourList[16] = 
 { 
   0x421 , 0x4320, 0x5310, 0x521 ,

@@ -6,9 +6,10 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 #include "Lantern.h"
-#include "Random.h"
 
 
 

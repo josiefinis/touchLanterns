@@ -4,10 +4,8 @@
 ======================================================================================================================================================
 */
 
-#include "Global.h"
-#include "Arduino.h"
-#include "Random.h"
 #include "Sensor.h"
+#include "Random.h"
 
 #define NORMALISATION_FACTOR        32
 #define LEVEL_THRESHOLD             80

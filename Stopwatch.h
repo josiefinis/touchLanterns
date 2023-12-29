@@ -1,7 +1,9 @@
 #ifndef STOPWATCH_H
 #define STOPWATCH_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 
 class Stopwatch {
 

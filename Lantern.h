@@ -7,7 +7,8 @@
 #ifndef LANTERN_H
 #define LANTERN_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
 
 #include "State.fwd.h"
 #include "SerialMonitor.fwd.h"

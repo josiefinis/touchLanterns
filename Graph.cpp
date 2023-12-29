@@ -7,6 +7,8 @@
 #define GRAPH_CPP
 
 #include "Graph.h"
+#include "ShuffledList.h"
+#include "Queue.h"
 
 
 Graph::Graph( const uint8_t vertexCount, const uint16_t* adjacencyList )

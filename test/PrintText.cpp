@@ -1,8 +1,8 @@
 #ifndef PRINT_TEXT_CPP
 #define PRINT_TEXT_CPP
 
-#include "Lantern.h"
-#include "SensorInput.h"
+#include "../Lantern.h"
+#include "../SensorInput.h"
 
 #define START_TEST          0
 #define END_TEST         0xFF
@@ -170,11 +170,6 @@ void printInstruction( Instruction instruction ) {
       std::cout << "ASSERT_STATE_EQ  ";
       printState( instruction.value );
       break;
-
-//    case ASSERT_OUPUT_EQ:
-//      std::cout << "ASSERT_OUPUT_EQ  ";
-//      printOutput( instruction.value );
-//      break;
   }
   std::cout << " at time " << instruction.time;
 }

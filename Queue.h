@@ -7,9 +7,11 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
 
-#define NONE    0xFF
+
+#define NONE    0xff
 
 class Queue {
   public:

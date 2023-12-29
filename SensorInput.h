@@ -16,7 +16,9 @@ Finite state machine that categorises input from sensor.
 #ifndef SENSOR_INPUT_H
 #define SENSOR_INPUT_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 
 #define FALLING_EDGE    0  
 #define NOT_TOUCHED     1  

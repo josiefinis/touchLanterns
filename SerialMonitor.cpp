@@ -6,7 +6,6 @@
 */ 
 #include "SerialMonitor.h"
 #include "Bridge.cpp"
-#include "Global.h"
 
 Bridge bridge;
 

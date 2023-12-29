@@ -4,7 +4,6 @@
 ======================================================================================================================================================
 */ 
 #include "LanternCollection.h"
-#include "Global.h"
 
 
 Idle    LanternCollection::IDLE;
@@ -32,7 +31,7 @@ LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjace
 const Lantern& LanternCollection::operator[](uint8_t idx) const { return collection[idx]; }
 
 
-bool LanternCollection::updateCollection( uint8_t idx, uint8_t sensorValue=NONE ) {
+bool LanternCollection::updateCollection( uint8_t idx, uint8_t sensorValue ) {
 // Update collection based on sensor input to the lantern at idx.
 
     Lantern& lantern = collection[ idx ];
@@ -51,7 +50,7 @@ bool LanternCollection::updateCollection( uint8_t idx, uint8_t sensorValue=NONE 
 }
 
 
-uint8_t LanternCollection::updateLantern( Lantern& lantern, uint8_t sensorValue=NONE )
+uint8_t LanternCollection::updateLantern( Lantern& lantern, uint8_t sensorValue )
 {
     if ( sensorValue == NONE )
     {

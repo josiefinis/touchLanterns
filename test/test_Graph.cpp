@@ -1,6 +1,12 @@
-#include "Graph.h"
-#include "Graph.cpp"
-#include <iostream>
+#include "Global.h"
+#include "ArduinoShadows.cpp"
+
+#include "../Graph.h"
+#include "../Graph.cpp"
+#include "../Queue.cpp"
+#include "../ShuffledList.cpp"
+#include "../Tree.cpp"
+#include "../Random.cpp"
 
 
 int test_countAdjacent( void ) {
@@ -40,7 +46,7 @@ void test_makeSpanningTree( uint8_t correctTree[16] ) {
   };
   Graph graph = Graph( 16, neighbourList );
   uint8_t parentList[16];
-  Tree tree = Tree( parentList, 16 );
+  Tree tree = Tree( 16, parentList );
   graph.makeSpanningTree( &tree, 7 );
   for ( int i=0; i<16; i++ ) {
     if ( tree.getParent( i ) != correctTree[ i ] ) {

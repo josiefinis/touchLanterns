@@ -1,9 +1,20 @@
-#include "LanternCollection.h"
-#include "LanternCollection.cpp"
+#include "Global.h"
+#include "ArduinoShadows.cpp"
+#include "../LanternCollection.h"
+#include "../LanternCollection.cpp"
+#include "../Bridge.cpp"
+#include "../Lantern.cpp"
+#include "../Light.cpp"
+#include "../SensorInput.cpp"
+#include "../Tree.cpp"
+#include "../State.cpp"
+#include "../Graph.cpp"
+#include "../Random.cpp"
+#include "../Queue.cpp"
+#include "../ShuffledList.cpp"
 #include "PrintText.cpp"
-#include "Bridge.cpp"
 
-#define NONE    0xFF
+#define NONE    0xff
 
 
 const uint16_t neighbourList[16] = 
@@ -85,8 +96,8 @@ void runTestSequence( Instruction sequence[], uint8_t verbose=0 )
         }
         for ( uint8_t idx=0; idx<16; idx++ )
         {
-            if ( t%16 == idx ) { collection.update( idx, input >> idx & 1 ); }
-            else { collection.update( idx ); }
+            if ( t%16 == idx ) { collection.updateCollection( idx, input >> idx & 1 ); }
+            else { collection.updateCollection( idx ); }
             if ( verbose )
             {
                 Lantern& lantern = collection[ idx ];

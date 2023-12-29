@@ -1,4 +1,12 @@
-#include "Arduino.h"
+/*
+======================================================================================================================================================
+                        BRIDGE
+======================================================================================================================================================
+*/
+
+#include "Global.h"
+#include "Environment.h"
+
 #include "Lantern.h"
 #include "LanternCollection.h"
 #include "Light.h"
@@ -26,7 +34,7 @@ class Bridge
         {
             return lantern.light.getBehaviour();
         }
-        uint8_t getSign( const Lantern& lantern )
+        uint8_t getSign( const Lantern& lantern ) const
         {
             return lantern.light.getSign();
         }

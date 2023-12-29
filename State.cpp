@@ -4,9 +4,9 @@
 ======================================================================================================================================================
 */
 
-#include "Arduino.h"
 #include "State.h"
 #include "Light.h"
+#include "Random.h"
 
 
 State::State( const uint8_t id )
@@ -296,6 +296,7 @@ uint8_t Pause::act( Lantern& lantern )
 { 
     lantern.light.changeBrightness();
     if ( lantern.input == MEDIUM_TOUCH )    { return MAKE_TREE; }
+    return 1;
 }
 
 
@@ -329,6 +330,7 @@ void Pulse::exit( Lantern& lantern ) { }
 uint8_t Pulse::act( Lantern& lantern ) 
 { 
     lantern.light.changeBrightness();
+    return 1;
 }
 
 
@@ -360,6 +362,7 @@ void Ripple::exit( Lantern& lantern ) { }
 uint8_t Ripple::act( Lantern& lantern ) 
 { 
     lantern.light.changeBrightness();
+    return 1;
 }
 
 

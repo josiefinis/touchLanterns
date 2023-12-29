@@ -7,7 +7,9 @@
 #ifndef LANTERN_COLLECTION_H
 #define LANTERN_COLLECTION_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 #include "Graph.h"
 #include "Lantern.h"
 #include "State.h"

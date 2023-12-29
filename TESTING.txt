@@ -8,5 +8,11 @@
     - The root lantern does respond to touch, and triggers all others to follow.
     - Likely that lanterns are failing to leave tree and yet are in IDLE state.
     - Not seen it happen after root FULL event.
+    - Test fix in branch 'fix'.
+
+* Make flicker prettier.
+
+* Make ripple prettier.
 
 * 
+

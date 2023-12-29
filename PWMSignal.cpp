@@ -5,7 +5,6 @@
 */
 
 #include "PWMSignal.h"
-#include "Arduino.h"
 
 
 PWMSignal::PWMSignal()

@@ -8,7 +8,9 @@ Writes to hardware SIPO shift register.
 
 #ifndef REGISTER_H
 #define REGISTER_H
-#include "Arduino.h"
+
+#include "Global.h"
+#include "Environment.h"
 
 
 class Register {

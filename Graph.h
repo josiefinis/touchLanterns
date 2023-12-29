@@ -13,10 +13,9 @@ Minimal graph implementation that tries to be frugal with memory and does not al
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
 #include "Tree.h"
-#include "Queue.h"
-#include "ShuffledList.h"
 
 
 class Graph {

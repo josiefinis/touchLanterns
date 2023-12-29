@@ -6,7 +6,9 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 #include <CapacitiveSensor.h>
 
 class Sensor {

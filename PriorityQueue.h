@@ -7,7 +7,9 @@
 #ifndef PRIORITY_QUEUE_H
 #define PRIORITY_QUEUE_H
 
-#include "Arduino.h"
+#include "Global.h"
+#include "Environment.h"
+
 
 #define NONE 0xff
 #define MAX_SIZE 0x10
