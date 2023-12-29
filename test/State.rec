@@ -1,0 +1,277 @@
+/*
+======================================================================================================================================================
+                    STATE
+======================================================================================================================================================
+*/
+
+#include <cstdint>
+#include <iostream>
+#include "State.h"
+
+
+State::State( 
+      const uint8_t id
+    , const SensorInput& input
+    , const Light& light
+    , const Lantern*& parent
+    , const uint8_t& delay 
+)
+    : id( id )
+    , input( input )
+    , light( light )
+    , parent( parent )
+    , delay( delay )
+{ }
+
+bool State::operator == ( const State& other )   const { return id == other.id; }
+bool State::operator == ( const uint8_t& other ) const { return id == other; }
+bool State::operator != ( const State& other )   const { return !( *this == other.id ); }
+bool State::operator != ( const uint8_t& other ) const { return !( *this == other ); }
+
+virtual State::void enter( void ) {}
+virtual State::void exit( void ) {}
+virtual State::void act( void ) {}
+virtual State::uint8_t getNext( void ) { return 0; } 
+
+
+/*
+======================================================================================================================================================
+    IDLE            ENTRY                                       STEP_SET_TO_TINY
+                    EXIT                                        TIMER_CLEAR
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                    LIGHT_EQ_ZERO                               TIMER_CLEAR | REF_SET_TO_ZERO
+                    TIMER_OVER | LIGHT_GT_REF                   TIMER_SET_LONG, LIGHT_LOWER
+                    TIMER_OVER | LIGHT_LT_REF                   TIMER_SET_LONG, LIGHT_RAISE
+    AUTO            PARENT_IS_AUTO                              TIMER_SET_TO_RANDOM
+    FULL            PARENT_IS_FULL                              TIMER_SET_TO_RANDOM
+    INIT            SENSOR_RISING_EDGE | NO_PARENT
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Idle::Idle() : State( IDLE_ID ) { }
+
+Idle::void enter( void ) { light.setRate( 0 ); }
+
+Idle::void exit( void )  { delay.clear(); }
+
+Idle::void act( void )
+{
+    if ( light == 0 )
+    {
+        delay.clear();
+        reference = 0;
+        return 0;
+    }
+    if ( delay.isOver() and light < reference )
+    {
+        delay.set( 0xFF );   
+        light.raiseBrightness();
+    }
+    if ( delay.isOver() and light > reference )
+    {
+        delay.set( 0xFF );   
+        light.lowerBrightness();
+    }
+}
+Idle::uint8_t getNext( void )
+{
+    if ( not parent and input == RISING_EDGE ) { return INIT_ID; }
+    if ( parent->getState == FULL_ID )
+    {
+        delay.setRandom();
+        return FULL_ID;
+    }
+    if ( parent->getState == AUTO_ID )
+    {
+        delay.setRandom();
+        return AUTO_ID;
+    }
+    return *this;
+}
+/*
+======================================================================================================================================================
+    INIT            ENTER                                       STEP_SET_TO_LARGE
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                    ALWAYS                                      LIGHT_RAISE
+                    STEP_IS_DOWN                                LIGHT_LOWER
+    FULL            SENSOR_FALLING_EDGE
+    FLKR            SENSOR_MEDIUM_TOUCH
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Init::Init() : State( INIT_ID ) { }
+
+Init::void enter( void ) { light.setRate( 5 ); }
+Init::void exit( void )  { }
+Init::void act( void )   { light.changeBrightness(); }
+Init::uint8_t getNext( void )
+{
+    if ( input == FALLING_EDGE ) { return FULL_ID; }
+    if ( input == MEDIUM_TOUCH ) { return FLKR_ID; }
+    return *this;
+}
+/*
+======================================================================================================================================================
+    FULL            ENTRY                                       set rate to huge
+                    EXIT                                        set rate to tiny
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                    no parent                                   change brightness
+                    delay over AND light < parent's             raise brightness
+                    delay over AND light > parent's             lower brightness
+    IDLE            light == FULL                               leave tree
+    IDLE            light ==_ZERO                               leave tree
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Full::Full() : State( FULL_ID ) { }
+
+Full::void enter( void ){ light.setRate( 7 ) }
+
+Full::void exit( void ) { light.setRate( 0 ) }
+
+Full::void act( void )
+{
+    if ( not parent ) 
+    { 
+        light.changeBrightness(); 
+        return 0;
+    }
+    if ( not delay.over() ) { return 0; }
+    if ( light < parent->getLight() ) { light.raiseBrightness( parent->getLight() ); }
+    if ( light > parent->getLight() ) { light.lowerBrightness( parent->getLight() ); }
+}
+
+
+Full::uint8_t getNext( void )
+{
+    if ( light == LIGHT_FULL or light == 0 ) 
+    { 
+        parent = nullptr; 
+        return IDLE_ID;
+    }
+    return *this;
+
+}
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------------------
+    FLKR                ENTER                                    flicker light, set ref to light
+                        EXIT                                     set light to ref                     
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                        always                                   flicker                              
+    FULL                input == long touch AND no tree          make tree                            
+    AUTO                input == fallig edge                     
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+flicker::flicker() : State( FLKR_ID ) { }
+
+Flicker::void enter( void )
+{
+    std::cout << "enter FLKR" << std::endl;
+    light.flicker();
+    reference = light;
+}
+Flicker::void exit( void )
+{
+    std::cout << "exit FLKR" << std::endl;
+    light.setBrightness( reference );
+}
+Flicker::void act( void )
+{
+    std::cout << "input to FLKR" << std::endl;
+    light.flicker();
+}
+Flicker::uint8_t getNext( void )
+{
+    if ( input == LONG_TOUCH and not tree ) 
+    {
+        makeTree();                     // TODO
+        return FULL_ID;
+    }
+    if ( input == FALLING_EDGE ) {
+        return AUTO_ID
+    }
+}
+
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------------------
+    AUTO                ENTER                                      set light's rate of change to 1                        
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+                        No parent                                  change brightness
+                        delay over AND light > parent's            lower brightness
+                        delay over AND light > parent's            raise brightness
+    PAUS                at full brightness                                    
+    PAUS                at 1 brightness                                       
+    PAUS                light == parent's AND parent != AUTO                  
+    PAUS                input == rising edge AND no parent                    
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Auto::Auto() : State( AUTO_ID ) { }
+
+Auto::void enter( void )
+{
+    std::cout << "enter AUTO" << std::endl;
+    setStepsize( 1 );
+    return 0;
+}
+
+Auto::void exit( void )
+{
+    std::cout << "exit AUTO" << std::endl;
+}
+
+Auto::void act( void )
+{
+    std::cout << "input to AUTO" << std::endl;
+    if ( not parent ) 
+    {
+        light.changeBrightness( 1, LIGHT_FULL );
+    }
+    else
+    {
+        if ( not delay.isOver() )          { return 0; }
+        if ( light > parent->getLight() )  { light.lowerBrightness( parent->getLight() ); }
+        if ( light < parent->getLight() )  { light.raiseBrightness( parent->getLight() ); }
+    } 
+}
+
+Auto::uint8_t getNext( void )
+{
+    if ( light == 1 )                                   { return PAUS_ID; }
+    if ( light == LIGHT_FULL )                          { return PAUS_ID; }
+    if ( not parent {
+        if ( input == SENSOR_RISING_EDGE )              { return PAUS_ID; }
+    }
+    if ( light == parent->getLight() 
+       and parent->getState() != AUTO )                 { return PAUS_ID; }
+}
+
+
+/*
+======================================================================================================================================================
+    PAUSE           ENTRY                                       PULSE | TIMER_SET_TO_SHORT           
+                    EXIT                                        PULSE | CLEAR_TIMER | FLIP_UP_DOWN   
+------------------------------------------------------------------------------------------------------------------------------------------------------
+    AUTO            PARENT_IS_AUTO
+    FLKR            SENSOR_MEDIUM_EDGE | NO_TREE                MAKE_TREE
+    AUTO            SENSOR_RISING_EDGE | NO_PARENT
+    IDLE            TIMER_OVER                                  LEAVE_TREE
+------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+Pause::Pause() : State( PAUS_ID ) { }
+
+Pause::void enter( void )
+{
+    std::cout << "enter PAUS" << std::endl;
+}
+Pause::void exit( void )
+{
+    std::cout << "exit PAUS" << std::endl;
+}
+Pause::void act( void )
+{
+    std::cout << "input to PAUS" << std::endl;
+}
+Pause::uint8_t getNext( void )
+{
+    return AUTO_ID;
+}

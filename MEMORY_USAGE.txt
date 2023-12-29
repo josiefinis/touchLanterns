@@ -1,0 +1,39 @@
+======================================================================================================================================================
+                MEMORY USAGE
+======================================================================================================================================================
+
+
+      LanternCollection                     
+1       const                                   1
+
+16      Lantern                     
+16        variables                             5       80
+16        pointers                              2
+        
+16        StateMachine                
+16          variables                           2
+        
+1         static const TransitionMatrix         
+1           TransitionMatrix            
+1             const                             1
+1             pointers                          2
+77            StateTransition             
+77              const                           4       308
+
+1       Graph
+1         const                                 1
+1         pointer                               2
+
+1         Tree
+1           const                               1
+1           pointer                             2
+
+1         Queue
+1           variables                           3
+1           pointer                             2
+
+1         Shuffled List                         
+1           var                                 3
+
+
+
