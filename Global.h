@@ -16,6 +16,6 @@
 #define PIN_REGISTER_SRCLK      0x10    // B4 (Pin 12)
 
 #define PWM_PERIOD             9856U    // µs
-#define BURN_INTERVAL       0x8000UL    // ms    E[total burn time] = BURN_INTERVAL * 256 * 2
+#define BURN_INTERVAL       0x6000UL    // ms
 
 #endif

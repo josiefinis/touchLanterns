@@ -20,19 +20,7 @@ Lantern::Lantern()
 
 void Lantern::burnDown( void )
 {
-    if ( not light ) {
-        return;
-    }
-    int newReference = reference + 3 - Random::pull(3);
-    if ( newReference < 0 ) 
-    {
-        newReference = 0;
-    }
-    if ( newReference > 255 ) 
-    { 
-        newReference = 255;
-    }
-    reference = newReference;
+    if ( light ) { --reference; }
 }
 
 

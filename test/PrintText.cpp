@@ -12,10 +12,12 @@
 #define ASSERT_OUPUT_EQ     4
 #define BURN_DOWN           5
 
-#define PRINT_INPUT         1
-#define PRINT_STATE         2
-#define PRINT_OUTPUT        4
-#define PRINT_BRIGHTNESS    8
+#define PRINT_INPUT        0x10
+#define PRINT_STATE        0x20
+#define PRINT_PARENT       0x40
+#define PRINT_DELAY        0x80
+#define PRINT_BRIGHTNESS   0x01
+#define PRINT_REFERENCE    0x02
 
 
 
@@ -148,7 +150,14 @@ void printState( uint8_t state ) {
 }
 
                                                                                 
-                                                                             
+void printBrightness( uint16_t brightness, uint16_t reference=0 ) 
+{                                                                             
+    std::cout << brightness;
+    if ( reference )
+    {
+        std::cout << "/" << reference;
+    }
+}
                                                                              
 void printInstruction( Instruction instruction ) {                           
   switch ( instruction.instruction ) {

@@ -55,7 +55,7 @@ Idle::Idle() : State( IDLE_ID ) { }
 void Idle::enter( Lantern& lantern ) 
 { 
     lantern.light.setBehaviour( TINY_STEP );
-    lantern.reference = lantern.light;
+    lantern.reference = lantern.light - 2;
 }
 
 void Idle::exit( Lantern& lantern )  { }
@@ -70,18 +70,17 @@ uint8_t Idle::act( Lantern& lantern )
         lantern.reference = 0;
         return 0;
     }
-    if ( lantern.delay == 0 and lantern.light < lantern.reference )
+
+    lantern.light.setSign( Random::pull( 1 ) );
+    lantern.light.setBehaviour( Random::pull( 2 ) );
+    if ( lantern.light < lantern.reference )
     {
-        lantern.delay = 0xFF;   
-        lantern.light.setToBrighten();
-        lantern.light.changeBrightness( lantern.reference, lantern.reference );
+        lantern.light.changeBrightness( 0, lantern.reference - 2 );
         return 0;
     }
-    if ( lantern.delay == 0 and lantern.light > lantern.reference )
+    if ( lantern.light > lantern.reference )
     {
-        lantern.delay = 0xFF;   
-        lantern.light.setToDim();
-        lantern.light.changeBrightness( lantern.reference, lantern.reference );
+        lantern.light.changeBrightness( lantern.reference + 2, LIGHT_FULL );
         return 0;
     }
     return 0;
