@@ -11,7 +11,7 @@
 // Create class instances.
 Sensor sensor = Sensor();       // Loops over 16 capacitive touch sensors with multiplexer. Takes raw sensor input and outputs binary 'is touched' signal.
 PWMSignal pwm;            // Generates a pulse width modulation signal for each lantern corresponding to its brightness.
-Register shiftRegister;         // Writes to SIPO register chip.
+Register sipo;         // Writes to serial in, parallel out ( SIPO ) register chip.
 const uint16_t neighbourList[16] = 
 { 
   0x421 , 0x4320, 0x5310, 0x521 ,
@@ -64,7 +64,7 @@ void pwmCycle1stHalf()
 {
     // Write signal to register at start of period.
     pwm.startPeriod();
-    shiftRegister.writeToStorageRegister( pwm.getSignal() ); // TODO change to shorter name
+    sipo.write( pwm.getSignal() ); // 
 
     // Poll sensor for one lantern ( on current mux channel ). This takes 2 ms - 3 ms.
     bool input = pollSensor();
@@ -90,7 +90,7 @@ void pwmCycle1stHalf()
 
 void pwmCycle2ndHalf() {
 // Second half of PWM cycle
-  shiftRegister.writeToStorageRegister( pwm.getSignal() );
+  sipo.write( pwm.getSignal() );
   pwm.nextEdge();
   edgeAtMicros = pwm.getTime();
 }
@@ -98,7 +98,7 @@ void pwmCycle2ndHalf() {
 
 void initialisePins() {
   // Set pins I/O.
-  DDRB |= PIN_REGISTER_SER | PIN_REGISTER_NOT_OE | PIN_REGISTER_NOT_SRCLR | PIN_REGISTER_RCLK | PIN_REGISTER_SRCLK;
+  DDRB |= PIN_REGISTER_DS | PIN_REGISTER_NOT_OE | PIN_REGISTER_NOT_MR | PIN_REGISTER_ST_CP | PIN_REGISTER_SH_CP;
   DDRD |= PIN_MUX_S0 | PIN_MUX_S1 | PIN_MUX_S2 | PIN_MUX_S3;
   pinMode(PIN_SENSOR_RECEIVE, INPUT);
   pinMode(PIN_SENSOR_SEND, OUTPUT);
@@ -107,7 +107,7 @@ void initialisePins() {
 
 void setup() {
   initialisePins();
-  shiftRegister.reset();
+  sipo.reset();
 
   #if SERIAL_ON
     Serial.begin(9600);		

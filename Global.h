@@ -9,11 +9,6 @@
 #define PIN_MUX_S2              0x40    // D6 (Pin 6)
 #define PIN_MUX_S3              0x80    // D7 (Pin 7)
 
-#define PIN_REGISTER_SER        0x01    // B0 (Pin 8)
-#define PIN_REGISTER_NOT_OE     0x02    // B1 (Pin 9)
-#define PIN_REGISTER_NOT_SRCLR  0x04    // B2 (Pin 10)
-#define PIN_REGISTER_RCLK       0x08    // B3 (Pin 11)
-#define PIN_REGISTER_SRCLK      0x10    // B4 (Pin 12)
 
 #define PWM_PERIOD             9856U    // µs
 #define BURN_INTERVAL       0x6000UL    // ms
