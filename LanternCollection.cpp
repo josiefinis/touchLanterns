@@ -17,8 +17,8 @@ Ripple  LanternCollection::RIPL;
 
 
 LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjacencyList ) 
-  : Graph( size, adjacencyList )
-  , size( size )
+    : Graph( size, adjacencyList )
+    , size( size )
 {
     for ( int i=0; i<16; ++i )
     {
@@ -31,8 +31,9 @@ LanternCollection::LanternCollection( const uint8_t size, const uint16_t* adjace
 const Lantern& LanternCollection::operator[](uint8_t idx) const { return collection[idx]; }
 
 
-bool LanternCollection::updateCollection( uint8_t idx, uint8_t sensorValue ) {
+bool LanternCollection::updateCollection( uint8_t idx, uint8_t sensorValue ) 
 // Update collection based on sensor input to the lantern at idx.
+{
 
     Lantern& lantern = collection[ idx ];
     switch ( updateLantern( lantern, sensorValue ) )
@@ -125,7 +126,8 @@ uint8_t LanternCollection::getBrightness( uint8_t idx )
 }
 
 
-void LanternCollection::burnDown( uint8_t idx ) {
+void LanternCollection::burnDown( uint8_t idx ) 
+{
   collection[ idx ].burnDown();
 }
 

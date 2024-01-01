@@ -17,41 +17,22 @@ uint16 implementation uses a list of at most four 4-bit values represented as a 
 
 #include "Random.h"
 
-#define UINT16_IMPLEMENTATION       1
-#define ARRAY_IMPLEMENTATION        !UINT16_IMPLEMENTATION
 #define NONE    0xff
 
-  #if UINT16_IMPLEMENTATION
   
-  class ShuffledList {
+class ShuffledList 
+{
     public:
-      ShuffledList( uint16_t list, uint8_t size );
-      uint8_t next( void );
-      void shuffle( void );
-      bool isEmpty( void );
-      void print( void );
+        ShuffledList( uint16_t list, uint8_t size );
+        uint8_t next( void );
+        void shuffle( void );
+        bool isEmpty( void );
+        void print( void );
   
     private:
-      uint16_t list;
-      uint8_t size;
-      uint8_t getElement( uint8_t index );
-      void setElement( uint8_t index, uint8_t value );
-  };
-  #endif
-
-  #if ARRAY_IMPLEMENTATION
-  
-  class ShuffledList {
-    public:
-      ShuffledList( uint8_t* list, uint8_t size );
-      uint8_t next( void );
-      void shuffle( void );
-      void print( void );
-  
-    private:
-      uint8_t* list;
-      uint8_t size;
-  };
-  #endif
-
+        uint16_t list;
+        uint8_t size;
+        uint8_t getElement( uint8_t index );
+        void setElement( uint8_t index, uint8_t value );
+};
 #endif

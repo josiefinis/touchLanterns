@@ -8,71 +8,84 @@
 
 
 PWMSignal::PWMSignal()
-  // Make zeroth node with signal = 0 and time = 0
-  : signal( 0 )
-  , time( 0 )
+    : signal( 0 )
+    , time( 0 )
 {
-  edgeQueue.clear();
+    edgeQueue.clear();
 }
 
 
-void PWMSignal::changeDuty(uint8_t index, uint8_t brightness) {
-  // Change the PWM signal to reflect the new brightness for lantern with index 'index'.
-  if ( brightness == 0xFF ) {
-    signalAtTimeZero |= 1 << index;
-    edgeQueue.remove( index );
-    return;
-  }
-  if ( brightness == 0 ) {
-    signalAtTimeZero &= ~( 1 << index );
-    edgeQueue.remove( index );
-    return;
-  }
-
-  uint16_t pulseWidth = pulseWidthQuadratic( brightness );
-  if ( pulseWidth > PWM_PERIOD / 2 ) {
-    signalAtTimeZero |= 1 << index;
-    edgeQueue.insert( index, pulseWidth );
-  }
-  else {
-    signalAtTimeZero &= ~( 1 << index );
-    edgeQueue.insert( index, PWM_PERIOD - pulseWidth );
-  }
-}
-
-
-void PWMSignal::nextEdge( void ) {
-  if ( edgeQueue.isEmpty() ) {
-    time = 0xFFFF;
-    signal = 0;
-    return;
-  }
-  time = edgeQueue.peekPriority();
-  while ( edgeQueue.peekPriority() == time ) {
-    signal ^= 1 << edgeQueue.dequeue();
-    if ( edgeQueue.isEmpty() ) {
-      break;
+void PWMSignal::changeDuty(uint8_t index, uint8_t brightness) 
+// Change the PWM signal to reflect the new brightness for lantern with index 'index'.
+{
+    if ( brightness == 0xFF ) 
+    {
+        signalAtTimeZero |= 1 << index;
+        edgeQueue.remove( index );
+        return;
     }
-  }
+    if ( brightness == 0 ) 
+    {
+        signalAtTimeZero &= ~( 1 << index );
+        edgeQueue.remove( index );
+        return;
+    }
+
+    uint16_t pulseWidth = pulseWidthQuadratic( brightness );
+    if ( pulseWidth > PWM_PERIOD / 2 ) 
+    {
+        signalAtTimeZero |= 1 << index;
+        edgeQueue.insert( index, pulseWidth );
+    }
+    else 
+    {
+        signalAtTimeZero &= ~( 1 << index );
+        edgeQueue.insert( index, PWM_PERIOD - pulseWidth );
+    }
 }
 
 
-void PWMSignal::startPeriod( void ) {
-  time = 0;
-  signal = signalAtTimeZero;
-  edgeQueue.refill();
+void PWMSignal::nextEdge( void ) 
+// Set signal and time to that of the next pulse edge.
+{
+    if ( edgeQueue.isEmpty() ) 
+    {
+        time = 0xFFFF;
+        signal = 0;
+        return;
+    }
+    time = edgeQueue.peekPriority();
+    while ( edgeQueue.peekPriority() == time ) 
+    {
+        signal ^= 1 << edgeQueue.dequeue();
+        if ( edgeQueue.isEmpty() ) 
+        {
+          break;
+        }
+    }
 }
 
 
-uint16_t PWMSignal::getSignal( void ) {
+void PWMSignal::startPeriod( void ) 
+// Make ready to start a new PWM signal period.
+{
+    time = 0;
+    signal = signalAtTimeZero;
+    edgeQueue.refill();
+}
+
+
+uint16_t PWMSignal::getSignal( void ) 
 // Return the next signal to write to the register.
-  return signal;
+{
+    return signal;
 }
 
 
-uint16_t PWMSignal::getTime( void ) {
+uint16_t PWMSignal::getTime( void ) 
 // Return the time when the next signal is due (in microseconds after the start of the PWM period).
-  return time;
+{
+    return time;
 }
 
 
@@ -82,25 +95,29 @@ uint16_t PWMSignal::getTime( void ) {
 //               f(256) == 9856 µs,         which is the PWM period.
 // These are a linear, a quadratic, a cubic and a quartic function. 
 
-uint16_t PWMSignal::pulseWidthLinear( uint8_t brightness ) {
+uint16_t PWMSignal::pulseWidthLinear( uint8_t brightness ) 
 // Map brightness value to pulse width using linear function. 
-  return 640 + 36 * brightness;
+{
+    return 640 + 36 * brightness;
 }
 
 
-uint16_t PWMSignal::pulseWidthQuadratic( uint16_t brightness ) {
+uint16_t PWMSignal::pulseWidthQuadratic( uint16_t brightness ) 
 // Map brightness value to pulse width usisng quadratic function f(x) = 4x + 2*(x/4)^2.
-  return 640UL + 4U * brightness + brightness / 2U * brightness / 4U;
+{
+    return 640UL + 4U * brightness + brightness / 2U * brightness / 4U;
 }
 
 
-uint16_t PWMSignal::pulseWidthCubic( uint16_t brightness ) {
+uint16_t PWMSignal::pulseWidthCubic( uint16_t brightness ) 
 // Map brightness value to pulse width usisng cubic function f(x) = 4x + 2*(x/16)^3.
-  return 640 + 4 * brightness + brightness / 2 * brightness / 256 * brightness / 8;
+{
+    return 640 + 4 * brightness + brightness / 2 * brightness / 256 * brightness / 8;
 }
 
 
-uint16_t PWMSignal::pulseWidthQuartic( uint32_t brightness ) {
+uint16_t PWMSignal::pulseWidthQuartic( uint32_t brightness ) 
 // Map brightness value to pulse width using quartic function f(x) = 4x + 2*(x/32)^4.
-  return 640 + 4 * brightness + brightness / 2 * brightness / 256 * brightness / 256 * brightness / 8;
+{
+    return 640 + 4 * brightness + brightness / 2 * brightness / 256 * brightness / 256 * brightness / 8;
 }

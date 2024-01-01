@@ -1,6 +1,6 @@
 /*
 ======================================================================================================================================================
-            TREE
+                TREE
 ======================================================================================================================================================
 
 Minimal tree implimentation.
@@ -17,15 +17,16 @@ Tree structure is defined as a list of each nodes parents.
 
 #define NONE    0xff
 
-class Tree {
-  public:
-    Tree( const uint8_t size, uint8_t* parentList );
-    uint8_t getSize();
-    uint8_t getParent( uint8_t idx );
-    void setParent( uint8_t idx, uint8_t parent );
+class Tree 
+{
+    public:
+        Tree( const uint8_t size, uint8_t* parentList );
+        uint8_t getSize();
+        uint8_t getParent( uint8_t idx );
+        void setParent( uint8_t idx, uint8_t parent );
 
-  private:
-    const uint8_t size;
-    uint8_t* parentList;
+    private:
+        const uint8_t size;
+        uint8_t* parentList;
 };
 #endif

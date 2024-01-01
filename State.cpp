@@ -22,27 +22,6 @@ uint8_t State::getNext( Lantern& lantern ) { return 0; }
 
 
 /*
-
-            Sensor input, i in { RISING_EDGE (↑), FALLING_EDGE (↓), MEDIUM_TOUCH (M), LONG_TOUCH (L) }
-            Brightness, b in   [ 0, 255 (full) ]
-            Delay, d in [ 0, 255 ]
-
-
-
-                           i==M-----------------------------------┐                                                      i==M----------------------------------┐
-                           │                                      ↓                                                      │                                     ↓ 
-    ┏━━━━━━┓           ┏━━━━━━┓            ┏━━━━━━┓           ┏━━━━━━┓           ┏━━━━━━┓                            ┏━━━━━━┓           ┏━━━━━━┓           ┏━━━━━━┓
-    ┃ IDLE ┃---i==↑--->┃ WAKE ┃----i==↓--->┃ FULL ┃<---i==L---┃ FLKR ┃---i==↓--->┃ AUTO ┃---i==↑ | b==1 | b==full--->┃ PAUS ┃---i==↑--->┃ PULS ┃           ┃ RIPL ┃ 
-    ┗━━━━━━┛           ┗━━━━━━┛            ┗━━━━━━┛           ┗━━━━━━┛           ┗━━━━━━┛                            ┗━━━━━━┛           ┗━━━━━━┛           ┗━━━━━━┛
-       ↑                                      │                                     ↑                                   │                  │                  │
-       └------------b==0 | b==full------------┘                                     └----------------------------------)│(-----------------┘<---------------d==0
-       ↑                                                                                                                │
-       └--------------------------------------------------------------------------------------------------------------d==0
-      
-
-
-
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------
                     IDLE           
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -51,8 +30,8 @@ uint8_t State::getNext( Lantern& lantern ) { return 0; }
 // IDLE State: either unlit or lit, if lit trending slowly towards reference brightness.
 Idle::Idle() : State( IDLE_ID ) { }
 
-// Set slowest rate of change on entry ( step size = 2^rate ).
 void Idle::enter( Lantern& lantern ) 
+// Set slowest rate of change on entry ( step size = 2^rate ).
 { 
     lantern.light.setBehaviour( TINY_STEP );
     lantern.reference = lantern.light - 2;
@@ -60,9 +39,9 @@ void Idle::enter( Lantern& lantern )
 
 void Idle::exit( Lantern& lantern )  { }
 
+uint8_t Idle::act( Lantern& lantern )
 // Trend slowly toward reference brightness, which itself meanders slowly downwards, 
 // so that the lights burn lower and lower until they go out.
-uint8_t Idle::act( Lantern& lantern )
 {
     if ( lantern.light == 0 )
     {
@@ -86,8 +65,8 @@ uint8_t Idle::act( Lantern& lantern )
     return 0;
 }
 
-// Change state immediately on touch or if given a parent lantern to follow.
 uint8_t Idle::getNext( Lantern& lantern )
+// Change state immediately on touch or if given a parent lantern to follow.
 {
     if ( lantern.input == RISING_EDGE and not lantern.parent ) { return WAKE_ID; }
     if ( not lantern.parent ) { return *this; }
@@ -115,8 +94,8 @@ uint8_t Idle::getNext( Lantern& lantern )
 // WAKE state is the first state entered on touch, before branching depending on if touch is held or released.
 Wake::Wake() : State( WAKE_ID ) { }
 
-// Set a large rate in order to give immediate and obviousvisual feedback.
 void Wake::enter( Lantern& lantern ) 
+// Set a large rate in order to give immediate and obviousvisual feedback.
 { 
     if ( lantern.getBrightness() < 64 ) { lantern.light.setToBrighten(); }
     else { lantern.light.setToDim(); }
@@ -125,16 +104,16 @@ void Wake::enter( Lantern& lantern )
 
 void Wake::exit( Lantern& lantern )  { }
 
-// Change brightness until next state.
 uint8_t Wake::act( Lantern& lantern )
+// Change brightness until next state.
 { 
     lantern.light.changeBrightness(); 
     return 0;
-} //                                        TODO make different for down
+} 
 
+uint8_t Wake::getNext( Lantern& lantern )
 // Turn brightness fully up or fully off on a brief touch, which will be the end of this branch.
 // If held, continue on a path that branches further.
-uint8_t Wake::getNext( Lantern& lantern )
 {
     if ( lantern.input == FALLING_EDGE ) { return FULL_ID; }
     if ( lantern.input == MEDIUM_TOUCH ) { return FLKR_ID; }
@@ -155,8 +134,8 @@ void Full::enter( Lantern& lantern ){ lantern.light.setBehaviour( HUGE_STEP ); }
 
 void Full::exit( Lantern& lantern ) { }
 
-// Change brightness according to up/down bit, or if following a parent, towards it. 
 uint8_t Full::act( Lantern& lantern )
+// Change brightness according to up/down bit, or if following a parent, towards it. 
 {
     if ( lantern.parent and lantern.delay ) 
     { 
@@ -166,8 +145,8 @@ uint8_t Full::act( Lantern& lantern )
     return 0;
 }
 
-// Change to IDLE state once fully lit or fully out.
 uint8_t Full::getNext( Lantern& lantern )
+// Change to IDLE state once fully lit or fully out.
 {
     if ( lantern.parent and lantern.delay )
     {

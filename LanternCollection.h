@@ -20,7 +20,7 @@
 
 
 class LanternCollection : public Graph {
-  public:
+    public:
         static Idle     IDLE;
         static Wake     WAKE;
         static Full     FULL;
@@ -43,10 +43,10 @@ class LanternCollection : public Graph {
         void burnDown( uint8_t idx);
 
 
-  private:
-    const uint8_t size;
-    Lantern collection[ COLLECTION_SIZE ];
-    void makeTree( uint8_t root );
-    friend class Bridge;
+    private:
+        const uint8_t size;
+        Lantern collection[ COLLECTION_SIZE ];
+        void makeTree( uint8_t root );
+        friend class Bridge;
 };
 #endif

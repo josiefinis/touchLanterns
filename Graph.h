@@ -19,13 +19,13 @@ Minimal graph implementation that tries to be frugal with memory and does not al
 
 
 class Graph {
-  public:
-    Graph( uint8_t const vertexCount, const uint16_t* adjacencyList );
-    uint8_t countAdjacent( uint8_t vertex );
-    void makeSpanningTree( Tree* spanningTree, uint8_t root );
+    public:
+        Graph( uint8_t const vertexCount, const uint16_t* adjacencyList );
+        uint8_t countAdjacent( uint8_t vertex );
+        void makeSpanningTree( Tree* spanningTree, uint8_t root );
 
-  private:
-    const uint8_t vertexCount;
-    const uint16_t* adjacencyList;
+    private:
+        const uint8_t vertexCount;
+        const uint16_t* adjacencyList;
 };
 #endif

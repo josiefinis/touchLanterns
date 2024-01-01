@@ -136,7 +136,7 @@ void Light::step( uint16_t stepsize, uint8_t floor, uint8_t ceil )
     if ( isDimming() ) { temp -= stepsize; }
     else               { temp += stepsize; }
     if ( isBrightening() and temp > ceil << 4 )  { setBrightness( ceil );  return; }
-    if  ( isDimming() and temp < floor << 4)    { setBrightness( floor ); return; }
+    if  ( isDimming() and temp < floor << 4)     { setBrightness( floor ); return; }
     reg &= ~0xfff;
     reg |= temp;
 }

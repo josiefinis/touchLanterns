@@ -51,7 +51,7 @@ class Sensor {
     private:
         static CapacitiveSensor sensor;
         uint16_t baseline[ 16 ];
-        uint8_t i;
+        uint8_t counter;
         uint8_t muxChannel;
   
         long newInput( void );

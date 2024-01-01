@@ -1,4 +1,3 @@
-
 /* 
 ======================================================================================================================================================
                     MONITOR
@@ -16,23 +15,14 @@ void SerialMonitor::printIndices()
         Serial.print( i, HEX ); Serial.print( "\t" );
     }
     Serial.println(); 
-    //for ( uint8_t i=0; i<16; i++ ) {
-    //    Serial.print( F( "========" ) );
-    //}
     Serial.println();
-}
-
-
-void SerialMonitor::printSpace( void )
-{
-    Serial.print( " " );
 }
 
 
 void SerialMonitor::printLine( LanternCollection& collection )
+// Print debug data for all lanterns in one line. Format:   "pS dd:  " or "iS bbB  "
 {
     Serial.println();
-    // Print debug data for all lanterns in one line. Format:   "pS dd:  " or "iS bbB  "
     for ( uint8_t i=0; i<16; ++i )
     {
         Lantern& lantern = collection[ i ];
