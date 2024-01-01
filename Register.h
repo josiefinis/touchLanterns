@@ -3,18 +3,33 @@
                                       REGISTER
 ======================================================================================================================================================
 
-Writes to hardware SIPO shift register.
+Writes to hardware 16 bit SIPO shift register.
 
-                                               ┌--------┐             
-         Parallel data output          Q1    1 ┿ 〇     ┿ 16  VCC
-         Parallel data output          Q2    2 ┿        ┿ 15  Q0            Parallel data output
-         Parallel data output          Q3    3 ┿        ┿ 14  DS            Serial data input
-         Parallel data output          Q4    4 ┿  74HC  ┿ 13  NOT_OE        Output enable ( active LOW )
-         Parallel data output          Q5    5 ┿  595   ┿ 12  ST_CP         Storage register clock pulse
-         Parallel data output          Q6    6 ┿        ┿ 11  SH_CP         Shift register Clock pulse
-         Parallel data output          Q7    7 ┿        ┿ 10  NOT_MR        Master reset ( active LOW )
-                                      GND    8 ┿        ┿ 9   Q7'           Serial data output
-                                               └--------┘
+    ----------------------------------------------------------------------------------┬----------------------------------------------- 5 V
+                                                                                      │
+                                                            ┌--------┐                │
+         Parallel data output ( light 1 ) ---------- Q1   1 ┿ 〇     ┿ 16   VCC ------┤
+         Parallel data output ( light 2 ) ---------- Q2   2 ┿        ┿ 15   Q0 -------│---- ( light 0 )   Parallel data output
+         Parallel data output ( light 3 ) ---------- Q3   3 ┿        ┿ 14   DS -------│---- (8)           Serial data input
+         Parallel data output ( light 4 ) ---------- Q4   4 ┿  74HC  ┿ 13   NOT_OE ---│---- (9)           Output enable ( active LOW )
+         Parallel data output ( light 5 ) ---------- Q5   5 ┿  595   ┿ 12   ST_CP ----│---- (11)          Storage register clock pulse
+         Parallel data output ( light 6 ) ---------- Q6   6 ┿        ┿ 11   SH_CP ----│---- (12)          Shift register Clock pulse
+         Parallel data output ( light 7 ) ---------- Q7   7 ┿        ┿ 10   NOT_MR ---│---- (10)          Master reset ( active LOW )
+                                               ┌--- GND   8 ┿        ┿ 9    Q7' ---┐  │                   Serial data output
+                                               │            └--------┘             │  │
+                                               │            ┌--------┐             │  │
+         Parallel data output ( light 9 ) -----│---- Q1   1 ┿ 〇     ┿ 16   VCC ---│--┘
+         Parallel data output ( light a ) -----│---- Q2   2 ┿        ┿ 15   Q0 ----│------- ( light 8 )   Parallel data output
+         Parallel data output ( light b ) -----│---- Q3   3 ┿        ┿ 14   DS ----┘                      Serial data input
+         Parallel data output ( light c ) -----│---- Q4   4 ┿  74HC  ┿ 13   NOT_OE -------- (9)           Output enable ( active LOW )
+         Parallel data output ( light d ) -----│---- Q5   5 ┿  595   ┿ 12   ST_CP --------- (11)          Storage register clock pulse
+         Parallel data output ( light e ) -----│---- Q6   6 ┿        ┿ 11   SH_CP --------- (12)          Shift register Clock pulse
+         Parallel data output ( light f ) -----│---- Q7   7 ┿        ┿ 10   NOT_MR -------- (10)          Master reset ( active LOW )
+                                               ├--- GND   8 ┿        ┿ 9    Q7'                           Serial data output
+                                               │            └--------┘
+                                               │
+                                               │
+    -------------------------------------------┴------------------------------------------------------------------------------------- 0 V
 */
 
 #ifndef REGISTER_H

@@ -6,26 +6,26 @@
 Controls multiplexer to cycle through capacitive sensor inputs and detect touch.
 Uses CapacitiveSensor library.
 
-       -----------------------------------------------------------------------------------------┬------------------------ 5 V
-                                                                                                │
-                                                                                                │
-                                                                           ┌---▄▄---┐           │ 
-                Receive (3)-------┬----------------Common Input/Output   1 ┿        ┿ 24  VCC --┘
-                                  │      Touch sensor      ○------- I7   2 ┿        ┿ 23  I8  ------○       Touch sensor
-                                  █      Touch sensor      ○------- I6   3 ┿        ┿ 22  I9  ------○       Touch sensor
-                                  █      Touch sensor      ○------- I5   4 ┿  74HC  ┿ 21  I10 ------○       Touch sensor
-                    R1 = 1 kΩ     █      Touch sensor      ○------- I4   5 ┿  4067  ┿ 20  I11 ------○       Touch sensor
-                                  █      Touch sensor      ○------- I3   6 ┿        ┿ 19  I12 ------○       Touch sensor
-                                  │      Touch sensor      ○------- I2   7 ┿        ┿ 18  I13 ------○       Touch sensor
-                  Send (2)--------┘      Touch sensor      ○------- I1   8 ┿        ┿ 17  I14 ------○       Touch sensor
-                                         Touch sensor      ○------- I0   9 ┿        ┿ 16  I15 ------○       Touch sensor
-                                         Channel control (4)------- S0  10 ┿        ┿ 15  NOT_E ----(GND)
-                                         Channel control (5)------- S1  11 ┿        ┿ 14  S2 -------(6) Channel control
-                                                               ┌-- GND  12 ┿        ┿ 13  S3 -------(7) Channel control
-                                                               │           └--------┘
-                                                               │
-                                                               │
-       --------------------------------------------------------┴--------------------------------------------------------- 0 V
+       --------------------------------------------------------------------------------------------┬--------------------- 5 V
+                                                                                                   │
+                                                                                                   │
+                                                                           ┌---▄▄---┐              │
+                Receive (3)-------┬----------------Common Input/Output   1 ┿        ┿ 24  VCC -----┘
+                                  │      Touch sensor 7    ○------- I7   2 ┿        ┿ 23  I8  ---------○       Touch sensor 8
+                                  █      Touch sensor 6    ○------- I6   3 ┿        ┿ 22  I9  ---------○       Touch sensor 9
+                                  █      Touch sensor 5    ○------- I5   4 ┿  74HC  ┿ 21  I10 ---------○       Touch sensor a
+                    R1 = 1 kΩ     █      Touch sensor 4    ○------- I4   5 ┿  4067  ┿ 20  I11 ---------○       Touch sensor b
+                                  █      Touch sensor 3    ○------- I3   6 ┿        ┿ 19  I12 ---------○       Touch sensor c
+                                  │      Touch sensor 2    ○------- I2   7 ┿        ┿ 18  I13 ---------○       Touch sensor d
+                  Send (2)--------┘      Touch sensor 1    ○------- I1   8 ┿        ┿ 17  I14 ---------○       Touch sensor e
+                                         Touch sensor 0    ○------- I0   9 ┿        ┿ 16  I15 ---------○       Touch sensor f
+                                         Channel control (4)------- S0  10 ┿        ┿ 15  NOT_E ---┐           Enable ( active LOW )
+                                         Channel control (5)------- S1  11 ┿        ┿ 14  S2 ------│---(6)     Channel control
+                                                              ┌--- GND  12 ┿        ┿ 13  S3 ------│---(7)     Channel control
+                                                              │            └--------┘              │
+                                                              │                                    │
+                                                              │                                    │
+       -------------------------------------------------------┴------------------------------------┴--------------------- 0 V
 */
 #ifndef SENSOR_H
 #define SENSOR_H
