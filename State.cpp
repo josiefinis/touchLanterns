@@ -71,10 +71,11 @@ uint8_t Idle::getNext( Lantern& lantern )
     if ( lantern.input == RISING_EDGE and not lantern.parent ) { return WAKE_ID; }
     if ( not lantern.parent ) { return *this; }
 
-    if ( *( lantern.parent->state ) == FULL_ID and not lantern.parent->delay )
+    if ( *( lantern.parent->state ) == FULL_ID and lantern.parent->delay <= 1 )
     {
         lantern.delay = Random::uRandN( 16 );
         lantern.light.setSign( lantern.parent->light.getSign() );
+        lantern.light.setBrightness( 128 );     // 
         return FULL_ID;
     }
     if ( *( lantern.parent->state ) == RIPL_ID )
