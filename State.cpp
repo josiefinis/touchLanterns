@@ -15,8 +15,8 @@ State::State( const uint8_t id )
 
 State::operator int() const { return id; }
 
-void    State::enter( Lantern& lantern ) {}
-void    State::exit( Lantern& lantern ) {}
+void    State::enter( Lantern& lantern ) { }
+void    State::exit( Lantern& lantern ) { }
 uint8_t State::act( Lantern& lantern ) { return 0; }
 uint8_t State::getNext( Lantern& lantern ) { return 0; } 
 
@@ -69,6 +69,7 @@ uint8_t Idle::getNext( Lantern& lantern )
 // Change state immediately on touch or if given a parent lantern to follow.
 {
     if ( lantern.input == RISING_EDGE and not lantern.parent ) { return WAKE_ID; }
+
     if ( not lantern.parent ) { return *this; }
 
     if ( *( lantern.parent->state ) == FULL_ID and not lantern.parent->delay )
@@ -135,11 +136,13 @@ void Full::enter( Lantern& lantern ){ lantern.light.setBehaviour( HUGE_STEP ); }
 void Full::exit( Lantern& lantern ) { }
 
 uint8_t Full::act( Lantern& lantern )
-// Change brightness according to up/down bit, or if following a parent, towards it. 
+// Change brightness according to up/down bit.
 {
-    if ( lantern.parent and lantern.delay ) 
+    if ( lantern.parent and lantern.delay > 1 ) { return 0; }
+    if ( lantern.parent and lantern.delay == 1 ) 
     { 
-        return 0;
+        --lantern.delay;
+        lantern.light.setBrightness( 128 ); 
     }
     lantern.light.changeBrightness(); 
     return 0;
